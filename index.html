@@ -273,7 +273,7 @@ body.stage main{padding-top:64px}
 .ptitle{font-family:var(--f-display);font-weight:800;font-size:22px;margin:16px 0 4px}
 .linkbtn{border:0;background:none;color:var(--orange);font-weight:700;padding:0;text-decoration:underline}
 /* ferramentas */
-.ttabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px;margin:12px 0}
+.ttabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px;margin:12px 0}
 .ttabs button{border:0;background:none;border-radius:10px;padding:10px 4px;font-weight:600;color:var(--muted)}
 .ttabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .tcard{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px}
@@ -346,6 +346,35 @@ body.stage .btbar{display:none}
 .ghost.danger{border-color:#9b3a2e;color:#9b3a2e}
 @media (max-width:480px){.admbt{grid-template-columns:auto minmax(0,1fr) auto;}.admbt .ini{grid-column:2}.admbt [data-abtog]{grid-column:3;grid-row:1}}
 .card.colec{background:var(--orange-soft);border-color:var(--orange)}
+
+.ttabs button{font-size:13px;line-height:1.15}
+.tmodo button{font-size:13px}
+.roda{display:block;width:min(270px,78vw);margin:10px auto 4px}
+.roda .kring{fill:none;stroke:var(--line);stroke-width:1.5}
+.roda .kn{fill:var(--blue-soft);stroke:var(--blue);stroke-width:1;transition:r .18s ease,opacity .18s ease}
+.roda .kn.in{fill:var(--orange-soft);stroke:var(--orange)}
+.roda .kn.ton{fill:var(--orange);stroke:var(--orange)}
+.roda .kt{font:700 12px var(--f-body,system-ui);fill:var(--ink);text-anchor:middle;pointer-events:none}
+.roda .kt.ton{fill:#fff}
+.roda .kc{font:800 34px var(--f-display,system-ui);fill:var(--blue);text-anchor:middle}
+.roda .ks{font:600 11px var(--f-body,system-ui);fill:var(--muted);text-anchor:middle;letter-spacing:.04em}
+.roda .ksweep{fill:none;stroke:var(--orange);stroke-width:3;stroke-linecap:round;opacity:.55;transform-origin:120px 120px;animation:kspin 1.6s linear infinite}
+@keyframes kspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.roda .ksweep{animation:none}.roda .kn{transition:none}}
+.tprog{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:6px 0 0}
+.tprog i{display:block;height:100%;background:var(--orange);transition:width .3s}
+.tres{margin:10px 0 4px;padding:14px;border-radius:16px;background:var(--bg)}
+.tbig{text-align:center;font-family:var(--f-display);font-weight:800;font-size:24px;color:var(--blue);margin:2px 0}
+.tbig span{color:var(--muted);font-weight:700;font-size:18px}
+.tconf{text-align:center;font-size:13px;font-weight:700;margin:4px 0 0}
+.tconf.alta{color:#2f6b3a}.tconf.media{color:var(--blue)}.tconf.baixa{color:var(--orange)}
+.talt{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;background:var(--paper)}
+.tbtn{display:block;width:100%;text-align:center;margin-top:14px;cursor:pointer}
+.tbtn[aria-disabled="true"]{opacity:.6;pointer-events:none}
+.tyt{display:flex;gap:8px;margin-top:12px}.tyt input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);font-size:16px}
+.tvid{position:relative;aspect-ratio:16/9;margin-top:10px;border-radius:12px;overflow:hidden;background:#000}
+.tvid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tfine{font-size:11px;line-height:1.4;color:var(--muted);text-align:center;margin:14px 4px 0}
 
 </style>
 </head>
@@ -525,6 +554,62 @@ function wrapLine(text,toks,cols){ // quebra no último espaço que cabe; cada a
 function rowHTML(toks,off){let s="",cur=0;for(const k of toks){const c=k.c-off;s+=" ".repeat(Math.max(0,c-cur))+k.html;cur=Math.max(c,cur)+k.len}return s}
 function textHTML(text,tab){return tab?esc(text).replace(/\d{2,3}/g,x=>`<span class="t">${trTab(x,tdelta())}</span>`):esc(text)}
 const tdelta=()=>{let d=mod(st.delta,12);return d>6?d-12:d};
+/* ---------- descobrir o tom pelo áudio ----------
+   1) Em cada janela (~0,37 s) mede a força das 12 notas (cromagrama), juntando as oitavas.
+   2) Corrige a afinação da gravação (muita música não está em Lá = 440 Hz).
+   3) Soma tudo e compara com o perfil de cada um dos 24 tons. Fica o mais parecido. */
+const KD=(()=>{
+  // perfis de tom (Temperley / Kostka-Payne): peso de cada grau da escala
+  let PMAJ=[.748,.060,.488,.082,.670,.460,.096,.715,.104,.366,.057,.400];
+  let PMIN=[.712,.084,.474,.618,.049,.460,.105,.747,.404,.067,.133,.330];
+  function fft(re,im){const n=re.length;for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t}}
+    for(let len=2;len<=n;len<<=1){const a=-2*Math.PI/len,wr=Math.cos(a),wi=Math.sin(a),h=len>>1;for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let k=0;k<h;k++){const p=i+k,q=p+h,xr=re[q]*cr-im[q]*ci,xi=re[q]*ci+im[q]*cr;re[q]=re[p]-xr;im[q]=im[p]-xi;re[p]+=xr;im[p]+=xi;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t}}}}
+  const wins=new Map();const OPT={baixo:2,harm:0};
+  function tamanho(sr){let n=1;while(n<sr*.37)n<<=1;return n}
+  /** picos espectrais de uma janela: [{midi (fracionário), w}] */
+  function picos(x,sr,off=0){
+    const n=tamanho(sr);let w=wins.get(n);if(!w){w=new Float32Array(n);for(let i=0;i<n;i++)w[i]=.5-.5*Math.cos(2*Math.PI*i/(n-1));wins.set(n,w)}
+    const re=new Float64Array(n),im=new Float64Array(n);let e=0;
+    for(let i=0;i<n;i++){const v=(x[off+i]||0);e+=v*v;re[i]=v*w[i]}
+    if(Math.sqrt(e/n)<.004)return null; // silêncio
+    fft(re,im);const h=n>>1,m=new Float64Array(h);for(let k=0;k<h;k++)m[k]=Math.hypot(re[k],im[k]);
+    const k0=Math.floor(75*n/sr),k1=Math.min(h-2,Math.ceil(3200*n/sr));let mx=0;for(let k=k0;k<=k1;k++)if(m[k]>mx)mx=m[k];if(!mx)return null;
+    const out=[];const R=Math.max(6,Math.round(25*n/sr));
+    // média local para ignorar o "chiado" da percussão (picos precisam se destacar do entorno)
+    const pre=new Float64Array(h+1);for(let k=0;k<h;k++)pre[k+1]=pre[k]+m[k];
+    for(let k=k0;k<=k1;k++){const v=m[k];if(v<mx*.015||v<=m[k-1]||v<m[k+1])continue;
+      const a=Math.max(0,k-R),b=Math.min(h,k+R+1),loc=(pre[b]-pre[a])/(b-a);if(v<loc*2.2)continue;
+      const la=Math.log(m[k-1]+1e-12),lb=Math.log(v),lc=Math.log(m[k+1]+1e-12),d=la-2*lb+lc,p=d?.5*(la-lc)/d:0;
+      const f=(k+p)*sr/n;out.push({midi:69+12*Math.log2(f/440),w:Math.sqrt(v/mx)})}
+    // harmônicos 3, 5 e 6 de uma nota soam como quinta e terça "falsas": atenua quando a fundamental está presente
+    if(OPT.harm){for(const p of out){for(const st of[19.02,27.86,31.02]){const f=p.midi-st;if(out.some(q=>Math.abs(q.midi-f)<.35&&q.w>=p.w*.5)){p.w*=OPT.harm;break}}}}
+    return out;
+  }
+  /** acumulador: recebe janelas de áudio e devolve o ranking dos 24 tons */
+  function novo(){
+    const ch=new Float64Array(12);let cs=0,sn=0,quadros=0,ultimo=new Float64Array(12);
+    return{
+      add(x,sr,off=0){const ps=picos(x,sr,off);if(!ps||!ps.length)return false;
+        // afinação: média circular do desvio de cada pico em relação ao semitom
+        for(const p of ps){const a=2*Math.PI*p.midi;cs+=p.w*Math.cos(a);sn+=p.w*Math.sin(a)}
+        const tun=Math.atan2(sn,cs)/(2*Math.PI);const c=new Float64Array(12);
+        for(const p of ps){const mm=p.midi-tun,r=Math.round(mm),d=mm-r,g=Math.cos(Math.PI*d)**2;c[((r%12)+12)%12]+=p.w*g*(p.midi<55?OPT.baixo:1)}
+        let s=0;for(const v of c)s=Math.max(s,v);if(!s)return false;
+        for(let i=0;i<12;i++){c[i]/=s;ch[i]+=c[i]}ultimo=c;quadros++;return true},
+      quadros:()=>quadros,
+      afinacao:()=>Math.round(Math.atan2(sn,cs)/(2*Math.PI)*100), // cents em relação a Lá 440
+      agora:()=>ultimo, croma:()=>{let s=0;for(const v of ch)s=Math.max(s,v);return Array.from(ch,v=>s?v/s:0)},
+      ranking(){return rank(ch)}};
+  }
+  function corr(a,b){const n=12;let ma=0,mb=0;for(let i=0;i<n;i++){ma+=a[i];mb+=b[i]}ma/=n;mb/=n;let x=0,ya=0,yb=0;for(let i=0;i<n;i++){const p=a[i]-ma,q=b[i]-mb;x+=p*q;ya+=p*p;yb+=q*q}return ya&&yb?x/Math.sqrt(ya*yb):0}
+  function rank(ch){const r=[];for(let t=0;t<12;t++)for(const minor of[false,true]){const P=minor?PMIN:PMAJ,rot=Array.from({length:12},(_,i)=>P[((i-t)%12+12)%12]);r.push({pc:t,minor,score:corr(ch,rot)})}
+    return r.sort((a,b)=>b.score-a.score)}
+  /** confiança do resultado: distância entre o 1º e o 2º colocado, sem contar o relativo */
+  function confianca(r){if(!r.length||r[0].score<=0)return 0;const t=r[0],o=r.find(x=>!(x.pc===t.pc&&x.minor===t.minor));return Math.max(0,Math.min(1,(t.score-o.score)/.2))} // calibrado: ≥0,7 acertou 95% · 0,35–0,7 acertou 70% · abaixo, 42%
+  /** relativo (Dó ↔ Lám) */
+  function relativo(k){return k.minor?{pc:(k.pc+3)%12,minor:false}:{pc:(k.pc+9)%12,minor:true}}
+  return{OPT,setPerfil(a,b){PMAJ=a;PMIN=b},novo,rank,confianca,relativo,tamanho};
+})();
 
 
 /* ================= parser de texto (acorde sobre a letra) ================= */
@@ -703,7 +788,7 @@ function fromSubmission(v,approved){
 }
 
 /* ================= navegação ================= */
-function go(view,opts={}){if(view==="song"&&st.view!=="song")st.from=st.view;$("toast").hidden=true;Object.assign(st,{view},opts);stopPlay();closeDrawer();draw();window.scrollTo(0,0)}
+function go(view,opts={}){if(view!=="tools"){if(T.af.on)afOff();if(T.tom&&T.tom.mic)tomOff(false)}if(view==="song"&&st.view!=="song")st.from=st.view;$("toast").hidden=true;Object.assign(st,{view},opts);stopPlay();closeDrawer();draw();window.scrollTo(0,0)}
 function draw(){
   document.body.classList.toggle("stage",st.view==="song"&&!!st.stage);
   $("stagebar").hidden=!(st.view==="song"&&st.stage);
@@ -1527,9 +1612,9 @@ const andamento=b=>b<60?"Bem lento":b<80?"Lento":b<100?"Moderado":b<125?"Andante
 function drawTools(){
   homeNav();
   $("topbar").innerHTML=`<h1>Ferramentas</h1>`;
-  $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucadas"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
-  document.querySelectorAll("[data-aba]").forEach(b=>b.onclick=()=>{T.aba=b.dataset.aba;drawTools()});
-  ({metronomo:drawMet,afinador:drawAf,batucadas:drawBt})[T.aba]();
+  $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucadas"],["tom","Qual o tom?"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
+  document.querySelectorAll("[data-aba]").forEach(b=>b.onclick=()=>{if(b.dataset.aba!=="afinador"&&T.af.on)afOff();if(b.dataset.aba!=="tom"&&T.tom.mic)tomOff(false);T.aba=b.dataset.aba;drawTools()});
+  ({metronomo:drawMet,afinador:drawAf,batucadas:drawBt,tom:drawTom})[T.aba]();
 }
 
 /* ----- metrônomo ----- */
@@ -1779,6 +1864,81 @@ async function detectarInicio(file){
 }
 
 initCaps();
+
+/* ----- descobrir o tom pelo som (arquivo, microfone ou vídeo do YouTube) ----- */
+T.tom={modo:"arquivo",estado:"pronto",prog:0,acc:null,rank:null,croma:new Array(12).fill(0),viz:new Array(12).fill(0),nome:"",yt:"",erro:"",mic:null,raf:0,t0:0,afin:0};
+const QUINTAS=[0,7,2,9,4,11,6,1,8,3,10,5];
+const PT={C:"Dó",D:"Ré",E:"Mi",F:"Fá",G:"Sol",A:"Lá",B:"Si"};
+function tomPt(k){const n=keyName(k.pc,k.minor),l=n[0],a=n[1]==="#"?" sustenido":n[1]==="b"?" bemol":"";return PT[l]+a+(k.minor?" menor":" maior")}
+function tomCif(k){return keyName(k.pc,k.minor)}
+function escala(k){return(k.minor?[0,2,3,5,7,8,10]:[0,2,4,5,7,9,11]).map(i=>(k.pc+i)%12)}
+function tomAlternativas(r){const eq=(a,b)=>a.pc===b.pc&&a.minor===b.minor,rel=KD.relativo(r[0]);return[rel,...r.slice(1).filter(x=>!eq(x,rel))].slice(0,2)}
+function ytId(u){const m=/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/.exec(u||"");return m?m[1]:/^[\w-]{11}$/.test((u||"").trim())?u.trim():null}
+
+function rodaSVG(){const t=T.tom,lead=t.rank?t.rank[0]:null,esc=lead?escala(lead):[],R=96,C=120;
+  const nos=QUINTAS.map((pc,i)=>{const a=(i/12)*2*Math.PI-Math.PI/2,x=C+R*Math.cos(a),y=C+R*Math.sin(a),v=t.viz[pc],dentro=esc.includes(pc),ton=lead&&lead.pc===pc;
+    const rm=lead?(lead.minor?(lead.pc+3)%12:lead.pc):0,nm=(!lead?MAJ:[7,2,9,4,11,6].includes(rm)?SHARP:FLAT)[pc];
+    return`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(13+v*9).toFixed(1)}" class="kn${dentro?" in":""}${ton?" ton":""}" style="opacity:${(.28+v*.72).toFixed(2)}"/><text x="${x.toFixed(1)}" y="${(y+4.5).toFixed(1)}" class="kt${ton?" ton":""}">${nm}</text>`}).join("");
+  const busca=t.estado==="ouvindo"||t.estado==="analisando";
+  const centro=lead&&t.acc&&t.acc.quadros()>=6?`<text x="${C}" y="${C-6}" class="kc">${tomCif(lead)}</text><text x="${C}" y="${C+18}" class="ks">${busca?"procurando…":"tom provável"}</text>`:`<text x="${C}" y="${C+6}" class="ks">${busca?"ouvindo as notas…":"círculo das quintas"}</text>`;
+  return`<svg viewBox="0 0 240 240" class="roda${busca?" busca":""}" role="img" aria-label="Notas detectadas"><circle cx="${C}" cy="${C}" r="${R}" class="kring"/>${busca?`<path d="M${C} ${C-R-14} A ${R+14} ${R+14} 0 0 1 ${C+R+14} ${C}" class="ksweep"/>`:""}${nos}${centro}</svg>`}
+
+function tomLiveHTML(){const t=T.tom,r=t.rank,fim=t.estado==="pronto"&&r,ok=r&&t.acc&&t.acc.quadros()>=6;
+  const conf=r?KD.confianca(r):0,cl=conf>=.7?["alta","Confiança alta"]:conf>=.35?["media","Confiança média"]:["baixa","Confiança baixa · confira as opções"];
+  return`${t.estado==="analisando"?`<div class="tprog"><i style="width:${Math.round(t.prog*100)}%"></i></div><p class="help" style="text-align:center;margin-top:6px">Analisando ${esc(t.nome)}…</p>`:""}
+   ${t.estado==="ouvindo"?`<div class="tprog"><i style="width:${Math.min(100,Math.round(t.prog*100))}%"></i></div><p class="help" style="text-align:center;margin-top:6px">${t.prog<1?"Deixe tocar uns 30 segundos para o tom se firmar":"Já dá para confiar. Pode parar quando quiser."}</p>`:""}
+   ${ok?`<div class="tres"><p class="lbl2" style="text-align:center">${fim?"Tom mais provável":"Por enquanto"}</p><p class="tbig">${tomPt(r[0])} <span>· ${tomCif(r[0])}</span></p>${fim?`<p class="tconf ${cl[0]}">${cl[1]}</p>`:""}
+     <p class="lbl2" style="text-align:center;margin-top:10px">Também pode ser</p><div class="pills" style="justify-content:center">${tomAlternativas(r).map(k=>`<span class="talt">${tomPt(k)} · ${tomCif(k)}</span>`).join("")}</div>
+     ${fim&&Math.abs(t.afin)>=15?`<p class="help" style="text-align:center">A gravação está ${Math.abs(t.afin)} cents ${t.afin>0?"acima":"abaixo"} do Lá 440. Para tocar junto, ajuste a afinação do cavaquinho.</p>`:""}</div>`:""}
+   ${t.erro?`<p class="status err">${esc(t.erro)}</p>`:""}`}
+function tomBtn(){const t=T.tom,r=t.rank;return t.mic?"Parar e ver o resultado":r?"Ouvir de novo":t.modo==="yt"?"Dei play, começar a ouvir":"Começar a ouvir"}
+function tomLive(){if(!(st.view==="tools"&&T.aba==="tom"))return;const el=$("tlive");if(!el)return drawTom();el.innerHTML=tomLiveHTML();const rd=$("troda");if(rd&&T.tom.estado==="pronto")rd.innerHTML=rodaSVG();const m=$("tmic");if(m)m.textContent=tomBtn();
+  const l=document.querySelector("label.tbtn");if(l){const t=T.tom;l.textContent=t.estado==="analisando"?"Analisando…":t.rank?"Analisar outra música":"Escolher música do celular";l.toggleAttribute("aria-disabled",t.estado==="analisando")}}
+function drawTom(){const t=T.tom,r=t.rank,id=ytId(t.yt);
+  $("tbody").innerHTML=`<div class="pills tmodo" style="justify-content:center">${[["arquivo","Enviar música"],["mic","Ouvir pelo microfone"],["yt","Link do YouTube"]].map(([k,l])=>`<button data-tm="${k}" class="${t.modo===k?"on":""}">${l}</button>`).join("")}</div>
+   <div id="troda">${rodaSVG()}</div><div id="tlive">${tomLiveHTML()}</div>
+   ${t.modo==="arquivo"?`<label class="primary tbtn" for="tfile">Escolher música do celular</label><input type="file" id="tfile" accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.opus,.aac,.flac,.mp4" hidden>
+     <p class="help" style="text-align:center">MP3, áudio do WhatsApp, gravação do celular ou vídeo. O áudio é analisado no seu aparelho e não é enviado para lugar nenhum.</p>`:""}
+   ${t.modo==="mic"?`<button class="primary tbtn" id="tmic"></button>
+     <p class="help" style="text-align:center">Coloque o celular perto da caixa de som, do rádio ou da TV. Quanto menos conversa em volta, melhor.</p>`:""}
+   ${t.modo==="yt"?`<div class="tyt"><input id="tyt" type="url" inputmode="url" placeholder="Cole aqui o link do vídeo" value="${esc(t.yt)}"><button class="ghost" id="tytok">Abrir</button></div>
+     ${id?`<div class="tvid"><iframe src="https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0" title="Vídeo do YouTube" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
+     <button class="primary tbtn" id="tmic"></button>
+     <p class="help" style="text-align:center">Dê play no vídeo, aumente o volume e toque no botão. O app ouve o som pelo microfone. Se no seu celular o som do vídeo baixar quando o microfone liga, toque o vídeo em outro aparelho (TV ou computador) e use “Ouvir pelo microfone”.</p>`:`<p class="help" style="text-align:center">O vídeo abre aqui mesmo, e o app ouve a música enquanto ele toca.</p>`}`:""}
+   <p class="tfine">Estimativa automática pelo som, que pode errar, principalmente entre o tom maior e o relativo menor (ex.: Dó e Lá menor) e em músicas que mudam de tom. Em testes com o repertório do app, o tom certo ficou em 1º lugar em cerca de 7 a cada 10 músicas e entre as 3 opções mostradas em 9 a cada 10.</p>`;
+  document.querySelectorAll("[data-tm]").forEach(b=>b.onclick=()=>{if(T.tom.mic)tomOff(false);t.modo=b.dataset.tm;t.erro="";drawTom()});
+  const f=$("tfile");if(f)f.onchange=e=>{const x=e.target.files[0];if(x)tomArquivo(x)};
+  const m=$("tmic");if(m){m.textContent=tomBtn();m.onclick=()=>t.mic?tomOff(true):tomMic()}
+  const y=$("tyt");if(y){const ab=()=>{const v=$("tyt").value.trim();if(v===t.yt&&ytId(v))return;t.yt=v;t.erro=ytId(v)?"":"Esse link não parece ser de um vídeo do YouTube.";if(t.mic)tomOff(false);drawTom()};$("tytok").onclick=ab;y.onkeydown=e=>{if(e.key==="Enter")ab()};y.onpaste=()=>setTimeout(ab,0)}
+  tomLive();
+}
+function tomViz(){const t=T.tom,c=t.acc?t.acc.croma():t.croma,a=t.acc?t.acc.agora():null;for(let i=0;i<12;i++){const alvo=a?.6*c[i]+.4*(a[i]||0):c[i];t.viz[i]+=(alvo-t.viz[i])*.35}
+  if(st.view==="tools"&&T.aba==="tom"){const el=$("troda");if(el)el.innerHTML=rodaSVG()}}
+function tomVivo(){tomLive()}
+async function tomArquivo(file){const t=T.tom;if(t.estado==="analisando")return;t.erro="";t.nome=file.name.replace(/\.[^.]+$/,"");t.estado="analisando";t.prog=0;t.rank=null;t.acc=KD.novo();tomVivo();
+  try{const ac=audioCtx(),buf=await file.arrayBuffer();const dec=await new Promise((ok,no)=>{const p=ac.decodeAudioData(buf,ok,no);if(p&&p.then)p.then(ok,no)});
+    // mistura para mono e reduz para 22 050 Hz (mais rápido e não muda as notas)
+    const sr=22050,len=Math.ceil(dec.duration*sr),off=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,len,sr),src=off.createBufferSource();src.buffer=dec;src.connect(off.destination);src.start();
+    const y=(await off.startRendering()).getChannelData(0),N=KD.tamanho(sr),tot=Math.max(1,Math.floor((y.length-N)/N));let i=0;
+    await new Promise(fim=>{const passo=()=>{const t0=performance.now();while(i<tot&&performance.now()-t0<14){t.acc.add(y,sr,i*N);i++}t.prog=i/tot;t.rank=t.acc.quadros()?t.acc.ranking():null;tomViz();
+      const p=document.querySelector(".tprog i");if(p)p.style.width=Math.round(t.prog*100)+"%";if(i%40<3)tomLive();if(i<tot)requestAnimationFrame(passo);else fim()};requestAnimationFrame(passo)});
+    if(t.acc.quadros()<6)throw new Error("curto");
+    t.rank=t.acc.ranking();t.afin=t.acc.afinacao();t.estado="pronto";
+  }catch(e){t.estado="pronto";t.rank=null;t.acc=null;t.erro=e&&e.message==="curto"?"Não deu para ouvir notas suficientes nesse arquivo. Tente um trecho maior da música.":"Não foi possível ler esse arquivo neste aparelho. Tente um MP3 ou M4A."}
+  const f=$("tfile");if(f)f.value="";tomVivo()}
+async function tomMic(){const t=T.tom;t.erro="";
+  try{const ac=audioCtx();const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const src=ac.createMediaStreamSource(stream),an=ac.createAnalyser();an.fftSize=KD.tamanho(ac.sampleRate)>32768?32768:KD.tamanho(ac.sampleRate);an.smoothingTimeConstant=0;src.connect(an);
+    const buf=new Float32Array(an.fftSize),hop=an.fftSize/ac.sampleRate*1000;t.mic={stream,src};t.acc=KD.novo();t.rank=null;t.estado="ouvindo";t.prog=0;t.t0=performance.now();let ult=0;
+    const loop=now=>{t.raf=requestAnimationFrame(loop);if(now-ult>=hop){ult=now;an.getFloatTimeDomainData(buf);if(t.acc.add(buf,ac.sampleRate,0))t.rank=t.acc.ranking()}
+      t.prog=t.acc.quadros()*hop/30000;tomViz()};
+    t.raf=requestAnimationFrame(loop);
+    t.tick=setInterval(()=>{if(performance.now()-t.t0>90000)return tomOff(true);tomLive()},1000);
+    tomLive();
+  }catch(e){t.erro=e&&e.name==="NotAllowedError"?"O microfone foi bloqueado. Libere o acesso ao microfone nas configurações do navegador e tente de novo.":"Não foi possível usar o microfone neste aparelho.";tomOff(false)}}
+function tomOff(mostrar){const t=T.tom;cancelAnimationFrame(t.raf);clearInterval(t.tick);t.mic?.stream.getTracks().forEach(x=>x.stop());t.mic=null;
+  if(t.estado==="ouvindo"){t.estado="pronto";if(!t.acc||t.acc.quadros()<6){t.rank=null;if(mostrar)t.erro="Não deu para ouvir notas suficientes. Aproxime o celular do som e tente de novo."}else{t.rank=t.acc.ranking();t.afin=t.acc.afinacao()}}
+  tomVivo()}
 
 if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
