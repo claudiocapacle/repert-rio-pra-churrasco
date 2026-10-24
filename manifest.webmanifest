@@ -1,0 +1,15 @@
+{
+  "name": "Repertório pra Churrasco",
+  "short_name": "Repertório",
+  "description": "Cifras corrigidas para cavaquinho, com tempo certinho, troca de tom e roda ao vivo.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5efe3",
+  "theme_color": "#f5efe3",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
