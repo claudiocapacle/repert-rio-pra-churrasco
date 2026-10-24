@@ -883,7 +883,7 @@ function drawSongHead(){
     <div class="chips"><button class="chip key" data-tool="tom">Tom <span class="v">${esc(cur)}</span>${IC.caret}</button>
     ${s.simplificada?`<button class="chip" data-tool="versao">${st.ver==="completa"?"Completa":"Simplificada"}${IC.caret}</button>`:""}
     <button class="chip ${T.met.on?"live":""}" data-tool="metronomo">${ICM.met}Metrônomo${T.met.on?` <span class="v">${T.met.bpm}</span>`:""}</button>
-    <button class="chip ${T.bt.on?"live":""}" data-tool="batucada">${ICM.drum}Batucada${T.bt.sel?` <span class="v">${T.bt.sel.bpm}</span>`:""}</button>
+    <button class="chip ${T.bt.on?"live":""}" data-tool="batucada">${ICM.drum}Batucada${T.bt.on||T.bt.loading?` <span class="v">${T.bt.bpm}</span>`:""}</button>
     </div><div class="chips" style="margin-top:8px"><a class="learn" href="${esc(aulaUrl(s))}" target="_blank" rel="noopener">${IC.yt.replace('<svg','<svg style="fill:currentColor"')}Aprender essa música</a></div>`;
   $("tbKey").textContent=cur;
 }
@@ -1205,16 +1205,11 @@ function drawDrawer(){
     B.querySelectorAll("[data-dms]").forEach(b=>b.onclick=()=>{m.sub=+b.dataset.dms;m.passo=0;drawDrawer()});
     $("dmgo").onclick=()=>{m.on?metStop():metStart();refreshLive()};
   } else if(dr.kind==="batucada"){
-    const b=T.bt,sug=(meta[s.id]||{}).bpm;
+    const b=T.bt;
     if(b.lista===null){B.innerHTML=`<h3>Batucada</h3><p class="sub">Carregando batucadas…</p>`;btLoad().then(()=>{if(dr&&dr.kind==="batucada")drawDrawer()});return}
-    const gs=btGroups();
-    const near=sug&&b.lista.length?b.lista.reduce((a,x)=>Math.abs(x.bpm-sug)<Math.abs(a.bpm-sug)?x:a):null;
-    B.innerHTML=`<h3>Batucada</h3><p class="sub">Escolha o andamento e toque junto. A batucada segue tocando enquanto você rola a cifra ou troca de música.${near?` Sugerida para esta música: <b>${near.bpm} BPM</b> ★`:""}</p>
-     ${gs.length?gs.map(g=>`<div class="bgroup"><b>${esc(g.nome)}</b><div class="pills">${g.it.map(x=>{const at=b.sel&&b.sel.id===x.id;return`<button data-dbt="${x.id}" class="bpm ${at&&b.on?"play":at?"on":""}">${at&&b.loading?"…":at&&b.on?"❚❚":"▶"} ${x.bpm}${near&&near.id===x.id?" ★":""}</button>`}).join("")}</div></div>`).join(""):`<div class="empty">${b.erro?"Não foi possível carregar. Verifique a internet.":"As batucadas chegam em breve."}</div>`}
-     ${b.sel?`<div class="row2" style="margin-top:12px"><label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)">Volume<input type="range" id="dbv" min="0" max="1" step="0.01" value="${b.vol}" style="flex:1"></label><button class="ghost" id="dbstop">Parar batucada</button></div>`:""}`;
-    B.querySelectorAll("[data-dbt]").forEach(el=>el.onclick=()=>{const x=b.lista.find(y=>y.id===el.dataset.dbt);if(b.sel&&b.sel.id===x.id&&b.on)btPause();else btPlay(x)});
-    if($("dbv")) $("dbv").oninput=e=>{b.vol=+e.target.value;if(b.audio)b.audio.volume=b.vol};
-    if($("dbstop")) $("dbstop").onclick=()=>{btStop();drawDrawer()};
+    b.sug=(meta[s.id]||{}).bpm||null;
+    B.innerHTML=`<h3>Batucada</h3><p class="sub">Escolha o andamento, de 1 em 1 BPM, e toque junto. Ela fica em loop enquanto você rola a cifra ou troca de música.${b.sug?` ★ = andamento sugerido para esta música.`:""}</p>`+btPanel("d");
+    btWire(B,"d",drawDrawer);
   } else if(dr.kind==="professor"){
     B.innerHTML=`<h3>Área do professor</h3><p class="sub">${isAdmin?"Você já está como professor neste aparelho.":"Digite a chave de professor para revisar cifras e definir BPM e aulas."}</p>
      ${isAdmin?`<button class="ghost" id="sairP" style="width:100%">Sair do modo professor</button>`:`<form class="newrep" id="pf"><input id="pk2" type="password" placeholder="Chave" autocomplete="off"><button class="primary">Entrar</button></form>`}`;
@@ -1485,7 +1480,7 @@ function clique(ac,q,tipo){const o=ac.createOscillator(),g=ac.createGain();const
 const T={aba:"metronomo",
   met:{bpm:80,comp:2,sub:1,on:false,beat:-1,prox:0,passo:0,timer:null,fila:[],raf:0,taps:[]},
   af:{on:false,la:440,leit:null,ativo:false,stream:null,raf:0,hist:[],ultimo:0,voz:0,erro:""},
-  bt:{lista:null,erro:false,sel:null,on:false,loading:false,audio:null,vol:.9,rep:true,raf:0}};
+  bt:{lista:null,erro:false,sel:null,on:false,loading:false,audio:null,vol:.9,bpm:90,style:null,sug:null,shown:false}};
 const andamento=b=>b<60?"Bem lento":b<80?"Lento":b<100?"Moderado":b<125?"Andante":b<160?"Rápido":"Muito rápido";
 
 function drawTools(){
@@ -1575,45 +1570,78 @@ async function btLoad(){const b=T.bt;try{const r=await fetch(BAT_URL);const d=aw
 const mmss=s=>{s=Math.max(0,Math.floor(s||0));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
 function btGroups(){const m=new Map();for(const x of T.bt.lista||[]){const nome=(x.nome.replace(/^\s*\d+\s*bpm\s*[-–]\s*/i,"").trim())||x.nome;if(!m.has(nome))m.set(nome,[]);m.get(nome).push(x)}
   return[...m.entries()].map(([nome,it])=>({nome,it:it.sort((a,b)=>a.bpm-b.bpm)}))}
+/* batucada em loop com BPM livre: escolhe a gravação de andamento mais próximo e ajusta a velocidade
+   na proporção exata (alvo ÷ gravação), mantendo a afinação (preservesPitch do navegador). */
+function btStyles(){return btGroups().map(g=>{const lo=g.it[0].bpm,hi=g.it[g.it.length-1].bpm;return{nome:g.nome,it:g.it,min:Math.max(40,Math.round(lo*.8)),max:Math.round(hi*1.15)}})}
+function btStyle(){const ss=btStyles();return ss.find(x=>x.nome===T.bt.style)||ss[0]}
+function btPick(sty,bpm){return sty.it.reduce((a,x)=>Math.abs(Math.log(bpm/x.bpm))<Math.abs(Math.log(bpm/a.bpm))?x:a)}
+function btPanel(prefix){ // controles (aba Ferramentas e gaveta da música)
+  const b=T.bt,ss=btStyles(),sty=btStyle();
+  if(!ss.length) return `<div class="empty">${b.erro?"Não foi possível carregar as batucadas. Verifique a internet.":"As batucadas chegam em breve."}</div>`;
+  if(!b.style) b.style=sty.nome;
+  b.bpm=Math.min(sty.max,Math.max(sty.min,b.bpm));
+  return `${ss.length>1?`<div class="pills" style="justify-content:center;margin-bottom:6px">${ss.map(x=>`<button data-${prefix}sty="${esc(x.nome)}" class="${x.nome===sty.nome?"on":""}">${esc(x.nome)}</button>`).join("")}</div>`:""}
+   <div class="big"><button class="round" data-${prefix}d="-1" aria-label="Diminuir 1 BPM">−</button><div style="text-align:center"><span class="num" id="${prefix}bpm">${b.bpm}</span><div class="sub" style="margin:0">BPM · ${andamento(b.bpm)}</div></div><button class="round" data-${prefix}d="1" aria-label="Aumentar 1 BPM">+</button></div>
+   <input type="range" id="${prefix}range" min="${sty.min}" max="${sty.max}" step="1" value="${b.bpm}" aria-label="Andamento da batucada em BPM">
+   <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>${sty.min}</span><span>${sty.max}</span></div>
+   <div class="pills" style="justify-content:center;margin:10px 0 14px">${[-5,...(b.sug?[b.sug]:[]),5].map(v=>`<button data-${prefix}d="${v===b.sug?"=":""}${v}">${v===b.sug?v+" ★":(v>0?"+":"")+v}</button>`).join("")}</div>
+   <button class="primary" data-${prefix}go style="width:100%">${b.loading?"Carregando…":b.on?"Parar batucada":"Tocar batucada"}</button>
+   <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin-top:12px">Volume<input type="range" data-${prefix}vol min="0" max="1" step="0.01" value="${b.vol}" style="flex:1"></label>`;
+}
+function btWire(root,prefix,redraw){
+  const b=T.bt;
+  root.querySelectorAll(`[data-${prefix}sty]`).forEach(el=>el.onclick=()=>{b.style=el.getAttribute(`data-${prefix}sty`);const st2=btStyle();b.bpm=Math.min(st2.max,Math.max(st2.min,b.bpm));btApply();redraw()});
+  root.querySelectorAll(`[data-${prefix}d]`).forEach(el=>el.onclick=()=>{const v=el.getAttribute(`data-${prefix}d`);btSetBpm(v[0]==="="?+v.slice(1):b.bpm+ +v);redraw()});
+  const r=root.querySelector(`#${prefix}range`);if(r){r.oninput=e=>{btSetBpm(+e.target.value);const n=root.querySelector(`#${prefix}bpm`);if(n)n.textContent=b.bpm};r.onchange=()=>redraw()}
+  const g=root.querySelector(`[data-${prefix}go]`);if(g)g.onclick=()=>{b.on?btPause():btPlay();};
+  const vv=root.querySelector(`[data-${prefix}vol]`);if(vv)vv.oninput=e=>{b.vol=+e.target.value;if(b.audio)b.audio.volume=b.vol};
+}
+function btSetBpm(v){const b=T.bt,sty=btStyle();if(!sty)return;b.bpm=Math.min(sty.max,Math.max(sty.min,Math.round(v)));btApply();btUiLite()}
+function btEnsureAudio(){const b=T.bt;if(b.audio)return b.audio;const a=new Audio();a.preload="auto";a.loop=true;a.setAttribute("playsinline","");
+  a.preservesPitch=true;a.mozPreservesPitch=true;a.webkitPreservesPitch=true;
+  a.addEventListener("playing",()=>{b.loading=false;b.on=true;btUi()});a.addEventListener("pause",()=>{b.on=false;btUi()});
+  a.addEventListener("waiting",()=>{b.loading=true;btUi()});
+  a.addEventListener("error",()=>{if(!a.getAttribute("src"))return;b.loading=false;b.on=false;toast("Não foi possível tocar a batucada. Verifique a internet.");btUi()});
+  b.audio=a;return a}
+function btApply(){ // escolhe a gravação e a velocidade exata para o BPM pedido
+  const b=T.bt,sty=btStyle();if(!sty||!b.audio)return;
+  const src=btPick(sty,b.bpm);
+  if(!b.sel||b.sel.id!==src.id){const wasOn=b.on,frac=b.audio.duration?b.audio.currentTime/b.audio.duration:0;b.sel=src;b.audio.src=src.url;
+    b.audio.addEventListener("loadedmetadata",()=>{try{b.audio.currentTime=frac*b.audio.duration}catch(e){}},{once:true});if(wasOn){b.loading=true;b.audio.play().catch(()=>{})}}
+  b.audio.playbackRate=b.bpm/src.bpm;b.audio.preservesPitch=true;
+}
+async function btPlay(){
+  const b=T.bt;if(b.lista===null)await btLoad();
+  if(b.at&&Date.now()-b.at>100*60*1000){await btLoad();b.sel=null}
+  if(!btStyle())return;
+  unlockIOS();btEnsureAudio();b.audio.loop=true;b.audio.volume=b.vol;btApply();b.loading=true;btUi();
+  try{await b.audio.play();b.audio.playbackRate=b.bpm/b.sel.bpm}catch(e){b.loading=false;btUi()}
+}
+function btPause(){T.bt.audio&&T.bt.audio.pause()}
+function btStop(){const b=T.bt;if(b.audio){b.audio.pause();b.audio.removeAttribute("src");b.audio.load()}b.sel=null;b.on=false;b.shown=false;btUi()}
 async function drawBt(){
   const b=T.bt;
   if(b.lista===null){$("tbody").innerHTML=`<p class="help" style="text-align:center">Carregando batucadas…</p>`;await btLoad();if(st.view==="tools"&&T.aba==="batucadas")drawBt();return}
-  const gs=btGroups();
-  if(!gs.length){$("tbody").innerHTML=`<div class="empty">${b.erro?"Não foi possível carregar as batucadas. Verifique a internet.":"As batucadas chegam em breve."}</div>`;return}
-  $("tbody").innerHTML=`<p class="help" style="text-align:center;margin-top:0">Escolha o ritmo e o andamento (BPM). Comece devagar e vá subindo. A batucada continua tocando enquanto você abre uma cifra.</p>
-   ${gs.map(g=>`<div class="bgroup"><b>${esc(g.nome)}</b><div class="pills">${g.it.map(x=>{const at=b.sel&&b.sel.id===x.id;return`<button data-bt="${x.id}" class="bpm ${at&&b.on?"play":at?"on":""}">${at&&b.loading?"…":at&&b.on?"❚❚":"▶"} ${x.bpm} <small>BPM</small></button>`}).join("")}</div></div>`).join("")}`;
-  document.querySelectorAll("[data-bt]").forEach(el=>el.onclick=()=>{const x=(b.lista||[]).find(y=>y.id===el.dataset.bt);if(b.sel&&b.sel.id===x.id&&b.on)btPause();else btPlay(x)});
+  b.sug=null;
+  $("tbody").innerHTML=`<p class="help" style="text-align:center;margin-top:0">Escolha qualquer andamento, de 1 em 1 BPM. A batucada toca em loop e continua enquanto você abre uma cifra.</p>`+btPanel("t");
+  btWire($("tbody"),"t",drawBt);
 }
-async function btPlay(x){
-  const b=T.bt;
-  if(b.at&&Date.now()-b.at>100*60*1000){await btLoad();x=(b.lista||[]).find(y=>y.id===x.id)||x} // links valem 2 h
-  if(!b.audio){b.audio=new Audio();b.audio.preload="auto";b.audio.setAttribute("playsinline","");
-    b.audio.addEventListener("playing",()=>{b.loading=false;b.on=true;btUi()});b.audio.addEventListener("pause",()=>{b.on=false;btUi()});
-    b.audio.addEventListener("waiting",()=>{b.loading=true;btUi()});b.audio.addEventListener("ended",()=>{b.on=false;btUi()});
-    b.audio.addEventListener("error",()=>{b.loading=false;b.on=false;toast("Não foi possível tocar esta batucada. Verifique a internet.");btUi()})}
-  unlockIOS();
-  if(!b.sel||b.sel.id!==x.id){b.sel=x;b.audio.src=x.url}
-  b.audio.loop=b.rep;b.audio.volume=b.vol;b.loading=true;btUi();
-  try{await b.audio.play()}catch(e){b.loading=false;btUi()}
-}
-function btPause(){T.bt.audio&&T.bt.audio.pause()}
-function btStop(){const b=T.bt;if(b.audio){b.audio.pause();b.audio.removeAttribute("src");b.audio.load()}b.sel=null;b.on=false;btUi()}
+function btUiLite(){const b=T.bt;const n=$("btname");if(n)n.textContent=`${b.style||"Batucada"} · ${b.bpm} BPM`;["tbpm","dbpm"].forEach(id=>{if($(id))$(id).textContent=b.bpm});if(st.view==="song")drawSongHead()}
 function btUi(){
   if(st.view==="tools"&&T.aba==="batucadas")drawBt();
   refreshLive();
   const b=T.bt,bar=$("btbar");
-  if(!b.sel){bar.hidden=true;cancelAnimationFrame(b.raf);document.body.classList.remove("hasbt");return}
+  if(b.on||b.loading)b.shown=true;
+  if(!b.sel||!b.shown){bar.hidden=true;document.body.classList.remove("hasbt");return}
   bar.hidden=false;document.body.classList.add("hasbt");
   bar.innerHTML=`<div class="wrap"><button class="btp" id="btpp" aria-label="${b.on?"Pausar":"Tocar"} batucada">${b.loading?"…":b.on?"❚❚":"▶"}</button>
-   <div class="bti"><b>${esc(btGroups().find(g=>g.it.some(i=>i.id===b.sel.id))?.nome||"Batucada")} · ${b.sel.bpm} BPM</b><span class="btprog"><i id="btfill"></i></span><small id="bttime">${mmss(b.audio?.currentTime)} / ${mmss(b.sel.duracao||b.audio?.duration)}</small></div>
-   <button class="btx" id="btrep" title="Repetir" aria-pressed="${b.rep}">${b.rep?"↻":"→"}</button><input type="range" id="btvol" min="0" max="1" step="0.01" value="${b.vol}" aria-label="Volume da batucada"><button class="btx" id="btclose" aria-label="Fechar batucada">✕</button></div>`;
-  $("btpp").onclick=()=>b.on?btPause():btPlay(b.sel);
-  $("btrep").onclick=()=>{b.rep=!b.rep;if(b.audio)b.audio.loop=b.rep;btUi()};
+   <div class="bti"><b id="btname">${esc(b.style||"Batucada")} · ${b.bpm} BPM</b><small>em loop</small></div>
+   <button class="btx" id="btm" aria-label="Diminuir 1 BPM">−</button><button class="btx" id="btpl" aria-label="Aumentar 1 BPM">+</button>
+   <input type="range" id="btvol" min="0" max="1" step="0.01" value="${b.vol}" aria-label="Volume da batucada"><button class="btx" id="btclose" aria-label="Fechar batucada">✕</button></div>`;
+  $("btpp").onclick=()=>b.on?btPause():btPlay();
+  $("btm").onclick=()=>btSetBpm(b.bpm-1);$("btpl").onclick=()=>btSetBpm(b.bpm+1);
   $("btvol").oninput=e=>{b.vol=+e.target.value;if(b.audio)b.audio.volume=b.vol};
   $("btclose").onclick=btStop;
-  cancelAnimationFrame(b.raf);
-  const tick=()=>{const a=b.audio;if(a&&$("btfill")){const d=b.sel.duracao||a.duration||1;$("btfill").style.width=Math.min(100,a.currentTime/d*100)+"%";$("bttime").textContent=mmss(a.currentTime)+" / "+mmss(d)}b.raf=requestAnimationFrame(tick)};
-  b.raf=requestAnimationFrame(tick);
 }
 
 initCaps();
