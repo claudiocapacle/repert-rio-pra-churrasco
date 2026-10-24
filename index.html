@@ -337,6 +337,14 @@ body.stage .btbar{display:none}
 .chip svg{width:15px;height:15px}
 .chip.live{background:var(--orange);border-color:var(--orange);color:#fff}
 .chip.live .v{color:#fff}
+.admbt{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto;gap:8px;align-items:center;padding:8px 2px;border-bottom:1px solid var(--line)}
+.admbt.off .t b{color:var(--muted);text-decoration:line-through}
+.admbt .t b{display:block}.admbt .t small{color:var(--muted);font-size:12px}
+.admbt .ini{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.admbt .ini input{width:62px;border:1px solid var(--line);border-radius:8px;padding:5px 6px;background:var(--paper);font:inherit;font-size:13px}
+.ghost.sm{min-height:32px;padding:4px 10px;font-size:13px}
+.ghost.danger{border-color:#9b3a2e;color:#9b3a2e}
+@media (max-width:480px){.admbt{grid-template-columns:auto minmax(0,1fr) auto;}.admbt .ini{grid-column:2}.admbt [data-abtog]{grid-column:3;grid-row:1}}
 
 </style>
 </head>
@@ -676,7 +684,7 @@ function draw(){
   $("repnav").hidden=!(st.view==="song"&&st.rep);
   $("top").classList.toggle("lined",st.view!=="home");
   drawRodaBar();
-  homeNav(); if(st.view==="home") drawHome(); else if(st.view==="artist") drawArtist(); else if(st.view==="tools") drawTools(); else if(st.view==="rep") drawRep(); else if(st.view==="import") drawImport(); else if(st.view==="review") drawReview(); else drawSong();
+  homeNav(); if(st.view==="home") drawHome(); else if(st.view==="artist") drawArtist(); else if(st.view==="tools") drawTools(); else if(st.view==="admbt") drawAdmBt(); else if(st.view==="rep") drawRep(); else if(st.view==="import") drawImport(); else if(st.view==="review") drawReview(); else drawSong();
   save();
 }
 
@@ -686,11 +694,13 @@ function drawTop(){
   const pend=SUBS_ALL.filter(x=>x.status==="pendente").length;
   $("topbar").innerHTML=`<h1>Repertório <span>pra Churrasco</span></h1><div class="tools-r">
    <button class="icon" id="upBtn" aria-label="Enviar cifra" title="Enviar cifra">${IC.upload}</button>
+   ${isAdmin?`<button class="icon" id="admBtBtn" aria-label="Gerenciar batucadas" title="Batucadas">${ICM.drum.replace('width="15" height="15"','width="22" height="22"')}</button>`:""}
    ${isAdmin?`<button class="icon badge" id="revBtn" aria-label="Revisar cifras enviadas" title="Revisão">${IC.review}${pend?`<b>${pend}</b>`:""}</button>`:""}
    <button class="plan ${isPro()?"pro":""}" id="planBtn">${isPro()?"Premium":"Grátis"}</button></div>`;
   $("planBtn").onclick=()=>openDrawer("plano");
   $("upBtn").onclick=()=>go("import",{});
   if($("revBtn")) $("revBtn").onclick=()=>go("review",{});
+  if($("admBtBtn")) $("admBtBtn").onclick=()=>go("admbt",{});
 }
 
 function instrumentSVG(cx,cy,rot,sc,cor,braco,cordas){
@@ -1597,28 +1607,30 @@ function btWire(root,prefix,redraw){
   const vv=root.querySelector(`[data-${prefix}vol]`);if(vv)vv.oninput=e=>{b.vol=+e.target.value;if(b.audio)b.audio.volume=b.vol};
 }
 function btSetBpm(v){const b=T.bt,sty=btStyle();if(!sty)return;b.bpm=Math.min(sty.max,Math.max(sty.min,Math.round(v)));btApply();btUiLite()}
-function btEnsureAudio(){const b=T.bt;if(b.audio)return b.audio;const a=new Audio();a.preload="auto";a.loop=true;a.setAttribute("playsinline","");
+function btEnsureAudio(){const b=T.bt;if(b.audio)return b.audio;const a=new Audio();a.preload="auto";a.loop=false;a.setAttribute("playsinline","");
   a.preservesPitch=true;a.mozPreservesPitch=true;a.webkitPreservesPitch=true;
-  a.addEventListener("playing",()=>{b.loading=false;b.on=true;btUi()});a.addEventListener("pause",()=>{b.on=false;btUi()});
+  a.addEventListener("playing",()=>{b.loading=false;b.on=true;btUi()});a.addEventListener("pause",()=>{if(!a.ended){b.on=false;btUi()}});
   a.addEventListener("waiting",()=>{b.loading=true;btUi()});
+  a.addEventListener("ended",()=>{const ini=(b.sel&&b.sel.inicio)||0;a.currentTime=ini;a.play().catch(()=>{})}); // loop sem a contagem falada
+  a.addEventListener("timeupdate",()=>{const ini=(b.sel&&b.sel.inicio)||0;if(a.currentTime<ini-0.05)a.currentTime=ini});
   a.addEventListener("error",()=>{if(!a.getAttribute("src"))return;b.loading=false;b.on=false;toast("Não foi possível tocar a batucada. Verifique a internet.");btUi()});
   b.audio=a;return a}
 function btApply(){ // escolhe a gravação e a velocidade exata para o BPM pedido
   const b=T.bt,sty=btStyle();if(!sty||!b.audio)return;
   const src=btPick(sty,b.bpm);
   if(!b.sel||b.sel.id!==src.id){const wasOn=b.on,frac=b.audio.duration?b.audio.currentTime/b.audio.duration:0;b.sel=src;b.audio.src=src.url;
-    b.audio.addEventListener("loadedmetadata",()=>{try{b.audio.currentTime=frac*b.audio.duration}catch(e){}},{once:true});if(wasOn){b.loading=true;b.audio.play().catch(()=>{})}}
+    b.audio.addEventListener("loadedmetadata",()=>{try{b.audio.currentTime=Math.max(src.inicio||0,frac*b.audio.duration)}catch(e){}},{once:true});if(wasOn){b.loading=true;b.audio.play().catch(()=>{})}}
   b.audio.playbackRate=b.bpm/src.bpm;b.audio.preservesPitch=true;
 }
 async function btPlay(){
   const b=T.bt;if(b.lista===null)await btLoad();
   if(b.at&&Date.now()-b.at>100*60*1000){await btLoad();b.sel=null}
   if(!btStyle())return;
-  unlockIOS();btEnsureAudio();b.audio.loop=true;b.audio.volume=b.vol;btApply();b.loading=true;btUi();
+  unlockIOS();btEnsureAudio();b.audio.loop=false;b.audio.volume=b.vol;btApply();b.loading=true;btUi();
   try{await b.audio.play();b.audio.playbackRate=b.bpm/b.sel.bpm}catch(e){b.loading=false;btUi()}
 }
 function btPause(){T.bt.audio&&T.bt.audio.pause()}
-function btStop(){const b=T.bt;if(b.audio){b.audio.pause();b.audio.removeAttribute("src");b.audio.load()}b.sel=null;b.on=false;b.shown=false;btUi()}
+function btStop(){const b=T.bt;b.audio&&(b.audio.onended=null);if(b.audio){b.audio.pause();b.audio.removeAttribute("src");b.audio.load()}b.sel=null;b.on=false;b.shown=false;btUi()}
 async function drawBt(){
   const b=T.bt;
   if(b.lista===null){$("tbody").innerHTML=`<p class="help" style="text-align:center">Carregando batucadas…</p>`;await btLoad();if(st.view==="tools"&&T.aba==="batucadas")drawBt();return}
@@ -1642,6 +1654,97 @@ function btUi(){
   $("btm").onclick=()=>btSetBpm(b.bpm-1);$("btpl").onclick=()=>btSetBpm(b.bpm+1);
   $("btvol").oninput=e=>{b.vol=+e.target.value;if(b.audio)b.audio.volume=b.vol};
   $("btclose").onclick=btStop;
+}
+
+
+/* ================= professor: gestão das batucadas ================= */
+const BAT_ADM="https://rnznqwuoexwspwvnbkri.supabase.co/functions/v1/batucadas-admin";
+const AB={lista:null,msg:"",err:false,busy:false,prev:null,confirm:null,form:{nome:"Samba e Pagode",bpm:"",inicio:"0",file:null,detect:""}};
+async function admCall(acao,extra={}){const r=await fetch(BAT_ADM,{method:"POST",headers:{"content-type":"application/json","x-chave-professor":ADMIN_KEY},body:JSON.stringify({acao,...extra})});
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"falha");return d}
+async function admLoad(){try{AB.lista=(await admCall("listar")).batucadas}catch(e){AB.lista=[];AB.msg="Não foi possível carregar as batucadas.";AB.err=true}}
+function admMsg(m,err){AB.msg=m;AB.err=!!err;if(st.view==="admbt")drawAdmBt()}
+async function drawAdmBt(){
+  $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">Batucadas</span>`;
+  $("bk").onclick=()=>{admPrevStop();go("home",{})};
+  if(!isAdmin){$("view").innerHTML=`<div class="empty">Só o professor vê esta área.</div>`;return}
+  if(AB.lista===null){$("view").innerHTML=`<p class="help">Carregando…</p>`;await admLoad()}
+  const f=AB.form;
+  const grupos=new Map();(AB.lista||[]).forEach(x=>{const n=x.nome.replace(/^\s*\d+\s*bpm\s*[-–]\s*/i,"").trim()||x.nome;if(!grupos.has(n))grupos.set(n,[]);grupos.get(n).push(x)});
+  $("view").innerHTML=`<div class="homepad">
+   <p class="help" style="font-size:14px;color:var(--ink);margin-top:10px">As batucadas valem para os dois apps (Repertório e Minha Evolução). O aluno escolhe qualquer BPM: o app usa a gravação de andamento mais próximo e ajusta a velocidade sem mudar a afinação. Quanto mais andamentos você gravar, mais natural fica.</p>
+   ${AB.msg?`<div class="status ${AB.err?"err":""}" role="status">${esc(AB.msg)}</div>`:""}
+   <div class="subcard"><h4>Enviar nova batucada</h4>
+    <div class="row2" style="margin-top:10px"><div class="field"><label for="abn">Estilo</label><input id="abn" list="abnl" value="${esc(f.nome)}"><datalist id="abnl">${[...grupos.keys()].map(n=>`<option value="${esc(n)}">`).join("")}</datalist></div>
+     <div class="field"><label for="abb">BPM exato da gravação</label><input id="abb" type="number" min="20" max="300" inputmode="numeric" value="${esc(f.bpm)}" placeholder="ex.: 80"></div></div>
+    <div class="field"><label for="abf">Arquivo de áudio (MP3, M4A, WAV)</label><input id="abf" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac">${f.file?`<small style="color:var(--ink)">Selecionado: <b>${esc(f.file.name)}</b> (${(f.file.size/1048576).toFixed(1)} MB)</small>`:""}</div>
+    <div class="field"><label for="abi">Início do loop (segundos)</label><input id="abi" type="number" min="0" max="119" step="0.01" value="${esc(f.inicio)}"></div>
+    <p class="help" style="margin-top:-4px">Se a gravação começa com fala ou contagem, coloque aqui o segundo em que a batucada entra. ${f.detect?`<b style="color:var(--ink)">${esc(f.detect)}</b>`:"Ao escolher o arquivo, o app tenta encontrar esse ponto sozinho."}</p>
+    <button class="primary" id="abgo" style="width:100%" ${AB.busy?"disabled":""}>${AB.busy?"Enviando…":"Enviar batucada"}</button></div>
+   ${[...grupos.entries()].map(([n,it])=>`<div class="sec">${esc(n)}</div>${it.sort((a,b)=>a.bpm-b.bpm).map(x=>`<div class="admbt ${x.ativo?"":"off"}">
+     <button class="btp" data-abprev="${x.id}" aria-label="Ouvir o começo do loop">${AB.prev===x.id?"❚❚":"▶"}</button>
+     <div class="t"><b>${x.bpm} BPM</b><small>${x.ativo?"visível para os alunos":"oculta"} · ${x.duracao_seg?Math.round(x.duracao_seg/60)+" min":""}</small></div>
+     <label class="ini">início <input type="number" min="0" max="119" step="0.01" value="${Number(x.loop_inicio_seg)}" data-abini="${x.id}" aria-label="Início do loop em segundos">s</label>
+     <button class="ghost sm" data-abtog="${x.id}">${x.ativo?"Ocultar":"Mostrar"}</button>
+     ${AB.confirm===x.id?`<button class="ghost sm danger" data-abdelok="${x.id}">Confirmar exclusão</button>`:`<button class="ghost sm" data-abdel="${x.id}" aria-label="Excluir">✕</button>`}
+   </div>`).join("")}`).join("")}
+  </div>`;
+  const sync=()=>{f.nome=$("abn").value;f.bpm=$("abb").value;f.inicio=$("abi").value};
+  ["abn","abb","abi"].forEach(id=>$(id).oninput=sync);
+  $("abf").onchange=async e=>{f.file=e.target.files[0]||null;sync();if(!f.file)return;
+    if(!f.bpm){const m=f.file.name.match(/(\d{2,3})\s*bpm/i)||f.file.name.match(/(\d{2,3})/);if(m)f.bpm=m[1]}
+    f.detect="Procurando onde a batucada entra…";drawAdmBt();
+    const t=await detectarInicio(f.file).catch(()=>null);
+    if(t!=null){f.inicio=String(t);f.detect=t>0.3?`Encontrei a batucada entrando em ${t.toFixed(2)} s. Ouça a prévia depois de enviar e ajuste se precisar.`:"A batucada começa logo no início."}else f.detect="Não consegui analisar o arquivo. Preencha o início à mão, se precisar.";
+    drawAdmBt()};
+  $("abgo").onclick=admEnviar;
+  document.querySelectorAll("[data-abini]").forEach(el=>el.onchange=async()=>{try{await admCall("atualizar",{id:el.dataset.abini,loop_inicio_seg:+el.value});const x=AB.lista.find(y=>y.id===el.dataset.abini);x.loop_inicio_seg=+el.value;T.bt.lista=null;admMsg("Início do loop salvo.")}catch(e){admMsg(e.message,true)}});
+  document.querySelectorAll("[data-abtog]").forEach(el=>el.onclick=async()=>{const x=AB.lista.find(y=>y.id===el.dataset.abtog);try{await admCall("atualizar",{id:x.id,ativo:!x.ativo});x.ativo=!x.ativo;T.bt.lista=null;admMsg(x.ativo?"Batucada visível para os alunos.":"Batucada oculta.")}catch(e){admMsg(e.message,true)}});
+  document.querySelectorAll("[data-abdel]").forEach(el=>el.onclick=()=>{AB.confirm=el.dataset.abdel;drawAdmBt()});
+  document.querySelectorAll("[data-abdelok]").forEach(el=>el.onclick=async()=>{try{await admCall("excluir",{id:el.dataset.abdelok});AB.lista=AB.lista.filter(y=>y.id!==el.dataset.abdelok);AB.confirm=null;T.bt.lista=null;admMsg("Batucada excluída.")}catch(e){admMsg(e.message,true)}});
+  document.querySelectorAll("[data-abprev]").forEach(el=>el.onclick=()=>admPrev(el.dataset.abprev));
+}
+let _admA=null;
+function admPrevStop(){if(_admA){_admA.pause();_admA=null}AB.prev=null}
+function admPrev(id){
+  if(AB.prev===id){admPrevStop();return drawAdmBt()}
+  admPrevStop();const x=AB.lista.find(y=>y.id===id);if(!x||!x.url)return;
+  const a=new Audio(x.url);a.setAttribute("playsinline","");_admA=a;AB.prev=id;
+  a.addEventListener("loadedmetadata",()=>{a.currentTime=Math.max(0,Number(x.loop_inicio_seg)-1.5)},{once:true}); // 1,5 s antes do ponto, para conferir o corte
+  a.play().catch(()=>{});setTimeout(()=>{if(_admA===a){admPrevStop();if(st.view==="admbt")drawAdmBt()}},12000);drawAdmBt();
+}
+async function admEnviar(){
+  const f=AB.form;f.nome=$("abn").value.trim();f.bpm=$("abb").value;f.inicio=$("abi").value;
+  if(!f.file) return admMsg("Escolha o arquivo de áudio.",true);
+  if(!f.nome) return admMsg("Dê um nome para o estilo, por exemplo: Samba e Pagode.",true);
+  const bpm=parseInt(f.bpm,10);if(!(bpm>=20&&bpm<=300)) return admMsg("Informe o BPM exato da gravação (entre 20 e 300).",true);
+  if(f.file.size>26214400) return admMsg("O arquivo passa de 25 MB. Exporte em MP3 de 128 kbps ou corte para uns 10 minutos.",true);
+  AB.busy=true;admMsg("Enviando o áudio…");
+  try{
+    const ext=(f.file.name.split(".").pop()||"mp3").toLowerCase();
+    const link=await admCall("link_envio",{nome:f.nome,bpm,ext});
+    const up=await fetch(link.url,{method:"PUT",headers:{"content-type":f.file.type||"audio/mpeg","x-upsert":"false"},body:f.file});
+    if(!up.ok) throw new Error("O envio do arquivo falhou. Tente de novo.");
+    const dur=await new Promise(ok=>{const a=new Audio();a.preload="metadata";a.onloadedmetadata=()=>ok(a.duration);a.onerror=()=>ok(null);a.src=URL.createObjectURL(f.file)});
+    await admCall("criar",{nome:f.nome,bpm,arquivo:link.arquivo,tamanho_bytes:f.file.size,duracao_seg:dur,loop_inicio_seg:+f.inicio||0});
+    AB.form={nome:f.nome,bpm:"",inicio:"0",file:null,detect:""};AB.busy=false;T.bt.lista=null;await admLoad();admMsg(`Batucada de ${bpm} BPM enviada. Ela já aparece para os alunos nos dois apps.`);
+  }catch(e){AB.busy=false;admMsg(e.message||"Não foi possível enviar.",true)}
+}
+/* acha onde o surdo entra: graves fortes e repetidos, dominando a faixa da voz (mesmo critério usado nas gravações atuais) */
+async function detectarInicio(file){
+  const bytes=await file.slice(0,1500000).arrayBuffer();
+  const C=window.AudioContext||window.webkitAudioContext,tmp=new C();
+  let buf;try{buf=await tmp.decodeAudioData(bytes)}finally{tmp.close&&tmp.close()}
+  const sr=buf.sampleRate,len=Math.min(buf.length,sr*45);
+  const band=async(type,freq,q)=>{const oc=new OfflineAudioContext(1,len,sr),src=oc.createBufferSource();src.buffer=buf;const f=oc.createBiquadFilter();f.type=type;f.frequency.value=freq;if(q)f.Q.value=q;src.connect(f).connect(oc.destination);src.start();return(await oc.startRendering()).getChannelData(0)};
+  const lo=await band("lowpass",160),mi=await band("bandpass",1000,.7);
+  const hop=Math.round(sr*.02),win=Math.round(sr*.06),L=[],M=[],ts=[];
+  for(let i=0;i+win<len;i+=hop){let a=0,b=0;for(let j=i;j<i+win;j++){a+=lo[j]*lo[j];b+=mi[j]*mi[j]}L.push(Math.sqrt(a/win));M.push(Math.sqrt(b/win));ts.push(i/sr)}
+  const after=L.filter((_,k)=>ts[k]>Math.min(20,ts[ts.length-1]*.5)).sort((a,b)=>a-b);if(!after.length)return 0;
+  const ref=after[Math.floor(after.length*.95)],thr=.5*ref;
+  const hit=L.map((v,k)=>v>thr&&v>1.3*M[k]);
+  for(let k=0;k<hit.length;k++){if(!hit[k])continue;let n=0;for(let j=k+1;j<hit.length&&ts[j]<ts[k]+5;j++)if(hit[j]&&ts[j]>ts[k]+.25)n++;if(n>=5)return Math.max(0,Math.round((ts[k]-.05)*100)/100)}
+  return 0;
 }
 
 initCaps();
