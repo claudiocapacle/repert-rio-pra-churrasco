@@ -272,6 +272,53 @@ body.stage main{padding-top:64px}
 .ahead p{margin:4px 0 0;color:var(--muted)}
 .ptitle{font-family:var(--f-display);font-weight:800;font-size:22px;margin:16px 0 4px}
 .linkbtn{border:0;background:none;color:var(--orange);font-weight:700;padding:0;text-decoration:underline}
+/* ferramentas */
+.ttabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px;margin:12px 0}
+.ttabs button{border:0;background:none;border-radius:10px;padding:10px 4px;font-weight:600;color:var(--muted)}
+.ttabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.tcard{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pills button{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:6px 11px;font-weight:600;font-size:14px;color:var(--ink)}
+.pills button.on{border-color:var(--orange);background:var(--orange-soft);color:var(--orange)}
+.pills button.bpm{min-width:5.6rem;padding:10px 12px;font-size:15px}
+.pills button.bpm small{font-size:11px;opacity:.7}
+.pills button.bpm.play{background:var(--orange);border-color:var(--orange);color:#fff}
+.lbl2{font-size:13px;font-weight:700;margin:0 0 6px}
+.beats i.acc.hit{background:var(--orange);transform:scale(1.25)}
+.beats i.hit{background:var(--ink);transform:scale(1.25)}
+.beats i{transition:transform .07s}
+.tuner{border-radius:22px;padding:22px 14px;text-align:center;background:var(--bg)}
+.tuner.ok{background:#e2efe3}.tuner.off{background:var(--orange-soft)}
+.tnote{font-family:var(--f-display);font-weight:800;font-size:64px;line-height:1;margin:8px 0 4px}
+.tnote small{font-size:22px;color:var(--muted);vertical-align:top;margin-left:4px}
+.gauge{position:relative;height:46px;max-width:360px;margin:18px auto 0}
+.gauge .bar{position:absolute;left:0;right:0;top:50%;height:4px;transform:translateY(-50%);border-radius:2px;background:linear-gradient(90deg,var(--orange),#4c9a5b,var(--orange));opacity:.4}
+.gauge .tick{position:absolute;top:50%;width:2px;height:16px;transform:translate(-50%,-50%);background:#a39a8a;border-radius:1px}
+.gauge .tick.z{height:32px;width:4px}
+.gauge .needle{position:absolute;top:0;width:6px;height:46px;transform:translateX(-50%);border-radius:3px;background:#cfc6b6;transition:left .1s}
+.gauge .needle.on{background:var(--orange)}.gauge .needle.ok{background:#2f6b3a}
+.tmsg{font-weight:700;margin:12px 0 0;min-height:1.4em}
+.cordas{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cordas div{border:1px solid var(--line);border-radius:12px;padding:10px 4px;text-align:center;background:var(--paper)}
+.cordas b{display:block;font-size:18px}.cordas small{color:var(--muted);font-size:12px}
+.cordas .on{background:var(--orange-soft);border-color:var(--orange)}.cordas .ok{background:#2f6b3a;border-color:#2f6b3a;color:#fff}.cordas .ok small{color:#fff}
+.bgroup{border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;background:var(--bg)}
+.bgroup>b{display:block;margin-bottom:10px}
+.btbar{position:fixed;z-index:26;left:0;right:0;bottom:calc(var(--tb) + env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff}
+.btbar .wrap{display:flex;align-items:center;gap:10px;min-height:56px}
+.btp{width:40px;height:40px;border-radius:50%;border:0;background:var(--orange);color:#fff;font-weight:800;flex:none}
+.bti{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.bti b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btprog{height:4px;border-radius:2px;background:rgba(255,255,255,.18);overflow:hidden}.btprog i{display:block;height:100%;background:var(--orange)}
+.bti small{font-size:11px;color:#b9b3a6;font-variant-numeric:tabular-nums}
+.btx{border:0;background:none;color:#fff;font-size:18px;padding:4px 6px;flex:none}
+#btvol{width:70px;accent-color:var(--orange);flex:none}
+body.hasbt .homepad{padding-bottom:calc(var(--tb) + 100px)}
+body.hasbt .sheetwrap{padding-bottom:calc(var(--tb) + 150px)}
+body.hasbt .repnav{bottom:calc(var(--tb) + 56px + env(safe-area-inset-bottom,0px))}
+body.stage .btbar{display:none}
+.rank{font-family:var(--f-mono);font-weight:700;color:var(--orange);width:1.6em;text-align:center}
+.row.ranked{grid-template-columns:auto minmax(0,1fr) auto auto}
 
 </style>
 </head>
@@ -289,7 +336,7 @@ body.stage main{padding-top:64px}
   <button data-nav="musicas"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>Músicas</button>
   <button data-nav="artistas"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg>Artistas</button>
   <button data-nav="meus"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Repertórios</button>
-  <button data-nav="prontos"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>Prontos</button>
+  <button data-nav="ferramentas"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Ferramentas</button>
 </div></nav>
 <nav class="tools" id="tools" hidden aria-label="Ferramentas"><div class="wrap">
   <button data-tool="tom"><span class="v" id="tbKey">C</span>Tom</button>
@@ -299,6 +346,7 @@ body.stage main{padding-top:64px}
   <button data-tool="mais"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>Mais</button>
 </div></nav>
 
+<div class="btbar" id="btbar" hidden></div>
 <div class="scrim" id="scrim" hidden></div>
 <section class="drawer" id="drawer" hidden role="dialog" aria-modal="true"><div class="grab"></div><div class="wrap" id="dbody"></div></section>
 <div class="toast" id="toast" hidden role="status"></div>
@@ -505,7 +553,7 @@ function guessKey(lines){
 
 /* ================= dados ================= */
 SONGS.forEach(s=>{s.id="s"+s.id});
-for(const n of NEW_SONGS){SONGS.push({id:n.id,title:n.title,artist:n.artist,key:n.key,block:null,credit:n.credit,isNew:true,
+for(const n of NEW_SONGS){SONGS.push({addedAt:Date.parse(n.added||"2026-10-24T12:00:00Z"),id:n.id,title:n.title,artist:n.artist,key:n.key,block:null,credit:n.credit,isNew:true,
   completa:parseChordText(n.completa),simplificada:n.simplificada?parseChordText(n.simplificada):null})}
 const BASE_COUNT=SONGS.length;
 const FREE_REPS=1, FREE_SONGS=25;
@@ -543,6 +591,7 @@ const IC={
   upload:'<svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg>',
   review:'<svg viewBox="0 0 24 24"><path d="M9 11l2 2 4-4"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>',
   share:'<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 10.9l7.6-3.8M8.2 13.1l7.6 3.8"/></svg>',
+  tune:'<svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>',
   yt:'<svg viewBox="0 0 24 24"><path d="M10 8.5v7l6-3.5z"/></svg>'
 };
 const ico=(k,sz=18,extra="")=>IC[k].replace("<svg",`<svg width="${sz}" height="${sz}" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;${extra}"`);
@@ -579,14 +628,21 @@ async function loadAdmin(){
   isAdmin=true;SUBS_ALL=data.map(x=>({...x,at:Date.parse(x.created_at)}));
   if(st.view==="home")drawTop();if(st.view==="review")drawReview();
 }
+let TOP=[];
+async function loadPlays(){if(!sb)return;const {data,error}=await sb.from("plays").select("song_id,total").order("total",{ascending:false}).limit(15);
+  if(error)return;TOP=data.filter(x=>byId(x.song_id)&&!byId(x.song_id).pending);if(st.view==="home"&&st.tab==="inicio"&&!st.q.trim())drawTab()}
+setInterval(()=>{if(document.visibilityState==="visible"&&st.view==="home"){loadPlays();loadCatalog()}},120000);
+let _lastPlay={};
+function contarToque(s){if(!sb||s.pending)return;const k=s.id;if(_lastPlay[k]&&Date.now()-_lastPlay[k]<30*60000)return;_lastPlay[k]=Date.now();
+  sb.rpc("registrar_toque",{p_device:DEVICE,p_song:k}).then(()=>{}).catch(()=>{})}
 async function initCaps(){
   try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false}})}catch(e){sb=null}
-  if(sb){await Promise.allSettled([loadCatalog(),loadMeta(),loadMine(),loadAdmin()])}
+  if(sb){await Promise.allSettled([loadCatalog(),loadMeta(),loadMine(),loadAdmin()]);loadPlays()}
   if(st.view==="home") drawHome();
   handleHash();
 }
 function fromSubmission(v,approved){
-  return{id:(approved?"c-":"p-")+v.id,subId:v.id,at:Date.parse(v.created_at||0),title:v.title,artist:v.artist||"",key:v.key||"C",block:null,credit:v.credit||"",isNew:approved,pending:!approved,status:v.status,
+  return{addedAt:Date.parse(v.created_at||0)||0,id:(approved?"c-":"p-")+v.id,subId:v.id,at:Date.parse(v.created_at||0),title:v.title,artist:v.artist||"",key:v.key||"C",block:null,credit:v.credit||"",isNew:approved,pending:!approved,status:v.status,
     completa:parseChordText(v.completa||v.text||""),simplificada:v.simplificada?parseChordText(v.simplificada):null}
 }
 
@@ -599,7 +655,7 @@ function draw(){
   $("repnav").hidden=!(st.view==="song"&&st.rep);
   $("top").classList.toggle("lined",st.view!=="home");
   drawRodaBar();
-  homeNav(); if(st.view==="home") drawHome(); else if(st.view==="artist") drawArtist(); else if(st.view==="rep") drawRep(); else if(st.view==="import") drawImport(); else if(st.view==="review") drawReview(); else drawSong();
+  homeNav(); if(st.view==="home") drawHome(); else if(st.view==="artist") drawArtist(); else if(st.view==="tools") drawTools(); else if(st.view==="rep") drawRep(); else if(st.view==="import") drawImport(); else if(st.view==="review") drawReview(); else drawSong();
   save();
 }
 
@@ -637,13 +693,13 @@ function searchResults(q){
   const songs=searchSongs(q);
   let h="";
   if(arts.length) h+=`<div class="sec">Artistas</div>`+arts.slice(0,6).map(artistRow).join("");
-  if(songs.length) h+=`<div class="sec">Músicas · ${songs.length}</div><div class="rows" style="padding-bottom:0">${songs.slice(0,60).map(songRow).join("")}</div>`;
+  if(songs.length) h+=`<div class="sec">Músicas · ${songs.length}</div><div class="rows" style="padding-bottom:0">${songs.slice(0,60).map(s=>songRow(s)).join("")}</div>`;
   if(!h) h=`<div class="empty">Nada encontrado para “${esc(q)}”. Tente só uma parte do nome, ou <button class="linkbtn" id="sendIt">envie essa cifra</button>.</div>`;
   return h;
 }
 function homeNav(){
-  const nav=$("homenav");nav.hidden=st.view!=="home"&&st.view!=="artist";
-  nav.querySelectorAll("[data-nav]").forEach(b=>b.classList.toggle("on",(st.view==="artist"?"artistas":st.tab)===b.dataset.nav));
+  const nav=$("homenav");nav.hidden=!["home","artist","tools"].includes(st.view);
+  nav.querySelectorAll("[data-nav]").forEach(b=>b.classList.toggle("on",(st.view==="artist"?"artistas":st.view==="tools"?"ferramentas":st.tab)===b.dataset.nav));
 }
 function drawHome(){
   drawTop();homeNav();
@@ -663,17 +719,18 @@ function drawTab(){
   if(st.tab==="inicio"){
     if(st.q.trim()){tb.innerHTML=searchResults(st.q);if($("sendIt"))$("sendIt").onclick=()=>go("import",{});return}
     const arts=artistsAll().sort((a,b)=>b.songs.length-a.songs.length);
-    const recent=store.hist.map(byId).filter(Boolean).slice(0,5), news=SONGS.filter(s=>s.isNew).slice(-6).reverse(), favN=store.fav.filter(byId).length;
+    const recent=store.hist.map(byId).filter(Boolean).slice(0,5), news=SONGS.filter(s=>s.addedAt).sort((a,b)=>b.addedAt-a.addedAt).slice(0,5), favN=store.fav.filter(byId).length;
     let h=`<div class="qgrid">
       <button class="qt" data-nav="musicas"><b>${SONGS.length}</b><span>Todas as músicas</span></button>
       <button class="qt" data-nav="artistas"><b>${arts.length}</b><span>Artistas</span></button>
       <button class="qt" data-nav="meus"><b>${store.reps.length}</b><span>Meus repertórios</span></button>
       <button class="qt o" data-nav="prontos"><b>${new Set(SONGS.filter(s=>s.block).map(s=>s.block)).size}</b><span>Repertórios prontos</span></button>
-      <button class="qt" data-go="fav"><b>${favN}</b><span>Favoritas</span></button>
+      <button class="qt" data-nav="ferramentas"><b>${ico("tune",24)}</b><span>Afinador, metrônomo e batucadas</span></button>
       <button class="qt" data-go="import"><b>${ico("upload",22)}</b><span>Enviar uma cifra</span></button></div>`;
-    if(recent.length) h+=`<div class="sec">Continue tocando</div><div class="rows" style="padding-bottom:0">${recent.map(songRow).join("")}</div>`;
+    if(recent.length) h+=`<div class="sec">Continue tocando</div><div class="rows" style="padding-bottom:0">${recent.map(s=>songRow(s)).join("")}</div>`;
     h+=`<div class="sec">Artistas com mais músicas</div><div class="achips">${arts.slice(0,12).map((a,i)=>`<button data-artist="${esc(a.key)}"><span class="av ${i%2?"b":""}">${esc(initials(a.name))}</span>${esc(a.name)}<small>${a.songs.length}</small></button>`).join("")}</div>`;
-    if(news.length) h+=`<div class="sec">Novidades</div><div class="rows" style="padding-bottom:0">${news.map(songRow).join("")}</div>`;
+    h+=`<div class="sec">Mais tocadas</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
+    if(news.length) h+=`<div class="sec">Últimas adicionadas</div><div class="rows" style="padding-bottom:0">${news.map(s=>songRow(s)).join("")}</div>`;
     const ex=store.reps[0]; if(ex) h+=`<div class="sec">Seu repertório</div><button class="card" data-rep="${ex.id}" style="margin-top:4px"><b>${esc(ex.name)}</b><small>${ex.items.length} músicas · toque para abrir e tocar em sequência</small><span class="go">›</span></button>`;
     tb.innerHTML=h;
   } else if(st.tab==="musicas"){
@@ -714,13 +771,13 @@ function drawArtist(){
   const songs=[...a.songs].sort((x,y)=>x.title.localeCompare(y.title,"pt"));
   $("view").innerHTML=`<div class="homepad"><div class="ahead"><span class="av big">${esc(initials(a.name))}</span><div><h2>${esc(a.name)}</h2><p>${songs.length} música${songs.length===1?"":"s"} no app</p></div></div>
    <div class="actions"><button class="primary" id="playAll">Tocar todas em sequência</button></div>
-   <div class="rows">${songs.map(songRow).join("")}</div></div>`;
+   <div class="rows">${songs.map(s=>songRow(s)).join("")}</div></div>`;
   $("playAll").onclick=()=>{st.readyRep={name:a.name,items:songs.map(s=>({id:s.id,delta:0}))};st.rep="sharedview";openRepSong(0)};
 }
-function songRow(s){
+function songRow(s,rank){
   const inn=inAnyRep(s.id);
   const tags=(s.pending?`<span class="tag ${s.status==="recusada"?"no":"pend"}">${s.status==="recusada"?"recusada":"só você · em revisão"}</span>`:"")+(s.isNew&&!s.pending?`<span class="tag new">nova</span>`:"");
-  return `<div class="row"><button class="open" data-open="${s.id}"><b>${esc(s.title)}${tags}</b><small>${esc(s.artist)}${s.credit&&s.isNew?` · contribuição de ${esc(s.credit)}`:""}</small></button><span class="key">${esc(s.key)}</span>
+  return `<div class="row${rank?" ranked":""}">${rank?`<span class="rank">${rank}</span>`:""}<button class="open" data-open="${s.id}"><b>${esc(s.title)}${tags}</b><small>${esc(s.artist)}${s.credit&&s.isNew?` · contribuição de ${esc(s.credit)}`:""}</small></button><span class="key">${esc(s.key)}</span>
   <button class="add ${inn?"in":""}" data-add="${s.id}" aria-label="${inn?"Já está num repertório":"Adicionar ao repertório"}">${inn?IC.check:IC.plus}</button></div>`;
 }
 /* ================= repertório ================= */
@@ -825,6 +882,7 @@ function drawSong(){
     $("pos").textContent=`${st.idx+1}/${n}`;
     $("prev").disabled=!p;$("prev").textContent=p?"‹ "+(byId(p.id)||{}).title:"";
     $("next").disabled=!q;$("next").textContent=q?(byId(q.id)||{}).title+" ›":"Fim do repertório";}
+  contarToque(s);
   if(!store.hist.includes(s.id)||store.hist[0]!==s.id){store.hist=[s.id,...store.hist.filter(x=>x!==s.id)].slice(0,30);save()}
   if(roda.host) pushRoda();
 }
@@ -1052,11 +1110,13 @@ function drawDrawer(){
     B.innerHTML=`<h3>Mais</h3>
      <div class="big"><button class="round" id="fm" aria-label="Diminuir">A−</button><span class="num" style="font-size:28px">${st.fs}</span><button class="round" id="fp" aria-label="Aumentar">A+</button></div>
      <label class="switch"><span><b>Quebrar linhas</b><br><small style="color:var(--muted)">Ajusta a cifra à largura da tela, levando o acorde junto com a sílaba.</small></span><input type="checkbox" id="fitc" ${st.fit?"checked":""}></label>
+     <button class="opt" id="goTools" style="margin-top:12px"><b>Ferramentas</b><small>Afinador, metrônomo e batucadas. A batucada continua tocando com a cifra aberta.</small></button>
      <label class="switch"><span><b>Modo palco</b><br><small style="color:var(--muted)">Tela escura, letra maior, sem botões. Funciona com pedal Bluetooth: <span class="kbd">↓</span> rola, <span class="kbd">→</span> próxima, <span class="kbd">espaço</span> toca.</small></span><input type="checkbox" id="stg" ${st.stage?"checked":""}></label>
      ${isAdmin?`<div class="switch" style="display:block"><b>Aula desta música</b> <small style="color:var(--muted)">(só você vê)</small><form class="newrep" id="af"><input id="au" placeholder="Link do vídeo no YouTube" value="${esc((meta[s.id]||{}).aula||"")}"><button class="ghost">Salvar</button></form><p class="help">Sem link, o botão busca “Claudio Capacle + nome da música” no YouTube.</p></div>`:""}`;
     $("fm").onclick=()=>{st.fs=Math.max(10,st.fs-1);drawSong();drawDrawer()};$("fp").onclick=()=>{st.fs=Math.min(26,st.fs+1);drawSong();drawDrawer()};
     $("fitc").onchange=e=>{st.fit=e.target.checked;drawSong()};
     $("stg").onchange=e=>{closeDrawer();setStage(e.target.checked)};
+    $("goTools").onclick=()=>{T.aba="batucadas";go("tools",{})};
     if($("af")) $("af").onsubmit=e=>{e.preventDefault();const u=$("au").value.trim();if(u&&!/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(u))return toast("Use um link do YouTube");
       saveMeta(s.id,{bpm:(meta[s.id]||{}).bpm||null,aula:u||null},"Aula salva").then(closeDrawer)};
   } else if(dr.kind==="acorde"){
@@ -1321,7 +1381,7 @@ document.addEventListener("click",e=>{
   const t=e.target.closest("[data-open],[data-add],[data-rep],[data-ready],[data-ri],[data-mv],[data-rm],[data-ch],[data-tool],[data-nav],[data-artist],[data-go]");
   if(!t||t.closest("#dbody")&&!t.dataset.ch) return;
   const d=t.dataset;
-  if(d.nav){st.q="";go("home",{tab:d.nav,addTarget:st.addTarget})}
+  if(d.nav){st.q="";if(d.nav==="ferramentas")return go("tools",{});go("home",{tab:d.nav,addTarget:st.addTarget})}
   else if(d.artist){go("artist",{artist:d.artist})}
   else if(d.go){if(d.go==="import")go("import",{});else{st.q="";st.filter="fav";go("home",{tab:"musicas"})}}
   else if(d.open){go("song",{id:d.open,delta:0,rep:null})}
@@ -1341,6 +1401,150 @@ document.addEventListener("click",e=>{
 });
 let _rw=innerWidth;addEventListener("resize",()=>{if(Math.abs(innerWidth-_rw)>20){_rw=innerWidth;if(st.view==="song")drawSong()}});
 draw();
+
+/* ================= ferramentas: metrônomo, afinador, batucadas (mesmas do Minha Evolução) ================= */
+let AC=null;
+function audioCtx(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;AC=new C({latencyHint:"interactive"})}if(AC.state==="suspended")AC.resume();unlockIOS();return AC}
+let _iosOk=false;
+function unlockIOS(){if(_iosOk)return;_iosOk=true;try{const n=800,buf=new ArrayBuffer(44+n),v=new DataView(buf),w=(o,s)=>[...s].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));
+  w(0,"RIFF");v.setUint32(4,36+n,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,"data");v.setUint32(40,n,true);for(let i=0;i<n;i++)v.setUint8(44+i,128);
+  let bin="";new Uint8Array(buf).forEach(b=>bin+=String.fromCharCode(b));const a=new Audio("data:audio/wav;base64,"+btoa(bin));a.loop=true;a.volume=.01;a.setAttribute("playsinline","");a.play().catch(()=>{})}catch(e){}}
+function clique(ac,q,tipo){const o=ac.createOscillator(),g=ac.createGain();const f=tipo==="acento"?1760:tipo==="tempo"?1180:880,pk=tipo==="acento"?.9:tipo==="tempo"?.6:.28;
+  o.type="triangle";o.frequency.setValueAtTime(f,q);g.gain.setValueAtTime(.0001,q);g.gain.exponentialRampToValueAtTime(pk,q+.002);g.gain.exponentialRampToValueAtTime(.0001,q+(tipo==="sub"?.03:.05));o.connect(g).connect(ac.destination);o.start(q);o.stop(q+.07)}
+
+const T={aba:"metronomo",
+  met:{bpm:80,comp:2,sub:1,on:false,beat:-1,prox:0,passo:0,timer:null,fila:[],raf:0,taps:[]},
+  af:{on:false,la:440,leit:null,ativo:false,stream:null,raf:0,hist:[],ultimo:0,voz:0,erro:""},
+  bt:{lista:null,erro:false,sel:null,on:false,loading:false,audio:null,vol:.9,rep:true,raf:0}};
+const andamento=b=>b<60?"Bem lento":b<80?"Lento":b<100?"Moderado":b<125?"Andante":b<160?"Rápido":"Muito rápido";
+
+function drawTools(){
+  homeNav();
+  $("topbar").innerHTML=`<h1>Ferramentas</h1>`;
+  $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucadas"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
+  document.querySelectorAll("[data-aba]").forEach(b=>b.onclick=()=>{T.aba=b.dataset.aba;drawTools()});
+  ({metronomo:drawMet,afinador:drawAf,batucadas:drawBt})[T.aba]();
+}
+
+/* ----- metrônomo ----- */
+function drawMet(){
+  const m=T.met;
+  $("tbody").innerHTML=`<div class="big"><button class="round" id="mm" aria-label="Diminuir 1 BPM">−</button><div style="text-align:center"><span class="num" id="mb">${m.bpm}</span><div class="sub" style="margin:0" id="mn">BPM · ${andamento(m.bpm)}</div></div><button class="round" id="mp" aria-label="Aumentar 1 BPM">+</button></div>
+   <input type="range" id="mr" min="30" max="240" value="${m.bpm}" aria-label="Andamento em BPM">
+   <div class="pills" style="justify-content:center;margin-top:8px">${[-5,60,80,100,120,5].map((v,i)=>`<button data-mv="${i===0||i===5?"d":"s"}:${v}" class="${m.bpm===v&&i>0&&i<5?"on":""}">${i===0?"−5":i===5?"+5":v}</button>`).join("")}</div>
+   <div class="beats" id="mbeats">${Array.from({length:Math.max(1,m.comp)},(_,i)=>`<i class="${m.beat===i?"hit":""} ${i===0&&m.comp>1?"acc":""}"></i>`).join("")}</div>
+   <div class="row2"><button class="primary" id="mgo">${m.on?"Parar":"Tocar"}</button><button class="ghost" id="mtap">Bater o tempo</button></div>
+   <div class="row2" style="margin-top:14px"><div><p class="lbl2">Compasso</p><div class="pills">${[[1,"Sem acento"],[2,"2/4"],[3,"3/4"],[4,"4/4"]].map(([v,l])=>`<button data-mc="${v}" class="${m.comp===v?"on":""}">${l}</button>`).join("")}</div></div>
+   <div><p class="lbl2">Subdivisão</p><div class="pills">${[[1,"Só o tempo"],[2,"Colcheias"],[4,"Semicolcheias"]].map(([v,l])=>`<button data-ms="${v}" class="${m.sub===v?"on":""}">${l}</button>`).join("")}</div></div></div>
+   <p class="help" style="text-align:center">Dica do samba: compasso 2/4 com semicolcheias ajuda a firmar a palhetada.</p>`;
+  const set=v=>{m.bpm=Math.min(240,Math.max(30,Math.round(v)));$("mb").textContent=m.bpm;$("mn").textContent="BPM · "+andamento(m.bpm);$("mr").value=m.bpm};
+  $("mm").onclick=()=>set(m.bpm-1);$("mp").onclick=()=>set(m.bpm+1);$("mr").oninput=e=>set(+e.target.value);
+  document.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{const[k,v]=b.dataset.mv.split(":");set(k==="d"?m.bpm+ +v:+v);drawMet()});
+  document.querySelectorAll("[data-mc]").forEach(b=>b.onclick=()=>{m.comp=+b.dataset.mc;m.passo=0;drawMet()});
+  document.querySelectorAll("[data-ms]").forEach(b=>b.onclick=()=>{m.sub=+b.dataset.ms;m.passo=0;drawMet()});
+  $("mgo").onclick=()=>{m.on?metStop():metStart();drawMet()};
+  $("mtap").onclick=()=>{const t=performance.now();m.taps=m.taps.filter(x=>t-x<2500);m.taps.push(t);m.taps=m.taps.slice(-6);if(m.taps.length>=2){const iv=m.taps.slice(1).map((x,i)=>x-m.taps[i]);set(60000/(iv.reduce((a,b)=>a+b,0)/iv.length))}};
+}
+function metStart(){
+  const ac=audioCtx(),m=T.met;m.prox=ac.currentTime+.08;m.passo=0;m.fila=[];
+  const ag=()=>{const dur=60/m.bpm/m.sub;while(m.prox<ac.currentTime+.12){const tc=Math.floor(m.passo/m.sub)%m.comp,eh=m.passo%m.sub===0;
+    clique(ac,m.prox,!eh?"sub":m.comp>1&&tc===0?"acento":"tempo");if(eh)m.fila.push({t:m.prox,tc});m.prox+=dur;m.passo=(m.passo+1)%(m.comp*m.sub)}};
+  ag();m.timer=setInterval(ag,25);
+  const dr=()=>{const now=ac.currentTime;while(m.fila.length&&m.fila[0].t<=now){m.beat=m.fila.shift().tc;const bs=document.querySelectorAll("#mbeats i");bs.forEach((x,i)=>x.classList.toggle("hit",i===m.beat))}m.raf=requestAnimationFrame(dr)};
+  m.raf=requestAnimationFrame(dr);m.on=true;
+}
+function metStop(){const m=T.met;clearInterval(m.timer);cancelAnimationFrame(m.raf);m.fila=[];m.on=false;m.beat=-1}
+
+/* ----- afinador (método de McLeod, igual ao Minha Evolução) ----- */
+const NOMES=["Dó","Dó♯","Ré","Ré♯","Mi","Fá","Fá♯","Sol","Sol♯","Lá","Lá♯","Si"],CIF=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const CORDAS=[{c:4,midi:62},{c:3,midi:67},{c:2,midi:71},{c:1,midi:74}];
+function detectarFrequencia(buf,sr){
+  const n=buf.length;let rms=0;for(let i=0;i<n;i++)rms+=buf[i]*buf[i];rms=Math.sqrt(rms/n);if(rms<.006)return -1;
+  const minLag=Math.floor(sr/1400),maxLag=Math.min(Math.floor(sr/60),n-1),nsdf=new Float32Array(maxLag+1);
+  for(let tau=minLag;tau<=maxLag;tau++){let acf=0,m=0;for(let j=0;j<n-tau;j++){acf+=buf[j]*buf[j+tau];m+=buf[j]*buf[j]+buf[j+tau]*buf[j+tau]}nsdf[tau]=m>0?2*acf/m:0}
+  const picos=[];let tau=minLag;while(tau<maxLag&&nsdf[tau]>0)tau++;
+  while(tau<maxLag){while(tau<maxLag&&nsdf[tau]<=0)tau++;let mel=tau;while(tau<maxLag&&nsdf[tau]>0){if(nsdf[tau]>nsdf[mel])mel=tau;tau++}if(mel<maxLag&&nsdf[mel]>0)picos.push(mel)}
+  if(!picos.length)return -1;const maior=Math.max(...picos.map(p=>nsdf[p]));if(maior<.6)return -1;
+  const e=picos.find(p=>nsdf[p]>=.9*maior)??picos[0];const a=nsdf[e-1]??nsdf[e],b=nsdf[e],c=nsdf[e+1]??nsdf[e],den=a-2*b+c;return sr/(e+(den!==0?.5*(a-c)/den:0));
+}
+function drawAf(){
+  const f=T.af,l=f.leit,cents=l?Math.max(-50,Math.min(50,l.cents)):0,ok=f.ativo&&l&&Math.abs(l.cents)<=5,nota=l?((l.midi%12)+12)%12:null,oit=l?Math.floor(l.midi/12)-1:null,alvo=l?CORDAS.find(c=>c.midi===l.midi):null;
+  $("tbody").innerHTML=`<div class="tuner ${!f.ativo?"":ok?"ok":"off"}">
+    <p class="sub" style="margin:0">${f.on?(f.ativo?"Nota tocada":"Toque uma corda…"):"Afinador cromático"}</p>
+    <p class="tnote">${nota!==null?NOMES[nota]+`<small>${oit}</small>`:"—"}</p>
+    <p class="sub" style="margin:0">${nota!==null?`${CIF[nota]}${oit} · ${l.freq.toFixed(1)} Hz`:"Lá = "+f.la+" Hz"}</p>
+    <div class="gauge" aria-hidden="true"><span class="bar"></span>${[-50,-25,0,25,50].map(m=>`<span class="tick ${m===0?"z":""}" style="left:${50+m}%"></span>`).join("")}<span class="needle ${ok?"ok":f.ativo?"on":""}" style="left:${50+cents}%"></span></div>
+    <p class="tmsg" aria-live="polite">${!f.ativo?"&nbsp;":ok?"Afinado!":l.cents<0?`Grave (${Math.round(l.cents)}) · aperte um pouco a tarraxa`:`Agudo (+${Math.round(l.cents)}) · afrouxe um pouco a tarraxa`}</p></div>
+   <p style="text-align:center;font-weight:600;margin:14px 0 8px">Afinação do cavaquinho: Ré · Sol · Si · Ré</p>
+   <div class="cordas">${CORDAS.map(c=>`<div class="${alvo&&alvo.c===c.c?(ok?"ok":"on"):""}"><b>${NOMES[c.midi%12]}</b><small>${c.c}ª corda</small></div>`).join("")}</div>
+   <button class="primary" id="afgo" style="width:100%;margin-top:14px">${f.on?"Desligar afinador":"Ligar afinador"}</button>
+   ${f.erro?`<p class="status err">${esc(f.erro)}</p>`:""}
+   <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;color:var(--muted);font-size:14px">Referência Lá <button class="ghost" id="lam" style="min-height:30px;padding:2px 10px">−</button><b style="color:var(--ink);font-variant-numeric:tabular-nums">${f.la} Hz</b><button class="ghost" id="lap" style="min-height:30px;padding:2px 10px">+</button></div>
+   <p class="help" style="text-align:center">Toque uma corda de cada vez, perto do celular, em lugar silencioso. O afinador reconhece todas as notas.</p>`;
+  $("afgo").onclick=()=>f.on?afOff():afOn();
+  $("lam").onclick=()=>{f.la=Math.max(430,f.la-1);drawAf()};$("lap").onclick=()=>{f.la=Math.min(450,f.la+1);drawAf()};
+}
+async function afOn(){
+  const f=T.af;f.erro="";
+  try{
+    const ac=audioCtx();const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+    const src=ac.createMediaStreamSource(stream),hp=ac.createBiquadFilter();hp.type="highpass";hp.frequency.value=50;const an=ac.createAnalyser();an.fftSize=2048;src.connect(hp).connect(an);
+    const buf=new Float32Array(an.fftSize);f.stream=stream;f.hist=[];f.on=true;
+    const loop=t=>{f.raf=requestAnimationFrame(loop);if(f.ultimo&&t-f.ultimo<45)return;f.ultimo=t;an.getFloatTimeDomainData(buf);const fr=detectarFrequencia(buf,ac.sampleRate);
+      if(fr>0){f.hist.push(fr);if(f.hist.length>5)f.hist.shift();const o=[...f.hist].sort((a,b)=>a-b),med=o[Math.floor(o.length/2)],mx=69+12*Math.log2(med/f.la),mi=Math.round(mx);f.leit={freq:med,midi:mi,cents:(mx-mi)*100};f.ativo=true;f.voz=t}
+      else if(t-f.voz>600){f.hist=[];f.ativo=false}
+      if(st.view==="tools"&&T.aba==="afinador")drawAf()};
+    f.raf=requestAnimationFrame(loop);drawAf();
+  }catch(e){f.erro=e&&e.name==="NotAllowedError"?"O microfone foi bloqueado. Libere o acesso ao microfone nas configurações do navegador e toque em “Ligar afinador” de novo.":"Não foi possível usar o microfone neste aparelho.";afOff()}
+}
+function afOff(){const f=T.af;cancelAnimationFrame(f.raf);f.stream?.getTracks().forEach(t=>t.stop());f.stream=null;f.on=false;f.ativo=false;if(st.view==="tools"&&T.aba==="afinador")drawAf()}
+
+/* ----- batucadas (áudios do Minha Evolução, em streaming) ----- */
+const BAT_URL="https://rnznqwuoexwspwvnbkri.supabase.co/functions/v1/batucadas-publicas";
+async function btLoad(){const b=T.bt;try{const r=await fetch(BAT_URL);const d=await r.json();b.lista=d.batucadas||[];b.at=Date.now()}catch(e){b.erro=true;b.lista=[]}}
+const mmss=s=>{s=Math.max(0,Math.floor(s||0));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+function btGroups(){const m=new Map();for(const x of T.bt.lista||[]){const nome=(x.nome.replace(/^\s*\d+\s*bpm\s*[-–]\s*/i,"").trim())||x.nome;if(!m.has(nome))m.set(nome,[]);m.get(nome).push(x)}
+  return[...m.entries()].map(([nome,it])=>({nome,it:it.sort((a,b)=>a.bpm-b.bpm)}))}
+async function drawBt(){
+  const b=T.bt;
+  if(b.lista===null){$("tbody").innerHTML=`<p class="help" style="text-align:center">Carregando batucadas…</p>`;await btLoad();if(st.view==="tools"&&T.aba==="batucadas")drawBt();return}
+  const gs=btGroups();
+  if(!gs.length){$("tbody").innerHTML=`<div class="empty">${b.erro?"Não foi possível carregar as batucadas. Verifique a internet.":"As batucadas chegam em breve."}</div>`;return}
+  $("tbody").innerHTML=`<p class="help" style="text-align:center;margin-top:0">Escolha o ritmo e o andamento (BPM). Comece devagar e vá subindo. A batucada continua tocando enquanto você abre uma cifra.</p>
+   ${gs.map(g=>`<div class="bgroup"><b>${esc(g.nome)}</b><div class="pills">${g.it.map(x=>{const at=b.sel&&b.sel.id===x.id;return`<button data-bt="${x.id}" class="bpm ${at&&b.on?"play":at?"on":""}">${at&&b.loading?"…":at&&b.on?"❚❚":"▶"} ${x.bpm} <small>BPM</small></button>`}).join("")}</div></div>`).join("")}`;
+  document.querySelectorAll("[data-bt]").forEach(el=>el.onclick=()=>{const x=(b.lista||[]).find(y=>y.id===el.dataset.bt);if(b.sel&&b.sel.id===x.id&&b.on)btPause();else btPlay(x)});
+}
+async function btPlay(x){
+  const b=T.bt;
+  if(b.at&&Date.now()-b.at>100*60*1000){await btLoad();x=(b.lista||[]).find(y=>y.id===x.id)||x} // links valem 2 h
+  if(!b.audio){b.audio=new Audio();b.audio.preload="auto";b.audio.setAttribute("playsinline","");
+    b.audio.addEventListener("playing",()=>{b.loading=false;b.on=true;btUi()});b.audio.addEventListener("pause",()=>{b.on=false;btUi()});
+    b.audio.addEventListener("waiting",()=>{b.loading=true;btUi()});b.audio.addEventListener("ended",()=>{b.on=false;btUi()});
+    b.audio.addEventListener("error",()=>{b.loading=false;b.on=false;toast("Não foi possível tocar esta batucada. Verifique a internet.");btUi()})}
+  unlockIOS();
+  if(!b.sel||b.sel.id!==x.id){b.sel=x;b.audio.src=x.url}
+  b.audio.loop=b.rep;b.audio.volume=b.vol;b.loading=true;btUi();
+  try{await b.audio.play()}catch(e){b.loading=false;btUi()}
+}
+function btPause(){T.bt.audio&&T.bt.audio.pause()}
+function btStop(){const b=T.bt;if(b.audio){b.audio.pause();b.audio.removeAttribute("src");b.audio.load()}b.sel=null;b.on=false;btUi()}
+function btUi(){
+  if(st.view==="tools"&&T.aba==="batucadas")drawBt();
+  const b=T.bt,bar=$("btbar");
+  if(!b.sel){bar.hidden=true;cancelAnimationFrame(b.raf);document.body.classList.remove("hasbt");return}
+  bar.hidden=false;document.body.classList.add("hasbt");
+  bar.innerHTML=`<div class="wrap"><button class="btp" id="btpp" aria-label="${b.on?"Pausar":"Tocar"} batucada">${b.loading?"…":b.on?"❚❚":"▶"}</button>
+   <div class="bti"><b>${esc(btGroups().find(g=>g.it.some(i=>i.id===b.sel.id))?.nome||"Batucada")} · ${b.sel.bpm} BPM</b><span class="btprog"><i id="btfill"></i></span><small id="bttime">${mmss(b.audio?.currentTime)} / ${mmss(b.sel.duracao||b.audio?.duration)}</small></div>
+   <button class="btx" id="btrep" title="Repetir" aria-pressed="${b.rep}">${b.rep?"↻":"→"}</button><input type="range" id="btvol" min="0" max="1" step="0.01" value="${b.vol}" aria-label="Volume da batucada"><button class="btx" id="btclose" aria-label="Fechar batucada">✕</button></div>`;
+  $("btpp").onclick=()=>b.on?btPause():btPlay(b.sel);
+  $("btrep").onclick=()=>{b.rep=!b.rep;if(b.audio)b.audio.loop=b.rep;btUi()};
+  $("btvol").oninput=e=>{b.vol=+e.target.value;if(b.audio)b.audio.volume=b.vol};
+  $("btclose").onclick=btStop;
+  cancelAnimationFrame(b.raf);
+  const tick=()=>{const a=b.audio;if(a&&$("btfill")){const d=b.sel.duracao||a.duration||1;$("btfill").style.width=Math.min(100,a.currentTime/d*100)+"%";$("bttime").textContent=mmss(a.currentTime)+" / "+mmss(d)}b.raf=requestAnimationFrame(tick)};
+  b.raf=requestAnimationFrame(tick);
+}
+
 initCaps();
 
 if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
