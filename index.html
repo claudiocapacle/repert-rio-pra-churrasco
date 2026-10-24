@@ -334,6 +334,9 @@ body.stage .btbar{display:none}
 .qt2:hover{border-color:var(--orange)}
 .achips .more{color:var(--orange);padding:5px 14px}
 .arow .t b,.arow .t small{color:inherit}.arow{color:var(--ink)!important}.arow .t small{color:var(--muted)}
+.chip svg{width:15px;height:15px}
+.chip.live{background:var(--orange);border-color:var(--orange);color:#fff}
+.chip.live .v{color:#fff}
 
 </style>
 </head>
@@ -869,6 +872,9 @@ function drawSongTop(){
   $("addBtn").onclick=()=>openDrawer("addrep",{id:s.id});
 }
 function aulaUrl(s){const m=meta[s.id];return m&&m.aula||("https://www.youtube.com/results?search_query="+encodeURIComponent("Claudio Capacle "+s.title+" cavaquinho"))}
+const ICM={met:'<svg viewBox="0 0 24 24" width="15" height="15" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round"><path d="M9 3h6l4 18H5L9 3zM12 16l5-9"/></svg>',
+  drum:'<svg viewBox="0 0 24 24" width="15" height="15" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round"><ellipse cx="12" cy="8" rx="8" ry="3"/><path d="M4 8v8c0 1.7 3.6 3 8 3s8-1.3 8-3V8M3 3l6 5M21 3l-6 5"/></svg>'};
+function refreshLive(){if(st.view==="song")drawSongHead();if(dr&&(dr.kind==="metronomo"||dr.kind==="batucada"))drawDrawer()}
 function drawSongHead(){
   const s=byId(st.id); if(!s||!$("shead")) return;
   const cur=keyOf(s,st.delta);
@@ -876,7 +882,9 @@ function drawSongHead(){
     ${s.credit&&(s.isNew||s.pending)?`<div class="credit">${s.pending?`<span class="tag pend" style="margin:0">em revisão · só você vê</span>`:`Contribuição de <b>${esc(s.credit)}</b>`}</div>`:""}
     <div class="chips"><button class="chip key" data-tool="tom">Tom <span class="v">${esc(cur)}</span>${IC.caret}</button>
     ${s.simplificada?`<button class="chip" data-tool="versao">${st.ver==="completa"?"Completa":"Simplificada"}${IC.caret}</button>`:""}
-    <a class="learn" href="${esc(aulaUrl(s))}" target="_blank" rel="noopener">${IC.yt.replace('<svg','<svg style="fill:currentColor"')}Aprender essa música</a></div>`;
+    <button class="chip ${T.met.on?"live":""}" data-tool="metronomo">${ICM.met}Metrônomo${T.met.on?` <span class="v">${T.met.bpm}</span>`:""}</button>
+    <button class="chip ${T.bt.on?"live":""}" data-tool="batucada">${ICM.drum}Batucada${T.bt.sel?` <span class="v">${T.bt.sel.bpm}</span>`:""}</button>
+    </div><div class="chips" style="margin-top:8px"><a class="learn" href="${esc(aulaUrl(s))}" target="_blank" rel="noopener">${IC.yt.replace('<svg','<svg style="fill:currentColor"')}Aprender essa música</a></div>`;
   $("tbKey").textContent=cur;
 }
 let MEASURES=0;
@@ -1181,6 +1189,32 @@ function drawDrawer(){
      <button class="primary" id="goPro" style="width:100%">Ativar Premium (demonstração)</button>
      <p class="sub" style="margin-top:10px;text-align:center">No protótipo, o botão só simula o plano pago.</p>`;
     $("goPro").onclick=()=>{store.plan="pro";save();closeDrawer();draw();toast("Premium ativado (demonstração)")};
+  } else if(dr.kind==="metronomo"){
+    const m=T.met,sug=(meta[s.id]||{}).bpm;
+    B.innerHTML=`<h3>Metrônomo</h3><p class="sub">Continua tocando enquanto você lê a cifra.${sug?` Andamento sugerido para esta música: <b>${sug} BPM</b>.`:""}</p>
+     <div class="big"><button class="round" id="dmm" aria-label="Diminuir 1 BPM">−</button><div style="text-align:center"><span class="num" id="dmb">${m.bpm}</span><div class="sub" style="margin:0" id="dmn">BPM · ${andamento(m.bpm)}</div></div><button class="round" id="dmp" aria-label="Aumentar 1 BPM">+</button></div>
+     <input type="range" id="dmr" min="30" max="240" value="${m.bpm}" aria-label="Andamento em BPM">
+     <div class="pills" style="justify-content:center;margin-top:8px">${[...new Set([sug,70,80,90,100,110,120].filter(Boolean))].map(v=>`<button data-dmv="${v}" class="${m.bpm===v?"on":""}">${v}${v===sug?" ★":""}</button>`).join("")}</div>
+     <div class="beats" id="mbeats">${Array.from({length:Math.max(1,m.comp)},(_,i)=>`<i class="${i===0&&m.comp>1?"acc":""}"></i>`).join("")}</div>
+     <div class="pills" style="justify-content:center;margin-bottom:12px">${[[2,"2/4"],[3,"3/4"],[4,"4/4"]].map(([v,l])=>`<button data-dmc="${v}" class="${m.comp===v?"on":""}">${l}</button>`).join("")}${[[1,"Só o tempo"],[4,"Semicolcheias"]].map(([v,l])=>`<button data-dms="${v}" class="${m.sub===v?"on":""}">${l}</button>`).join("")}</div>
+     <button class="primary" id="dmgo" style="width:100%">${m.on?"Parar metrônomo":"Tocar metrônomo"}</button>`;
+    const set=v=>{m.bpm=Math.min(240,Math.max(30,Math.round(v)));$("dmb").textContent=m.bpm;$("dmn").textContent="BPM · "+andamento(m.bpm);$("dmr").value=m.bpm;if(m.on)drawSongHead()};
+    $("dmm").onclick=()=>set(m.bpm-1);$("dmp").onclick=()=>set(m.bpm+1);$("dmr").oninput=e=>set(+e.target.value);
+    B.querySelectorAll("[data-dmv]").forEach(b=>b.onclick=()=>{set(+b.dataset.dmv);drawDrawer()});
+    B.querySelectorAll("[data-dmc]").forEach(b=>b.onclick=()=>{m.comp=+b.dataset.dmc;m.passo=0;drawDrawer()});
+    B.querySelectorAll("[data-dms]").forEach(b=>b.onclick=()=>{m.sub=+b.dataset.dms;m.passo=0;drawDrawer()});
+    $("dmgo").onclick=()=>{m.on?metStop():metStart();refreshLive()};
+  } else if(dr.kind==="batucada"){
+    const b=T.bt,sug=(meta[s.id]||{}).bpm;
+    if(b.lista===null){B.innerHTML=`<h3>Batucada</h3><p class="sub">Carregando batucadas…</p>`;btLoad().then(()=>{if(dr&&dr.kind==="batucada")drawDrawer()});return}
+    const gs=btGroups();
+    const near=sug&&b.lista.length?b.lista.reduce((a,x)=>Math.abs(x.bpm-sug)<Math.abs(a.bpm-sug)?x:a):null;
+    B.innerHTML=`<h3>Batucada</h3><p class="sub">Escolha o andamento e toque junto. A batucada segue tocando enquanto você rola a cifra ou troca de música.${near?` Sugerida para esta música: <b>${near.bpm} BPM</b> ★`:""}</p>
+     ${gs.length?gs.map(g=>`<div class="bgroup"><b>${esc(g.nome)}</b><div class="pills">${g.it.map(x=>{const at=b.sel&&b.sel.id===x.id;return`<button data-dbt="${x.id}" class="bpm ${at&&b.on?"play":at?"on":""}">${at&&b.loading?"…":at&&b.on?"❚❚":"▶"} ${x.bpm}${near&&near.id===x.id?" ★":""}</button>`}).join("")}</div></div>`).join(""):`<div class="empty">${b.erro?"Não foi possível carregar. Verifique a internet.":"As batucadas chegam em breve."}</div>`}
+     ${b.sel?`<div class="row2" style="margin-top:12px"><label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)">Volume<input type="range" id="dbv" min="0" max="1" step="0.01" value="${b.vol}" style="flex:1"></label><button class="ghost" id="dbstop">Parar batucada</button></div>`:""}`;
+    B.querySelectorAll("[data-dbt]").forEach(el=>el.onclick=()=>{const x=b.lista.find(y=>y.id===el.dataset.dbt);if(b.sel&&b.sel.id===x.id&&b.on)btPause();else btPlay(x)});
+    if($("dbv")) $("dbv").oninput=e=>{b.vol=+e.target.value;if(b.audio)b.audio.volume=b.vol};
+    if($("dbstop")) $("dbstop").onclick=()=>{btStop();drawDrawer()};
   } else if(dr.kind==="professor"){
     B.innerHTML=`<h3>Área do professor</h3><p class="sub">${isAdmin?"Você já está como professor neste aparelho.":"Digite a chave de professor para revisar cifras e definir BPM e aulas."}</p>
      ${isAdmin?`<button class="ghost" id="sairP" style="width:100%">Sair do modo professor</button>`:`<form class="newrep" id="pf"><input id="pk2" type="password" placeholder="Chave" autocomplete="off"><button class="primary">Entrar</button></form>`}`;
@@ -1486,10 +1520,10 @@ function metStart(){
   const ag=()=>{const dur=60/m.bpm/m.sub;while(m.prox<ac.currentTime+.12){const tc=Math.floor(m.passo/m.sub)%m.comp,eh=m.passo%m.sub===0;
     clique(ac,m.prox,!eh?"sub":m.comp>1&&tc===0?"acento":"tempo");if(eh)m.fila.push({t:m.prox,tc});m.prox+=dur;m.passo=(m.passo+1)%(m.comp*m.sub)}};
   ag();m.timer=setInterval(ag,25);
-  const dr=()=>{const now=ac.currentTime;while(m.fila.length&&m.fila[0].t<=now){m.beat=m.fila.shift().tc;const bs=document.querySelectorAll("#mbeats i");bs.forEach((x,i)=>x.classList.toggle("hit",i===m.beat))}m.raf=requestAnimationFrame(dr)};
-  m.raf=requestAnimationFrame(dr);m.on=true;
+  const drawBeat=()=>{const now=ac.currentTime;while(m.fila.length&&m.fila[0].t<=now){m.beat=m.fila.shift().tc;const bs=document.querySelectorAll("#mbeats i");bs.forEach((x,i)=>x.classList.toggle("hit",i===m.beat))}m.raf=requestAnimationFrame(drawBeat)};
+  m.raf=requestAnimationFrame(drawBeat);m.on=true;refreshLive();
 }
-function metStop(){const m=T.met;clearInterval(m.timer);cancelAnimationFrame(m.raf);m.fila=[];m.on=false;m.beat=-1}
+function metStop(){const m=T.met;clearInterval(m.timer);cancelAnimationFrame(m.raf);m.fila=[];m.on=false;m.beat=-1;refreshLive()}
 
 /* ----- afinador (método de McLeod, igual ao Minha Evolução) ----- */
 const NOMES=["Dó","Dó♯","Ré","Ré♯","Mi","Fá","Fá♯","Sol","Sol♯","Lá","Lá♯","Si"],CIF=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
@@ -1566,6 +1600,7 @@ function btPause(){T.bt.audio&&T.bt.audio.pause()}
 function btStop(){const b=T.bt;if(b.audio){b.audio.pause();b.audio.removeAttribute("src");b.audio.load()}b.sel=null;b.on=false;btUi()}
 function btUi(){
   if(st.view==="tools"&&T.aba==="batucadas")drawBt();
+  refreshLive();
   const b=T.bt,bar=$("btbar");
   if(!b.sel){bar.hidden=true;cancelAnimationFrame(b.raf);document.body.classList.remove("hasbt");return}
   bar.hidden=false;document.body.classList.add("hasbt");
