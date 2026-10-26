@@ -1485,6 +1485,7 @@ function handleHash(){
   if(h==="professor"){history.replaceState(null,"",location.pathname);return openDrawer("professor")}
   if(/^rep-/.test(h)) openShared(h.slice(4));
   else if(/^roda-/.test(h)) joinRoda(h.slice(5));
+  else if(/^musica-/.test(h)){const id=decodeURIComponent(h.slice(7));history.replaceState(null,"",location.pathname);if(byId(id))go("song",{id});else toast("Essa música não está mais no app.")}
 }
 addEventListener("hashchange",handleHash);
 
