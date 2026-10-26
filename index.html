@@ -411,6 +411,47 @@ body.stage .btbar{display:none}
 .edcard{display:block;padding:14px;margin:10px 0;text-align:left}
 .diff{font:500 12.5px/1.45 var(--f-mono);background:var(--bg);border-radius:10px;padding:8px;overflow:auto;max-height:46vh;margin:0}
 .dl{white-space:pre}.dl.da{background:#e2efe3;color:#1f5a2b}.dl.dr{background:#fbe4d1;color:#9a3d06;text-decoration:line-through}.dl.dk{color:var(--muted)}
+/* botão de repertório com rótulo */
+.add2{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:64px;height:44px;padding:3px 6px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);color:var(--orange);font:inherit}
+.add2 svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.add2 small{font-size:10px;font-weight:700;line-height:1.1;letter-spacing:.01em;white-space:nowrap}
+.add2.in{background:var(--orange-soft);border-color:var(--orange);color:var(--orange)}
+/* artista clicável na música */
+.shead .bylink{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:4px 0;font:inherit;color:var(--ink);font-weight:600;cursor:pointer;text-align:left}
+.shead .bylink .byall{color:var(--orange);font-weight:700;font-size:13px;white-space:nowrap}
+/* foto do artista */
+.av{overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av.sm{width:28px;height:28px;font-size:11px;flex:none}
+.afoto-cred{font-size:11px;color:var(--muted);margin:2px 0 0}
+.afoto-cred a{color:inherit}
+.afoto-adm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:-4px 0 12px}
+.afoto-adm .small{padding:6px 12px;font-size:13px;border-radius:999px;cursor:pointer}
+.av.big img{border-radius:50%}
+/* conta / login */
+.icon.acct svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.icon.acct.on span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--orange);color:#fff;font-weight:800;font-size:14px}
+.login{display:flex;flex-direction:column;gap:10px}
+.lgbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font-size:15px}
+.lgou{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;margin:4px 0}
+.lgou:before,.lgou:after{content:"";flex:1;height:1px;background:var(--line)}
+.lgseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:4px}
+.lgseg button{border:0;background:none;border-radius:9px;padding:9px;font:inherit;font-weight:700;color:var(--muted)}
+.lgseg button.on{background:var(--orange);color:#fff}
+.lgform{display:flex;flex-direction:column;gap:10px}
+.lgform input{font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.lgform .primary{min-height:48px;font-size:16px}
+.linkbtn{border:0;background:none;color:var(--blue);font:inherit;font-size:14px;text-decoration:underline;padding:4px;align-self:center}
+.lgpage{max-width:420px;margin:0 auto;padding:18px 18px 60px}
+.lghero{margin:8px 0 22px}
+.lghero h2{font-family:var(--f-display);font-size:34px;margin:6px 0 6px}
+.lghero p{color:var(--muted);margin:0;line-height:1.45}
+.lghero .kick{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--orange)}
+.cfgsw{display:flex;gap:12px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0 4px}
+.cfgsw input{width:22px;height:22px;accent-color:var(--orange);flex:none;margin-top:2px}
+.cfgsw span{display:flex;flex-direction:column;gap:2px}
+.cfgsw small{color:var(--muted);line-height:1.35}
+body.gate #btbar,body.gate #ouvirbar{display:none!important}
 
 </style>
 </head>
@@ -708,13 +749,14 @@ for(const n of NEW_SONGS){SONGS.push({addedAt:Date.parse(n.added||"2026-10-24T12
 const BASE_COUNT=SONGS.length;
 /* versões: completa, simplificada e outras (Versão 2, 3...), cada uma pode ter o próprio tom */
 const _chunkP={};
+const ICO_REP='<svg viewBox="0 0 24 24"><path d="M4 6h11M4 11h11M4 16h7M18 13v8M14 17h8"/></svg>';
 let EDITS={},EDS_ALL=[];
 /* cifra -> texto (acordes em cima, letra embaixo), o inverso de parseChordText */
 function chordRow(ch){let s="",prev="";for(const[c,t] of ch){const sp=/^[|>%]$/.test(t)||/^[|>%]$/.test(prev);if(s.length&&c<s.length+(sp?0:1))s+=sp?"":" ";else s=s.padEnd(c);s+=t;prev=t}return s}
 function linesToText(lines){const o=[];for(const l of lines){if(l.t==="gap")o.push("");else if(l.t==="pair"){o.push(chordRow(l.ch));o.push(l.text.replace(/\s+$/,"")+(l.bold?" [b]":""))}else if(l.t==="chords")o.push(chordRow(l.ch));else o.push((l.text||"").replace(/\s+$/,"")+(l.bold?" [b]":""))}return o.join("\n")}
 async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edicoes").select("song_id,versao,texto,tom,criado_em").eq("status","publicada").order("criado_em").limit(5000);if(error||!data)return;
   const m={};for(const e of data)m[e.song_id+"|"+e.versao]=e;EDITS=m;for(const e of data){const s=byId(e.song_id);if(s)delete s.vers}if(st.view==="song")drawSong()}
-async function loadAdminEdits(){if(!ADMIN_KEY||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
+async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 function loadChunk(n){if(!_chunkP[n])_chunkP[n]=fetch("data/"+CHUNKS[n]).then(r=>{if(!r.ok)throw new Error("rede");return r.json()}).then(o=>{for(const id in o){const s=byId("s"+id);if(s){Object.assign(s,o[id]);delete s.vers}}}).catch(e=>{delete _chunkP[n];throw e});return _chunkP[n]}
 function prefetchChunks(){let i=0;const nx=()=>{if(i>=CHUNKS.length)return;const n=i++;loadChunk(n).catch(()=>{}).finally(()=>setTimeout(nx,400))};nx()}
@@ -739,7 +781,7 @@ if(!store.reps.length){
   const ids=pick.map(t=>SONGS.find(s=>norm(s.title).startsWith(norm(t)))).filter(Boolean).map(s=>({id:s.id,delta:0}));
   store.reps.push({id:"r1",name:"Roda de sábado",items:ids,example:true});
 }
-const save=()=>{try{localStorage.setItem("rpc2",JSON.stringify(store));localStorage.setItem("rpc2p",JSON.stringify({fs:st.fs,fit:st.fit,ver:st.ver}))}catch(e){}};
+const save=()=>{try{localStorage.setItem("rpc2",JSON.stringify(store));localStorage.setItem("rpc2p",JSON.stringify({fs:st.fs,fit:st.fit,ver:st.ver}))}catch(e){};if(USER)syncPush()};
 const isPro=()=>store.plan==="pro";
 const repById=id=>store.reps.find(r=>r.id===id);
 const meta={}; // bpm/aula por música (do banco)
@@ -798,7 +840,7 @@ function shapes(name){
 /* ================= servidor (Supabase) ================= */
 const SB_URL="https://lbspifonlkwnthvohyvv.supabase.co";
 const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxic3BpZm9ubGt3bnRodm9oeXZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI4MzY3MTUsImV4cCI6MjEwODQxMjcxNX0.xnOBEWqSeHZU-HdeZ1yyvYg80b4hjs8hM9taCYhYqtY";
-let sb=null,isAdmin=false,myName="";
+let sb=null,isAdmin=false,myName="",USER=null,PROF=false,AUTH_OK=false,CFG={exigir_login:false},AUTHCFG=null;
 let SUBS_ALL=[];
 const rnd=n=>{const a=new Uint8Array(n);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,"0")).join("")};
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}}, lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
@@ -817,7 +859,7 @@ async function loadMine(){
   if(st.view==="import"&&!imp.busy)drawImport();if(st.view==="home")drawTab();
 }
 async function loadAdmin(){
-  if(!ADMIN_KEY) return;
+  if(!ADMIN_KEY&&!PROF) return;
   const {data,error}=await sb.rpc("admin_list",{p_key:ADMIN_KEY});
   if(error){isAdmin=false;return}
   isAdmin=true;SUBS_ALL=data.map(x=>({...x,at:Date.parse(x.created_at)}));
@@ -831,14 +873,112 @@ let _lastPlay={};
 function contarToque(s){if(!sb||s.pending)return;const k=s.id;if(_lastPlay[k]&&Date.now()-_lastPlay[k]<30*60000)return;_lastPlay[k]=Date.now();
   sb.rpc("registrar_toque",{p_device:DEVICE,p_song:k}).then(()=>{}).catch(()=>{})}
 async function initCaps(){
-  try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false}})}catch(e){sb=null}
-  if(sb){await Promise.allSettled([loadCatalog(),loadMeta(),loadMine(),loadAdmin(),loadEdits()]);loadPlays();loadAdminEdits()}
-  if(st.view==="home") drawHome();
+  try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce",storageKey:"sc-auth"}})}catch(e){sb=null}
+  if(sb){await authInit()}
+  if(sb){await Promise.allSettled([loadCatalog(),loadMeta(),loadMine(),loadAdmin(),loadEdits(),loadFotos()]);loadPlays();loadAdminEdits()}
+  AUTH_OK=true;
+  if(gateOn()) draw(); else if(st.view==="home") drawHome();
   handleHash();
 }
 function fromSubmission(v,approved){
   return{addedAt:Date.parse(v.created_at||0)||0,id:(approved?"c-":"p-")+v.id,subId:v.id,at:Date.parse(v.created_at||0),title:v.title,artist:v.artist||"",key:v.key||"C",block:null,credit:v.credit||"",isNew:approved,pending:!approved,status:v.status,
     completa:parseChordText(v.completa||v.text||""),simplificada:v.simplificada?parseChordText(v.simplificada):null}
+}
+
+
+/* ================= conta (login) ================= */
+const ICO_USER='<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+const ICO_G='<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.5z"/></svg>';
+const ICO_APPLE='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8s2 .8 3.4.8c1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>';
+const gateOn=()=>!!(AUTH_OK&&CFG.exigir_login&&!USER);
+async function authHdr(){if(!sb||!USER)return{};const {data}=await sb.auth.getSession();const t=data&&data.session&&data.session.access_token;return t?{Authorization:"Bearer "+t}:{}}
+async function loadCfg(){const {data}=await sb.from("app_cfg").select("k,v");(data||[]).forEach(x=>CFG[x.k]=x.v)}
+async function loadAuthCfg(){try{const r=await fetch(SB_URL+"/auth/v1/settings",{headers:{apikey:SB_KEY}});AUTHCFG=await r.json()}catch(e){AUTHCFG=null}}
+async function authInit(){
+  await Promise.allSettled([loadCfg(),loadAuthCfg()]);
+  try{const {data}=await sb.auth.getSession();USER=data&&data.session?data.session.user:null}catch(e){USER=null}
+  if(USER) await aoEntrar(false);
+  sb.auth.onAuthStateChange((ev,ses)=>{setTimeout(async()=>{
+    if(ev==="PASSWORD_RECOVERY"){USER=ses&&ses.user||USER;openDrawer("novasenha");return}
+    const novo=ses?ses.user:null;
+    if(novo&&(!USER||USER.id!==novo.id)){USER=novo;await aoEntrar(true)}
+    else if(!novo&&USER&&ev==="SIGNED_OUT"){USER=null;PROF=false}
+  },0)});
+}
+async function aoEntrar(avisar){
+  const md=USER.user_metadata||{};if(!myName&&(md.full_name||md.name))myName=md.full_name||md.name;
+  await syncPull();
+  try{const {data}=await sb.rpc("sou_professor");PROF=data===true}catch(e){PROF=false}
+  if(PROF){isAdmin=true;await loadAdmin();loadAdminEdits()}
+  if(avisar){closeDrawer();toast("Pronto, você entrou"+(md.full_name||md.name?", "+String(md.full_name||md.name).split(" ")[0]:"")+"!");if(st.view==="login")st.view="home";draw()}
+}
+async function sairConta(){try{await sb.auth.signOut()}catch(e){}
+  try{localStorage.removeItem("rpc2")}catch(e){}location.href=location.pathname}
+/* dados da conta: junta o que está no aparelho com o que está salvo */
+function mergeStore(srv){
+  const loc=store, real=loc.reps.filter(r=>!r.example);
+  const reps=[...(srv.reps||[])];const ids=new Set(reps.map(r=>r.id));
+  for(const r of real){if(ids.has(r.id)){const sr=reps.find(x=>x.id===r.id);if(JSON.stringify(sr)!==JSON.stringify(r))reps.push({...r,id:"r"+rnd(4)})}else reps.push(r)}
+  if(!reps.length)reps.push(...loc.reps);
+  const uni=(a,b,n)=>[...new Set([...(a||[]),...(b||[])])].slice(0,n);
+  return{...loc,reps,fav:uni(srv.fav,loc.fav,2000),hist:uni(loc.hist,srv.hist,30)};
+}
+async function syncPull(){if(!USER)return;
+  const {data,error}=await sb.from("aluno_dados").select("dados").eq("user_id",USER.id).maybeSingle();
+  if(error)return;
+  if(data&&data.dados&&data.dados.reps){store=mergeStore(data.dados)}
+  for(const r of store.reps) for(const it of r.items) if(typeof it.id==="number") it.id="s"+it.id;
+  try{localStorage.setItem("rpc2",JSON.stringify(store))}catch(e){}
+  syncPush(true);
+}
+let _syncT=null;
+function syncPush(agora){if(!USER||!sb)return;clearTimeout(_syncT);_syncT=setTimeout(async()=>{
+  const md=USER.user_metadata||{};
+  await sb.from("aluno_dados").upsert({user_id:USER.id,nome:md.full_name||md.name||myName||null,dados:{reps:store.reps,fav:store.fav,hist:store.hist},atualizado:new Date().toISOString()})},agora?50:1500)}
+function authErr(e){const m=String(e&&e.message||e||"");
+  if(/invalid login/i.test(m))return"E-mail ou senha incorretos.";
+  if(/not confirmed/i.test(m))return"Falta confirmar o e-mail. Abra o link que enviamos para você.";
+  if(/already registered|already exists/i.test(m))return"Esse e-mail já tem conta. Use a aba Entrar.";
+  if(/at least 6|password.*short|weak/i.test(m))return"A senha precisa ter pelo menos 6 caracteres.";
+  if(/not authorized|rate limit|sending|smtp/i.test(m))return"Não conseguimos enviar o e-mail agora. Tente entrar com o Google ou fale com o professor.";
+  if(/provider is not enabled|unsupported provider/i.test(m))return"Esse jeito de entrar ainda não foi ativado.";
+  if(/valid email|invalid.*email/i.test(m))return"Confira o e-mail digitado.";
+  return"Não deu certo agora. Tente de novo em instantes."}
+function loginForm(id,modo){const ext=(AUTHCFG&&AUTHCFG.external)||{};modo=modo||"entrar";
+  return `<div class="login" data-lg="${id}" data-modo="${modo}">
+    ${ext.google?`<button class="ghost lgbtn" data-prov="google">${ICO_G}<span>Continuar com o Google</span></button>`:""}
+    ${ext.apple?`<button class="ghost lgbtn" data-prov="apple">${ICO_APPLE}<span>Continuar com a Apple</span></button>`:""}
+    ${ext.google||ext.apple?`<div class="lgou"><span>ou com e-mail</span></div>`:""}
+    <div class="seg lgseg"><button type="button" data-m="entrar" class="${modo==="entrar"?"on":""}">Entrar</button><button type="button" data-m="criar" class="${modo==="criar"?"on":""}">Criar conta</button></div>
+    <form class="lgform" novalidate>
+      ${modo==="criar"?`<input name="nome" placeholder="Seu nome" autocomplete="name" maxlength="60">`:""}
+      <input name="email" type="email" placeholder="E-mail" autocomplete="email" required>
+      <input name="senha" type="password" placeholder="${modo==="criar"?"Crie uma senha (mínimo 6 caracteres)":"Senha"}" autocomplete="${modo==="criar"?"new-password":"current-password"}" required>
+      <button class="primary" type="submit">${modo==="criar"?"Criar minha conta":"Entrar"}</button>
+      ${modo==="entrar"?`<button type="button" class="linkbtn" data-esq="1">Esqueci minha senha</button>`:""}
+      <p class="status" hidden></p>
+    </form></div>`}
+function loginWire(id){const W=document.querySelector(`[data-lg="${id}"]`);if(!W)return;const S=W.querySelector(".status"),F=W.querySelector("form");
+  const msg=(t,err)=>{S.hidden=false;S.className="status"+(err?" err":"");S.textContent=t};
+  const redo=m=>{const box=W.parentElement;W.outerHTML=loginForm(id,m);loginWire(id)};
+  W.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>redo(b.dataset.m));
+  W.querySelectorAll("[data-prov]").forEach(b=>b.onclick=async()=>{const {error}=await sb.auth.signInWithOAuth({provider:b.dataset.prov,options:{redirectTo:location.origin+location.pathname}});if(error)msg(authErr(error),true)});
+  const esq=W.querySelector("[data-esq]");if(esq)esq.onclick=async()=>{const em=F.email.value.trim();if(!em)return msg("Digite seu e-mail acima e toque de novo em Esqueci minha senha.",true);
+    const {error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});msg(error?authErr(error):"Enviamos um link para "+em+" para você criar uma senha nova.",!!error)};
+  F.onsubmit=async e=>{e.preventDefault();const em=F.email.value.trim(),pw=F.senha.value,modo=W.dataset.modo,B=F.querySelector(".primary");
+    if(!/^\S+@\S+\.\S+$/.test(em))return msg("Confira o e-mail digitado.",true);if(pw.length<6)return msg("A senha precisa ter pelo menos 6 caracteres.",true);
+    B.disabled=true;msg(modo==="criar"?"Criando sua conta…":"Entrando…");
+    if(modo==="criar"){const nome=(F.nome&&F.nome.value.trim())||"";
+      const {data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:nome},emailRedirectTo:location.origin+location.pathname}});B.disabled=false;
+      if(error)return msg(authErr(error),true);
+      if(data&&data.session){USER=data.session.user;await aoEntrar(true)}else msg("Conta criada! Enviamos um link de confirmação para "+em+". Abra o e-mail e depois entre aqui.")}
+    else{const {data,error}=await sb.auth.signInWithPassword({email:em,password:pw});B.disabled=false;
+      if(error)return msg(authErr(error),true);USER=data.user;await aoEntrar(true)}};
+}
+function drawLogin(){
+  $("topbar").innerHTML=`<h1 class="brand"><span class="b1">samba<span>cifra</span></span></h1>`;
+  $("view").innerHTML=`<div class="lgpage"><div class="lghero"><span class="kick">Para qualquer instrumento</span><h2>Bora tocar?</h2><p>As cifras dos sambas mais tocados de todos os tempos. Entre para escolher a música e ser o mestre da roda de samba.</p></div>${loginForm("p")}</div>`;
+  loginWire("p");
 }
 
 /* ================= navegação ================= */
@@ -850,6 +990,8 @@ function draw(){
   $("repnav").hidden=!(st.view==="song"&&st.rep);
   $("top").classList.toggle("lined",st.view!=="home");
   drawRodaBar();
+  document.body.classList.toggle("gate",gateOn());
+  if(gateOn()){homeNav();$("homenav").hidden=true;$("tools").hidden=true;return drawLogin()}
   homeNav(); if(st.view==="home") drawHome(); else if(st.view==="artist") drawArtist(); else if(st.view==="tools") drawTools(); else if(st.view==="admbt") drawAdmBt(); else if(st.view==="rep") drawRep(); else if(st.view==="import") drawImport(); else if(st.view==="review") drawReview(); else if(st.view==="edit") drawEdit(); else drawSong();
   save();
 }
@@ -862,8 +1004,10 @@ function drawTop(){
    <button class="icon" id="upBtn" aria-label="Enviar cifra" title="Enviar cifra">${IC.upload}</button>
    ${isAdmin?`<button class="icon" id="admBtBtn" aria-label="Gerenciar batucadas" title="Batucadas">${ICM.drum.replace('width="15" height="15"','width="22" height="22"')}</button>`:""}
    ${isAdmin?`<button class="icon badge" id="revBtn" aria-label="Revisar cifras enviadas" title="Revisão">${IC.review}${pend?`<b>${pend}</b>`:""}</button>`:""}
+   <button class="icon acct ${USER?"on":""}" id="acctBtn" aria-label="${USER?"Minha conta":"Entrar"}" title="${USER?"Minha conta":"Entrar"}">${USER?`<span>${esc(((USER.user_metadata||{}).full_name||(USER.user_metadata||{}).name||USER.email||"?").trim()[0].toUpperCase())}</span>`:ICO_USER}</button>
    <button class="plan ${isPro()?"pro":""}" id="planBtn">${isPro()?"Premium":"Grátis"}</button></div>`;
   $("planBtn").onclick=()=>openDrawer("plano");
+  $("acctBtn").onclick=()=>openDrawer("conta");
   $("upBtn").onclick=()=>go("import",{});
   if($("revBtn")) $("revBtn").onclick=()=>go("review",{});
   if($("admBtBtn")) $("admBtBtn").onclick=()=>go("admbt",{});
@@ -899,8 +1043,20 @@ function artistsAll(){
     if(!m.has(k))m.set(k,{key:k,names:{},songs:[]});const a=m.get(k);a.songs.push(s);a.names[s.artist]=(a.names[s.artist]||0)+1}
   return [...m.values()].map(a=>({key:a.key,name:Object.entries(a.names).sort((x,y)=>y[1]-x[1])[0][0],songs:a.songs}));
 }
+let AFOTO={};
+async function loadFotos(){if(!sb)return;const {data,error}=await sb.from("artista_foto").select("akey,url,credito,pagina,fonte").limit(2000);if(error||!data)return;
+  AFOTO={};for(const x of data)if(x.url)AFOTO[x.akey]=x;if(["home","artist","song"].includes(st.view))draw()}
+function fotoDe(name){const f=AFOTO[artistKey(name)];if(f)return f;const p=String(name||"").replace(/\(.*?\)/g,"").split(/\s+(?:e|part\.?|feat\.?|com|&)\s+|\s*[\/,]\s*/i)[0];return p&&p!==name?AFOTO[artistKey(p)]:null}
+function artistAv(name,cls="",i=0){const f=fotoDe(name),ini=esc(initials(name||"?"));
+  return `<span class="av ${cls} ${i%2?"b":""}">${f?`<img src="${esc(f.url)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${ini}'">`:ini}</span>`}
+async function fotoSet(a,acao,img){const S=$("fstat");if(S){S.hidden=false;S.textContent=acao==="enviar"?"Enviando a foto…":"Removendo…"}
+  try{const r=await fetch(SB_URL+"/functions/v1/artista-foto",{method:"POST",headers:{"Content-Type":"application/json",apikey:SB_KEY,...(await authHdr())},body:JSON.stringify({key:ADMIN_KEY,acao,akey:a.key,nome:a.name,img})});const d=await r.json();
+    if(!r.ok||d.error)throw 0;if(acao==="enviar")AFOTO[a.key]={akey:a.key,url:d.url,fonte:"prof"};else delete AFOTO[a.key];toast(acao==="enviar"?"Foto salva para todos":"Foto removida");drawArtist()}
+  catch(e){if(S)S.textContent="Não deu certo. Tente outra imagem.";}}
+function fotoArquivo(file,cb){const im=new Image();im.onload=()=>{const c=document.createElement("canvas"),z=320;c.width=c.height=z;const g=c.getContext("2d"),m=Math.min(im.width,im.height);
+  g.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,z,z);URL.revokeObjectURL(im.src);cb(c.toDataURL("image/jpeg",.85))};im.onerror=()=>toast("Não consegui abrir essa imagem.");im.src=URL.createObjectURL(file)}
 const initials=n=>n.split(/\s+/).filter(w=>w.length>2||/^[A-Z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join("").toUpperCase()||n[0].toUpperCase();
-function artistRow(a,i){return `<button class="arow" data-artist="${esc(a.key)}"><span class="av ${i%2?"b":""}">${esc(initials(a.name))}</span><span class="t"><b>${esc(a.name)}</b><small>${esc(a.songs.slice(0,2).map(x=>x.title).join(", "))}${a.songs.length>2?"…":""}</small></span><span class="go">›</span></button>`}
+function artistRow(a,i){return `<button class="arow" data-artist="${esc(a.key)}">${artistAv(a.name,"",i)}<span class="t"><b>${esc(a.name)}</b><small>${esc(a.songs.slice(0,2).map(x=>x.title).join(", "))}${a.songs.length>2?"…":""}</small></span><span class="go">›</span></button>`}
 function searchSongs(q){
   const words=norm(q).split(/\s+/).filter(Boolean);if(!words.length)return[];
   const list=[...PRIVATE,...SONGS].filter(s=>{const h=norm(s.title+" "+s.artist);return words.every(w=>h.includes(w))});
@@ -925,7 +1081,7 @@ function drawHome(){
   drawTop();homeNav();
   const tgt=repById(st.addTarget);
   let h=tgt?`<div class="card" style="background:var(--orange-soft);border-color:var(--orange);margin:4px 0 12px"><span><b style="font-size:15px">Adicionando a “${esc(tgt.name)}”</b><br><small style="color:var(--ink)">Toque no + ao lado das músicas · ${tgt.items.length}${!isPro()?"/"+FREE_SONGS:""}</small></span><button class="primary" id="done" style="grid-row:1/3;grid-column:2;min-height:40px;padding:8px 14px">Concluir</button></div>`:"";
-  if(st.tab==="inicio") h+=`<section class="hero2"><div class="htxt"><span class="kick">4 cordas · 6 cordas</span><h2>Bora tocar?</h2><p>Cifras certinhas, com o tempo de cada troca. Escolha a música e puxe o samba.</p></div>${heroArt()}</section>`;
+  if(st.tab==="inicio") h+=`<section class="hero2"><div class="htxt"><span class="kick">Para qualquer instrumento</span><h2>Bora tocar?</h2><p>As cifras dos sambas mais tocados de todos os tempos. Escolha a música e seja o mestre da roda de samba.</p></div>${heroArt()}</section>`;
   if(["inicio","musicas","artistas"].includes(st.tab)) h+=`<div class="search big">${IC.search}<input id="q" type="search" placeholder="Buscar música ou artista" value="${esc(st.q)}" aria-label="Buscar música ou artista" autocomplete="off"></div>`;
   h+=`<div id="tabbody" class="homepad"></div>`;
   $("view").innerHTML=h;
@@ -943,7 +1099,7 @@ function drawTab(){
     let h=`<div class="qgrid2">${tile('data-nav="musicas"',"note","Músicas")}${tile('data-nav="artistas"',"user","Artistas")}${tile('data-nav="meus"',"addlist","Meus repertórios")}
       ${tile('data-nav="prontos"',"star","Repertórios prontos","o")}${tile('data-nav="ferramentas"',"tune","Ferramentas")}${tile('data-go="import"',"upload","Enviar cifra")}</div>`;
     if(recent.length) h+=`<div class="sec">Continue tocando</div><div class="rows" style="padding-bottom:0">${recent.map(s=>songRow(s)).join("")}</div>`;
-    h+=`<div class="sec">Artistas</div><div class="achips">${arts.slice(0,12).map((a,i)=>`<button data-artist="${esc(a.key)}"><span class="av ${i%2?"b":""}">${esc(initials(a.name))}</span>${esc(a.name)}</button>`).join("")}<button data-nav="artistas" class="more">Ver todos ›</button></div>`;
+    h+=`<div class="sec">Artistas</div><div class="achips">${arts.slice(0,12).map((a,i)=>`<button data-artist="${esc(a.key)}">${artistAv(a.name,"",i)}${esc(a.name)}</button>`).join("")}<button data-nav="artistas" class="more">Ver todos ›</button></div>`;
     h+=`<div class="sec">Mais tocadas</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
     if(news.length) h+=`<div class="sec">Últimas adicionadas</div><div class="rows" style="padding-bottom:0">${news.map(s=>songRow(s)).join("")}</div>`;
     const ex=store.reps[0]; if(ex) h+=`<div class="sec">Seu repertório</div><button class="card" data-rep="${ex.id}" style="margin-top:4px"><b>${esc(ex.name)}</b><small>${ex.items.length} músicas · toque para abrir e tocar em sequência</small><span class="go">›</span></button>`;
@@ -985,18 +1141,21 @@ function drawArtist(){
   homeNav();
   const a=artistsAll().find(x=>x.key===st.artist); if(!a) return go("home",{tab:"artistas"});
   $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">Artista</span>`;
-  $("bk").onclick=()=>go("home",{});
-  const songs=[...a.songs].sort((x,y)=>x.title.localeCompare(y.title,"pt"));
-  $("view").innerHTML=`<div class="homepad"><div class="ahead"><span class="av big">${esc(initials(a.name))}</span><div><h2>${esc(a.name)}</h2><p>Cifras corrigidas para tocar na roda</p></div></div>
+  $("bk").onclick=()=>st.fromSong&&byId(st.fromSong)?go("song",{id:st.fromSong,fromSong:null}):go("home",{});
+  const songs=[...a.songs].sort((x,y)=>x.title.localeCompare(y.title,"pt")),F=AFOTO[a.key];
+  $("view").innerHTML=`<div class="homepad"><div class="ahead">${artistAv(a.name,"big")}<div><h2>${esc(a.name)}</h2><p>${songs.length} música${songs.length===1?"":"s"} para tocar na roda</p>${F&&F.credito?`<p class="afoto-cred">Foto: <a href="${esc(F.pagina||"#")}" target="_blank" rel="noopener">${esc(F.credito)}</a></p>`:""}</div></div>
+   ${isAdmin?`<div class="afoto-adm"><label class="ghost small">${F?"Trocar foto":"Colocar foto"}<input type="file" accept="image/*" id="ffile" hidden></label>${F?`<button class="ghost small" id="frem">Tirar foto</button>`:""}<span class="help" id="fstat" hidden></span></div>`:""}
    <div class="actions"><button class="primary" id="playAll">Tocar todas em sequência</button></div>
    <div class="rows">${songs.map(s=>songRow(s)).join("")}</div></div>`;
+  if($("ffile"))$("ffile").onchange=e=>{const f=e.target.files[0];if(f)fotoArquivo(f,img=>fotoSet(a,"enviar",img))};
+  if($("frem"))$("frem").onclick=()=>fotoSet(a,"remover");
   $("playAll").onclick=()=>{st.readyRep={name:a.name,items:songs.map(s=>({id:s.id,delta:0}))};st.rep="sharedview";openRepSong(0)};
 }
 function songRow(s,rank){
   const inn=inAnyRep(s.id);
   const tags=(s.pending?`<span class="tag ${s.status==="recusada"?"no":"pend"}">${s.status==="recusada"?"recusada":"só você · em revisão"}</span>`:"")+(s.isNew&&!s.pending?`<span class="tag new">nova</span>`:"");
   return `<div class="row${rank?" ranked":""}">${rank?`<span class="rank">${rank}</span>`:""}<button class="open" data-open="${s.id}"><b>${esc(s.title)}${tags}</b><small>${esc(s.artist)}${s.credit&&s.isNew?` · contribuição de ${esc(s.credit)}`:""}</small></button><span class="key">${esc(s.key)}</span>
-  <button class="add ${inn?"in":""}" data-add="${s.id}" aria-label="${inn?"Já está num repertório":"Adicionar ao repertório"}">${inn?IC.check:IC.plus}</button></div>`;
+  <button class="add2 ${inn?"in":""}" data-add="${s.id}" aria-label="${inn?"Já está no seu repertório":"Adicionar ao seu repertório"}">${inn?IC.check:ICO_REP}<small>${inn?"No repertório":"Repertório"}</small></button></div>`;
 }
 /* ================= repertório ================= */
 function curRep(){return repById(st.rep)||(st.rep==="ready"||st.rep==="sharedview"?st.readyRep:null)}
@@ -1012,7 +1171,7 @@ function drawRep(){
   h+=r.items.map((it,i)=>{const s=byId(it.id);if(!s)return"";
     return`<div class="ritem"><span class="n">${i+1}</span><button class="open" data-ri="${i}" style="border:0;background:none;text-align:left;padding:0;min-width:0"><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.title)}</b><small style="color:var(--muted)">${esc(s.artist)}</small></button><span class="key">${esc(keyOf(s,it.delta))}</span>
      ${ready?"":`<span class="mini"><button data-mv="${i}:-1" aria-label="Subir">${IC.up}</button><button data-mv="${i}:1" aria-label="Descer">${IC.down}</button><button data-rm="${i}" aria-label="Remover">${IC.x}</button></span>`}</div>`}).join("");
-  if(!r.items.length) h+=`<div class="empty">Repertório vazio. Toque em <b>Adicionar músicas</b> e use o <b style="color:var(--orange)">+</b> ao lado de cada música.</div>`;
+  if(!r.items.length) h+=`<div class="empty">Repertório vazio. Toque em <b>Adicionar músicas</b> e toque em <b style="color:var(--orange)">Repertório</b> ao lado de cada música.</div>`;
   $("view").innerHTML=h;
   if($("rname")) $("rname").onchange=e=>{r.name=e.target.value.trim()||r.name;r.example=false;save()};
   if($("play")) $("play").onclick=()=>openRepSong(0);
@@ -1078,7 +1237,7 @@ function refreshLive(){if(st.view==="song")drawSongHead();if(dr&&(dr.kind==="met
 function drawSongHead(){
   const s=byId(st.id); if(!s||!$("shead")) return;
   const cur=keyOf(s,st.delta);
-  $("shead").innerHTML=`<h2>${esc(s.title)}</h2><div class="by">${esc(s.artist)}</div>
+  $("shead").innerHTML=`<h2>${esc(s.title)}</h2><button class="by bylink" data-artist="${esc(artistKey(s.artist))}" aria-label="Ver todas as músicas de ${esc(s.artist)}">${artistAv(s.artist,"sm")}<span>${esc(s.artist)}</span><span class="byall">ver músicas ›</span></button>
     ${s.credit&&(s.isNew||s.pending)?`<div class="credit">${s.pending?`<span class="tag pend" style="margin:0">em revisão · só você vê</span>`:`Contribuição de <b>${esc(s.credit)}</b>`}</div>`:""}
     <div class="chips"><button class="chip key" data-tool="tom">Tom <span class="v">${esc(cur)}</span>${IC.caret}</button>
     ${vers(s).length>1?`<button class="chip" data-tool="versao">${esc(curVer(s).label)}${IC.caret}</button>`:""}
@@ -1416,6 +1575,18 @@ function drawDrawer(){
     if($("pf")) $("pf").onsubmit=async e=>{e.preventDefault();const k=$("pk2").value.trim();const {data}=await sb.rpc("admin_check",{p_key:k});
       if(data){ADMIN_KEY=k;lsSet("rpc-admin",k);await loadAdmin();loadAdminEdits();closeDrawer();draw();toast("Modo professor ativado")}else toast("Chave incorreta")};
     if($("sairP")) $("sairP").onclick=()=>{ADMIN_KEY="";lsSet("rpc-admin","");isAdmin=false;SUBS_ALL=[];closeDrawer();draw()};
+  } else if(dr.kind==="conta"){
+    if(!USER){B.innerHTML=`<h3>Entrar</h3><p class="sub">Entre para guardar seus repertórios, favoritas e últimas tocadas em qualquer aparelho.</p>`+loginForm("d");loginWire("d");return}
+    const md=USER.user_metadata||{};
+    B.innerHTML=`<h3>Minha conta</h3><p class="sub">${esc(md.full_name||md.name||"")}${md.full_name||md.name?"<br>":""}${esc(USER.email||"")}</p>
+     <p class="help">Seus repertórios, favoritas e últimas tocadas ficam salvos na sua conta.</p>
+     ${PROF?`<p class="help"><b style="color:var(--orange)">Você é professor.</b> O painel e a edição das cifras aparecem para você em qualquer aparelho.</p><button class="ghost" id="goPainel" style="width:100%;margin-bottom:8px">Abrir o painel do professor</button>`:""}
+     <button class="ghost" id="sairC" style="width:100%">Sair da conta</button>`;
+    if($("goPainel"))$("goPainel").onclick=()=>{closeDrawer();go("review",{})};
+    $("sairC").onclick=sairConta;
+  } else if(dr.kind==="novasenha"){
+    B.innerHTML=`<h3>Nova senha</h3><p class="sub">Escolha uma senha nova para a sua conta.</p><form class="lgform" id="nsf"><input id="ns1" type="password" placeholder="Nova senha (mínimo 6 caracteres)" autocomplete="new-password" minlength="6" required><button class="primary">Salvar senha</button><p class="status" id="nsst" hidden></p></form>`;
+    $("nsf").onsubmit=async e=>{e.preventDefault();const {error}=await sb.auth.updateUser({password:$("ns1").value});if(error){$("nsst").hidden=false;$("nsst").className="status err";$("nsst").textContent=authErr(error)}else{closeDrawer();toast("Senha alterada")}};
   } else if(dr.kind==="plano"){
     B.innerHTML=`<h3>Seu plano</h3><p class="sub">Simulação para testar os limites do protótipo.</p>
      <button class="opt ${!isPro()?"on":""}" data-p="free"><b>Grátis</b><small>${FREE_REPS} repertório com até ${FREE_SONGS} músicas. Todas as cifras liberadas.</small></button>
@@ -1655,6 +1826,8 @@ async function edDecide(id,action){const x=EDS_ALL.find(y=>y.id===id);if(!x)retu
   const {data,error}=await sb.rpc("admin_publicar_edicao",{p_key:ADMIN_KEY,p_song:x.song_id,p_ver:x.versao,p_texto:x.texto,p_tom:x.tom||"",p_origem:x.id});
   if(error||!data)return toast("Não foi possível publicar");EDITS[x.song_id+"|"+x.versao]={texto:x.texto,tom:x.tom};const s=byId(x.song_id);if(s)delete s.vers;x.status="aprovada";toast("Aprovada e publicada");loadAdminEdits();drawReview()}
 function edCurrent(x){const s=byId(x.song_id);if(!s||!songReady(s))return null;const v=vers(s).find(v=>v.label===x.versao)||vers(s)[0];return linesToText(v.lines)}
+function drawReviewWire(){const c=$("cfgLogin");if(!c)return;c.onchange=async()=>{const v=c.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"exigir_login",p_v:v});
+  if(error||!data){c.checked=!v;return toast("Não foi possível mudar agora.")}CFG.exigir_login=v;toast(v?"Login obrigatório ligado":"Login obrigatório desligado")}}
 function drawReview(){
   $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">Painel do professor</span>`;
   $("bk").onclick=()=>go("home",{});
@@ -1663,7 +1836,8 @@ function drawReview(){
   const ep=EDS_ALL.filter(x=>x.status==="pendente");
   const need=[...new Set(ep.map(x=>byId(x.song_id)).filter(s=>s&&!songReady(s)).map(s=>s.c))];
   if(need.length){Promise.all(need.map(loadChunk)).then(()=>{if(st.view==="review")drawReview()}).catch(()=>{})}
-  let eh=`<div class="sec">Alterações sugeridas pelos alunos (${ep.length})</div>`;
+  let eh=`<div class="sec">Acesso ao app</div><label class="cfgsw"><input type="checkbox" id="cfgLogin" ${CFG.exigir_login?"checked":""}><span><b>Exigir login para usar o app</b><small>Ligado: quem abrir o app vê primeiro a tela de entrar ou criar conta. Desligado: as cifras ficam abertas e o login serve para salvar repertórios.</small></span></label>`;
+  eh+=`<div class="sec">Alterações sugeridas pelos alunos (${ep.length})</div>`;
   eh+=ep.map(x=>{const s=byId(x.song_id),cur=edCurrent(x);return`<div class="card edcard"><b>${esc(s?s.title:x.song_id)}</b> <small style="color:var(--muted)">${esc(s?s.artist:"")} · versão ${esc(x.versao)}${x.tom?" · tom "+esc(x.tom):""}</small>
      <p class="help" style="margin:4px 0">${esc(x.nome||"Aluno sem nome")} · ${new Date(x.criado_em).toLocaleDateString("pt-BR")}${x.nota?` · “${esc(x.nota)}”`:""}</p>
      <pre class="diff">${cur==null?"Carregando a cifra atual…":diffHTML(cur,x.texto)}</pre>
@@ -1671,7 +1845,7 @@ function drawReview(){
   let h=eh+`<div class="sec">Cifras novas enviadas</div>`+`<p class="help" style="font-size:14px;color:var(--ink);margin-top:8px">${pend.length} cifra${pend.length===1?"":"s"} esperando revisão. Aprovada, ela entra no app para todos com o crédito de quem enviou.</p>`;
   h+=pend.map(x=>subCard(x,true)).join("")||`<div class="empty">Nada para revisar agora.</div>`;
   if(done.length) h+=`<div class="sec">Revisadas</div>`+done.map(x=>subCard(x,false)).join("");
-  $("view").innerHTML=`<div style="padding-bottom:100px">${h}</div>`;
+  $("view").innerHTML=`<div style="padding-bottom:100px">${h}</div>`;drawReviewWire();
   document.querySelectorAll("[data-rv]").forEach(b=>b.onclick=()=>{revOpen=revOpen===b.dataset.rv?null:b.dataset.rv;drawReview()});
   document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>decide(b.dataset.ap,"aprovada"));
   document.querySelectorAll("[data-rj]").forEach(b=>b.onclick=()=>decide(b.dataset.rj,"recusada"));
@@ -1699,7 +1873,7 @@ document.addEventListener("click",e=>{
   if(!t||t.closest("#dbody")&&!t.dataset.ch) return;
   const d=t.dataset;
   if(d.nav){st.q="";if(d.nav==="ferramentas")return go("tools",{});go("home",{tab:d.nav,addTarget:st.addTarget})}
-  else if(d.artist){go("artist",{artist:d.artist})}
+  else if(d.artist){go("artist",{artist:d.artist,fromSong:st.view==="song"?st.id:null})}
   else if(d.go){if(d.go==="import")go("import",{});else{st.q="";st.filter="fav";go("home",{tab:"musicas"})}}
   else if(d.open){go("song",{id:d.open,delta:0,rep:null})}
   else if(d.add){quickAdd(d.add)}
