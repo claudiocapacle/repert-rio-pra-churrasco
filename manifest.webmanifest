@@ -1,15 +1,19 @@
 {
-  "name": "Repertório pra Churrasco",
-  "short_name": "Repertório",
-  "description": "Cifras corrigidas para cavaquinho, com tempo certinho, troca de tom e roda ao vivo.",
+  "name": "SambaCifra",
+  "short_name": "SambaCifra",
+  "description": "Cifras de samba e pagode para cavaquinho, com troca de tom, desenho dos acordes, batucada e roda ao vivo.",
   "lang": "pt-BR",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f5efe3",
   "theme_color": "#f5efe3",
   "icons": [
-    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
-    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
   ]
 }
