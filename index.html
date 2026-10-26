@@ -452,6 +452,47 @@ body.stage .btbar{display:none}
 .cfgsw span{display:flex;flex-direction:column;gap:2px}
 .cfgsw small{color:var(--muted);line-height:1.35}
 body.gate #btbar,body.gate #ouvirbar{display:none!important}
+/* batucada por instrumento */
+.bnome{text-align:center;color:var(--muted);font-size:14px;font-weight:600;margin:0 0 6px}
+.brange{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);gap:8px}
+.brange .pills{margin:0;justify-content:center;flex-wrap:wrap}
+.bctl{display:flex;align-items:center;justify-content:center;gap:18px;margin:16px 0 6px}
+.bsm{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--paper);color:var(--muted);display:grid;place-items:center;font:inherit;font-size:11px;font-weight:800;letter-spacing:-.02em;cursor:pointer}
+.bsm.on{background:var(--orange-soft);border-color:var(--orange);color:#b84e08}
+.bplay{width:80px;height:80px;border-radius:50%;border:0;background:var(--orange);color:#fff;display:grid;place-items:center;box-shadow:0 8px 22px rgba(226,100,15,.35);cursor:pointer}
+.bplay.on{background:var(--ink);box-shadow:0 8px 22px rgba(31,36,48,.3)}
+.bplay svg{margin-left:2px}.bplay.on svg{margin:0}
+.bspin{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;animation:bsp .8s linear infinite}
+@keyframes bsp{to{transform:rotate(360deg)}}
+.bbeats{display:flex;justify-content:center;gap:12px;margin-top:6px}
+.bbeats i{width:24px;height:24px;border-radius:50%;background:#ece6da;color:#a59d90;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;transition:background .08s}
+.bbeats i.on1{background:var(--orange);color:#fff}.bbeats i.on2{background:var(--ink);color:#fff}
+.bvol{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.bvol input{flex:1;min-width:0;accent-color:var(--orange)}
+.bmesa{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:12px 8px;margin-top:16px}
+.bgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.bcol{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.bins{display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;border:0;background:none;padding:6px 1px;border-radius:12px;color:var(--ink);font:inherit;cursor:pointer}
+.bins svg{width:44px;height:44px}
+.bins span{font-size:11px;font-weight:600;line-height:1.15;text-align:center;min-height:2.3em}
+.bcol.off .bins{color:#9aa1ad;opacity:.6}.bcol.off .bins span{text-decoration:line-through}
+.bfad{position:relative;width:40px;height:176px;margin:0 auto;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
+.bfad i{position:absolute;top:12px;bottom:12px;left:50%;width:6px;margin-left:-3px;border-radius:3px;background:var(--ink)}
+.bfad b{position:absolute;bottom:12px;left:50%;width:6px;margin-left:-3px;border-radius:3px;background:var(--orange);height:calc((100% - 24px) * var(--p))}
+.bfad em{position:absolute;left:50%;width:32px;height:32px;margin-left:-16px;margin-bottom:-16px;bottom:calc(12px + (100% - 24px) * var(--p));border-radius:50%;background:var(--orange);display:grid;place-items:center;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.bfad em s{width:12px;height:12px;border-radius:50%;background:var(--ink);text-decoration:none}
+.bcol.off .bfad b{background:#9aa1ad}.bcol.off .bfad em{background:#cfd3da}
+.bfad:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:8px}
+.bsolo{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:7px;padding:4px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.bsolo.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.bgeral{border-top:1px solid var(--line);margin-top:12px;padding:12px 6px 2px;color:var(--ink);font-weight:600}
+.bsubir{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:14px}
+.bst{display:flex;align-items:center;gap:8px;font-weight:700;margin:0}.bst svg{color:var(--orange)}
+.bsg{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;margin-top:10px}
+.bsg label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.bsg input,.bsg select{font:inherit;font-size:16px;text-align:center;padding:8px 4px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);width:100%}
+.primary.dark{background:var(--ink)}
+@media (min-width:640px){.bins svg{width:56px;height:56px}.bins span{font-size:12px}.bfad{height:208px}.bgrid{gap:12px}}
 
 </style>
 </head>
@@ -993,7 +1034,7 @@ function draw(){
   drawRodaBar();
   document.body.classList.toggle("gate",gateOn());
   if(gateOn()){homeNav();$("homenav").hidden=true;$("tools").hidden=true;return drawLogin()}
-  homeNav(); if(st.view==="home") drawHome(); else if(st.view==="artist") drawArtist(); else if(st.view==="tools") drawTools(); else if(st.view==="admbt") drawAdmBt(); else if(st.view==="rep") drawRep(); else if(st.view==="import") drawImport(); else if(st.view==="review") drawReview(); else if(st.view==="edit") drawEdit(); else drawSong();
+  homeNav(); if(st.view==="home") drawHome(); else if(st.view==="artist") drawArtist(); else if(st.view==="tools") drawTools(); else if(st.view==="rep") drawRep(); else if(st.view==="import") drawImport(); else if(st.view==="review") drawReview(); else if(st.view==="edit") drawEdit(); else drawSong();
   save();
 }
 
@@ -1003,7 +1044,6 @@ function drawTop(){
   const pend=SUBS_ALL.filter(x=>x.status==="pendente").length;
   $("topbar").innerHTML=`<h1 class="brand"><svg width="28" height="28" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#e2640f"/><g transform="translate(118 90) scale(2.76)"><g stroke="#fbf8f1" stroke-width="7" stroke-linecap="round"><line x1="20" y1="22" x2="20" y2="112"/><line x1="40" y1="22" x2="40" y2="112"/><line x1="60" y1="22" x2="60" y2="112"/><line x1="80" y1="22" x2="80" y2="112"/><line x1="20" y1="45" x2="80" y2="45"/><line x1="20" y1="68" x2="80" y2="68"/><line x1="20" y1="91" x2="80" y2="91"/></g><rect x="15" y="14" width="70" height="11" rx="3" fill="#fbf8f1"/><circle cx="20" cy="79.5" r="12" fill="#1f2430"/><circle cx="40" cy="56.5" r="12" fill="#1f2430"/><circle cx="60" cy="33.5" r="12" fill="#1f2430"/><circle cx="80" cy="79.5" r="12" fill="#1f2430"/></g></svg><span class="b1">samba<span>cifra</span></span></h1><div class="tools-r">
    <button class="icon" id="upBtn" aria-label="Enviar cifra" title="Enviar cifra">${IC.upload}</button>
-   ${isAdmin?`<button class="icon" id="admBtBtn" aria-label="Gerenciar batucadas" title="Batucadas">${ICM.drum.replace('width="15" height="15"','width="22" height="22"')}</button>`:""}
    ${isAdmin?`<button class="icon badge" id="revBtn" aria-label="Revisar cifras enviadas" title="Revisão">${IC.review}${pend?`<b>${pend}</b>`:""}</button>`:""}
    <button class="icon acct ${USER?"on":""}" id="acctBtn" aria-label="${USER?"Minha conta":"Entrar"}" title="${USER?"Minha conta":"Entrar"}">${USER?`<span>${esc(((USER.user_metadata||{}).full_name||(USER.user_metadata||{}).name||USER.email||"?").trim()[0].toUpperCase())}</span>`:ICO_USER}</button>
    <button class="plan ${isPro()?"pro":""}" id="planBtn">${isPro()?"Premium":"Grátis"}</button></div>`;
@@ -1011,7 +1051,6 @@ function drawTop(){
   $("acctBtn").onclick=()=>openDrawer("conta");
   $("upBtn").onclick=()=>go("import",{});
   if($("revBtn")) $("revBtn").onclick=()=>go("review",{});
-  if($("admBtBtn")) $("admBtBtn").onclick=()=>go("admbt",{});
 }
 
 function instrumentSVG(cx,cy,rot,sc,cor,braco,cordas){
@@ -1234,7 +1273,7 @@ new MutationObserver(placeOuvir).observe(document.getElementById("btbar"),{attri
 function aulaUrl(s){const m=meta[s.id];return m&&m.aula||("https://www.youtube.com/results?search_query="+encodeURIComponent(s.title+" cavaquinho"))}
 const ICM={met:'<svg viewBox="0 0 24 24" width="15" height="15" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round"><path d="M9 3h6l4 18H5L9 3zM12 16l5-9"/></svg>',
   drum:'<svg viewBox="0 0 24 24" width="15" height="15" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round"><ellipse cx="12" cy="8" rx="8" ry="3"/><path d="M4 8v8c0 1.7 3.6 3 8 3s8-1.3 8-3V8M3 3l6 5M21 3l-6 5"/></svg>'};
-function refreshLive(){if(st.view==="song")drawSongHead();if(dr&&(dr.kind==="metronomo"||dr.kind==="batucada"))drawDrawer()}
+function refreshLive(){if(st.view==="song")drawSongHead();if(dr&&dr.kind==="metronomo")drawDrawer()}
 function drawSongHead(){
   const s=byId(st.id); if(!s||!$("shead")) return;
   const cur=keyOf(s,st.delta);
@@ -1565,10 +1604,8 @@ function drawDrawer(){
     B.querySelectorAll("[data-dms]").forEach(b=>b.onclick=()=>{m.sub=+b.dataset.dms;m.passo=0;drawDrawer()});
     $("dmgo").onclick=()=>{m.on?metStop():metStart();refreshLive()};
   } else if(dr.kind==="batucada"){
-    const b=T.bt;
-    if(b.lista===null){B.innerHTML=`<h3>Batucada</h3><p class="sub">Carregando batucadas…</p>`;btLoad().then(()=>{if(dr&&dr.kind==="batucada")drawDrawer()});return}
-    b.sug=(meta[s.id]||{}).bpm||null;
-    B.innerHTML=`<h3>Batucada</h3><p class="sub">Escolha o andamento, de 1 em 1 BPM, e toque junto. Ela fica em loop enquanto você rola a cifra ou troca de música.${b.sug?` ★ = andamento sugerido para esta música.`:""}</p>`+btPanel("d");
+    const b=T.bt;b.sug=st.view==="song"&&s?(meta[s.id]||{}).bpm||null:null;bPreCarregar();
+    B.innerHTML=`<h3>Batucada</h3><p class="sub">Surdo, pandeiro, rebolo, repiques e cuíca gravados separados. Ligue, desligue e ajuste cada um. Ela fica em loop enquanto você rola a cifra ou troca de música.</p>`+btPanel("d");
     btWire(B,"d",drawDrawer);
   } else if(dr.kind==="professor"){
     B.innerHTML=`<h3>Área do professor</h3><p class="sub">${isAdmin?"Você já está como professor neste aparelho.":"Digite a chave de professor para revisar cifras e definir BPM e aulas."}</p>
@@ -1916,7 +1953,7 @@ const andamento=b=>b<60?"Bem lento":b<80?"Lento":b<100?"Moderado":b<125?"Andante
 function drawTools(){
   homeNav();
   $("topbar").innerHTML=`<h1>Ferramentas</h1>`;
-  $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucadas"],["tom","Qual o tom?"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
+  $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucada"],["tom","Qual o tom?"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
   document.querySelectorAll("[data-aba]").forEach(b=>b.onclick=()=>{if(b.dataset.aba!=="afinador"&&T.af.on)afOff();if(b.dataset.aba!=="tom"&&T.tom.mic)tomOff(false);T.aba=b.dataset.aba;drawTools()});
   ({metronomo:drawMet,afinador:drawAf,batucadas:drawBt,tom:drawTom})[T.aba]();
 }
@@ -1994,178 +2031,172 @@ async function afOn(){
 }
 function afOff(){const f=T.af;cancelAnimationFrame(f.raf);f.stream?.getTracks().forEach(t=>t.stop());f.stream=null;f.on=false;f.ativo=false;if(st.view==="tools"&&T.aba==="afinador")drawAf()}
 
-/* ----- batucadas (áudios do Minha Evolução, em streaming) ----- */
-const BAT_URL="https://rnznqwuoexwspwvnbkri.supabase.co/functions/v1/batucadas-publicas";
-async function btLoad(){const b=T.bt;try{const r=await fetch(BAT_URL);const d=await r.json();b.lista=d.batucadas||[];b.at=Date.now()}catch(e){b.erro=true;b.lista=[]}}
-const mmss=s=>{s=Math.max(0,Math.floor(s||0));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
-function btGroups(){const m=new Map();for(const x of T.bt.lista||[]){const nome=(x.nome.replace(/^\s*\d+\s*bpm\s*[-–]\s*/i,"").trim())||x.nome;if(!m.has(nome))m.set(nome,[]);m.get(nome).push(x)}
-  return[...m.entries()].map(([nome,it])=>({nome,it:it.sort((a,b)=>a.bpm-b.bpm)}))}
-/* batucada em loop com BPM livre: escolhe a gravação de andamento mais próximo e ajusta a velocidade
-   na proporção exata (alvo ÷ gravação), mantendo a afinação (preservesPitch do navegador). */
-function btStyles(){return btGroups().map(g=>{const lo=g.it[0].bpm,hi=g.it[g.it.length-1].bpm;return{nome:g.nome,it:g.it,min:Math.max(40,Math.round(lo*.8)),max:Math.round(hi*1.15)}})}
-function btStyle(){const ss=btStyles();return ss.find(x=>x.nome===T.bt.style)||ss[0]}
-function btPick(sty,bpm){return sty.it.reduce((a,x)=>Math.abs(Math.log(bpm/x.bpm))<Math.abs(Math.log(bpm/a.bpm))?x:a)}
-function btPanel(prefix){ // controles (aba Ferramentas e gaveta da música)
-  const b=T.bt,ss=btStyles(),sty=btStyle();
-  if(!ss.length) return `<div class="empty">${b.erro?"Não foi possível carregar as batucadas. Verifique a internet.":"As batucadas chegam em breve."}</div>`;
-  if(!b.style) b.style=sty.nome;
-  b.bpm=Math.min(sty.max,Math.max(sty.min,b.bpm));
-  return `${ss.length>1?`<div class="pills" style="justify-content:center;margin-bottom:6px">${ss.map(x=>`<button data-${prefix}sty="${esc(x.nome)}" class="${x.nome===sty.nome?"on":""}">${esc(x.nome)}</button>`).join("")}</div>`:""}
-   <div class="big"><button class="round" data-${prefix}d="-1" aria-label="Diminuir 1 BPM">−</button><div style="text-align:center"><span class="num" id="${prefix}bpm">${b.bpm}</span><div class="sub" style="margin:0">BPM · ${andamento(b.bpm)}</div></div><button class="round" data-${prefix}d="1" aria-label="Aumentar 1 BPM">+</button></div>
-   <input type="range" id="${prefix}range" min="${sty.min}" max="${sty.max}" step="1" value="${b.bpm}" aria-label="Andamento da batucada em BPM">
-   <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>${sty.min}</span><span>${sty.max}</span></div>
-   <div class="pills" style="justify-content:center;margin:10px 0 14px">${[-5,...(b.sug?[b.sug]:[]),5].map(v=>`<button data-${prefix}d="${v===b.sug?"=":""}${v}">${v===b.sug?v+" ★":(v>0?"+":"")+v}</button>`).join("")}</div>
-   <button class="primary" data-${prefix}go style="width:100%">${b.loading?"Carregando…":b.on?"Parar batucada":"Tocar batucada"}</button>
-   <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin-top:12px">Volume<input type="range" data-${prefix}vol min="0" max="1" step="0.01" value="${b.vol}" style="flex:1"></label>`;
+/* ----- batucada por instrumento (gravações do professor; mesmo motor e layout do Minha Evolução) ----- */
+const BRITMO={id:"samba",nome:"Samba e Pagode",pasta:"/batucada/samba",
+  bpms:[45,48,51,54,57,60,63,66,69,72,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,155,160,165],
+  instrumentos:[{id:"surdo",nome:"Surdo"},{id:"pandeiro",nome:"Pandeiro"},{id:"rebolo",nome:"Rebolo"},{id:"repique-mao",nome:"Repique de mão"},{id:"repique-anel",nome:"Repique de anel"},{id:"cuica",nome:"Cuíca"}]};
+const BMIN=45,BMAX=168,BVOLMAX=1.5,BFADE=0.01,BCHAVE="sc-batucada-mixer";
+/* carregamento: cada andamento tem um arquivo por instrumento, todos em loop de 4 compassos começando no tempo 1 */
+let _bDec=null,_bAtraso=null;const _bCache=new Map();
+function bDecCtx(){if(!_bDec){const O=window.OfflineAudioContext||window.webkitOfflineAudioContext;_bDec=new O(1,1,44100)}return _bDec}
+const bDecodificar=ab=>new Promise((ok,er)=>bDecCtx().decodeAudioData(ab,ok,er));
+async function bBaixar(u){const r=await fetch(u);if(!r.ok)throw new Error(r.status+" "+u);return r}
+/* alguns navegadores deixam um silêncio no começo do MP3; mede uma vez com um clique em 0,25 s */
+function bMedirAtraso(){if(!_bAtraso){_bAtraso=bBaixar("/batucada/calibra.mp3").then(r=>r.arrayBuffer()).then(bDecodificar).then(b=>{const d=b.getChannelData(0);let im=0;for(let i=1;i<d.length;i++)if(Math.abs(d[i])>Math.abs(d[im]))im=i;const a=im/b.sampleRate-.25;return Math.abs(a)<.1?a:0}).catch(()=>{_bAtraso=null;return 0})}return _bAtraso}
+function bConjunto(ritmo,bpm){const k=ritmo.id+"-"+bpm;let p=_bCache.get(k);
+  if(!p){p=(async()=>{const base=`${ritmo.pasta}/${bpm}`;const[meta,atraso]=await Promise.all([bBaixar(base+"/meta.json").then(r=>r.json()),bMedirAtraso()]);
+    const buffers={};await Promise.all(ritmo.instrumentos.map(async ins=>{buffers[ins.id]=await bDecodificar(await(await bBaixar(`${base}/${ins.id}.mp3`)).arrayBuffer())}));
+    return{bpm:meta.bpm,tempos:meta.tempos,loop:meta.loop,pre:meta.pre+atraso,buffers}})();p.catch(()=>_bCache.delete(k));_bCache.set(k,p)}
+  return p}
+const bReferencia=(ritmo,bpm)=>ritmo.bpms.reduce((a,x)=>Math.abs(Math.log(bpm/x))<Math.abs(Math.log(bpm/a))?x:a);
+function bVizinhos(ritmo,bpm){const i=ritmo.bpms.indexOf(bReferencia(ritmo,bpm));for(const j of[i-1,i+1])if(ritmo.bpms[j])bConjunto(ritmo,ritmo.bpms[j]).catch(()=>{})}
+
+class MotorBatucada{
+  constructor(ritmo){this.ritmo=ritmo;this.ctx=audioCtx();this.ganhos={};this.grupo=null;this.saindo=[];this.bpm=90;this.pb0=0;this.t0=0;this.geracao=0;
+    this.metroLigado=false;this.proxClique=0;this.cliques=[];this.timer=null;this.tempoPorCompasso=2;this.tocando=false;
+    this.mestre=this.ctx.createGain();this.mestre.gain.value=.9;const c=this.ctx.createDynamicsCompressor();c.threshold.value=-10;c.ratio.value=3;c.attack.value=.003;c.release.value=.15;
+    this.mestre.connect(c).connect(this.ctx.destination);
+    this.metroGanho=this.ctx.createGain();this.metroGanho.gain.value=.8;this.metroGanho.connect(this.ctx.destination);
+    for(const ins of ritmo.instrumentos){const g=this.ctx.createGain();g.connect(this.mestre);this.ganhos[ins.id]=g}}
+  volume(id,v){const g=this.ganhos[id];if(g)g.gain.setTargetAtTime(Math.max(0,v),this.ctx.currentTime,.015)}
+  volumeGeral(v){this.mestre.gain.setTargetAtTime(Math.max(0,v),this.ctx.currentTime,.015)}
+  volumeMetronomo(v){this.metroGanho.gain.setTargetAtTime(Math.max(0,v),this.ctx.currentTime,.015)}
+  clique(t,acento,guardar=true){const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type="triangle";o.frequency.value=acento?1900:1250;const pico=acento?.9:.6;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(pico,t+.001);g.gain.exponentialRampToValueAtTime(.001,t+.045);o.connect(g).connect(this.metroGanho);o.start(t);o.stop(t+.06);if(guardar)this.cliques.push({o,t})}
+  metronomo(lig){this.metroLigado=lig;if(!lig)this.cancelarCliques();else this.proxClique=Math.max(0,Math.ceil(this.posicao()+.02))}
+  cancelarCliques(){const a=this.ctx.currentTime;for(const c of this.cliques)if(c.t>a+.003){try{c.o.stop(0)}catch(e){}}this.cliques=[]}
+  agendarCliques(){if(!this.tocando||!this.metroLigado)return;const lim=this.ctx.currentTime+.12;
+    for(let g=0;g<16;g++){const t=this.tempoDe(this.proxClique);if(t>lim)break;if(t>=this.ctx.currentTime-.005)this.clique(t,this.proxClique%this.tempoPorCompasso===0);this.proxClique++}
+    const a=this.ctx.currentTime;this.cliques=this.cliques.filter(c=>c.t>a-.1)}
+  posicao(){if(!this.tocando)return 0;return this.pb0+(this.ctx.currentTime-this.t0)*this.bpm/60}
+  tempoDe(b){return this.t0+(b-this.pb0)*60/this.bpm}
+  comecarGrupo(conj,quando,beat){const taxa=this.bpm/conj.bpm,dentro=((beat%conj.tempos)+conj.tempos)%conj.tempos,off=conj.pre+dentro*60/conj.bpm;
+    const fontes=this.ritmo.instrumentos.filter(i=>conj.buffers[i.id]).map(ins=>{const s=this.ctx.createBufferSource();s.buffer=conj.buffers[ins.id];s.loop=true;s.loopStart=conj.pre;s.loopEnd=conj.pre+conj.loop;s.playbackRate.value=taxa;
+      const g=this.ctx.createGain();g.gain.setValueAtTime(0,quando);g.gain.linearRampToValueAtTime(1,quando+BFADE);s.connect(g).connect(this.ganhos[ins.id]);s.start(quando,off);return{id:ins.id,s,g}});
+    return{conj,fontes}}
+  encerrarGrupo(gr,q){for(const f of gr.fontes){try{f.g.gain.setValueAtTime(1,q);f.g.gain.linearRampToValueAtTime(0,q+BFADE);f.s.stop(q+BFADE+.02)}catch(e){}}}
+  async iniciar(bpm,contagem){this.parar();this.bpm=bpm;const conj=await bConjunto(this.ritmo,bReferencia(this.ritmo,bpm));
+    const agora=this.ctx.currentTime+.08,tp=60/bpm;for(let i=0;i<contagem;i++)this.clique(agora+i*tp,i%this.tempoPorCompasso===0,false);
+    this.t0=agora+contagem*tp;this.pb0=0;this.tocando=true;this.grupo=this.comecarGrupo(conj,this.t0,0);this.proxClique=0;this.agendarCliques();
+    this.timer=setInterval(()=>this.agendarCliques(),25);bVizinhos(this.ritmo,bpm)}
+  parar(){this.geracao++;if(this.timer)clearInterval(this.timer);this.timer=null;this.cancelarCliques();const t=this.ctx.currentTime;
+    for(const gr of[this.grupo,...this.saindo])if(gr)this.encerrarGrupo(gr,t);this.grupo=null;this.saindo=[];this.tocando=false}
+  async mudarBpm(bpm){if(!this.tocando||!this.grupo){this.bpm=bpm;return}
+    const agora=this.ctx.currentTime,naCont=agora<this.t0;if(!naCont){this.pb0=this.posicao();this.t0=agora}this.bpm=bpm;
+    const atual=this.grupo,taxa=bpm/atual.conj.bpm;for(const f of atual.fontes)f.s.playbackRate.setValueAtTime(taxa,naCont?this.t0:agora);
+    if(this.metroLigado){this.cancelarCliques();this.proxClique=Math.max(0,Math.ceil(this.posicao()+.001));this.agendarCliques()}
+    bVizinhos(this.ritmo,bpm);const ref=bReferencia(this.ritmo,bpm);if(ref===atual.conj.bpm)return;
+    const minha=++this.geracao;const novo=await bConjunto(this.ritmo,ref).catch(()=>null);if(!novo||minha!==this.geracao||!this.tocando||this.grupo!==atual)return;
+    const pos=this.pb0+(Math.max(this.ctx.currentTime,this.t0)+.12-this.t0)*this.bpm/60,comp=Math.max(0,Math.ceil(pos/4)*4),t=this.tempoDe(comp);
+    this.grupo=this.comecarGrupo(novo,t,comp);this.encerrarGrupo(atual,t);this.saindo.push(atual);
+    setTimeout(()=>{this.saindo=this.saindo.filter(g=>g!==atual)},Math.max(0,(t-this.ctx.currentTime+.2)*1000))}
 }
-function btWire(root,prefix,redraw){
-  const b=T.bt;
-  root.querySelectorAll(`[data-${prefix}sty]`).forEach(el=>el.onclick=()=>{b.style=el.getAttribute(`data-${prefix}sty`);const st2=btStyle();b.bpm=Math.min(st2.max,Math.max(st2.min,b.bpm));btApply();redraw()});
-  root.querySelectorAll(`[data-${prefix}d]`).forEach(el=>el.onclick=()=>{const v=el.getAttribute(`data-${prefix}d`);btSetBpm(v[0]==="="?+v.slice(1):b.bpm+ +v);redraw()});
-  const r=root.querySelector(`#${prefix}range`);if(r){r.oninput=e=>{btSetBpm(+e.target.value);const n=root.querySelector(`#${prefix}bpm`);if(n)n.textContent=b.bpm};r.onchange=()=>redraw()}
-  const g=root.querySelector(`[data-${prefix}go]`);if(g)g.onclick=()=>{b.on?btPause():btPlay();};
-  const vv=root.querySelector(`[data-${prefix}vol]`);if(vv)vv.oninput=e=>{b.vol=+e.target.value;if(b.audio)b.audio.volume=b.vol};
+
+/* desenhos dos instrumentos (traço de caneta, herdam a cor do texto) */
+const BDES=(()=>{const sv=b=>`<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${b}</svg>`;
+  const plat=[[9.4,22.6],[20.4,13.4],[36.6,12.6],[50.6,19.6],[55.4,34.4],[45,47.6],[27.8,49.8],[12.2,41.6]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="3.1" ry="2.2" fill="currentColor" fill-opacity=".12"/><path d="M${x-2.2} ${y}h4.4"/>`).join("");
+  return{
+  surdo:sv(`<path d="M41 9.5 55.5 2.8"/><circle cx="39" cy="10.6" r="2.6" fill="currentColor" stroke="none"/><path d="M12.6 17.2c.3-3.2 9.1-5.5 19.6-5.4 10.4.1 19 2.6 19 5.7 0 3.1-8.8 5.4-19.4 5.3-10.5-.1-19.4-2.4-19.2-5.6Z"/><path d="M13 19.6c2.5 2.5 10.2 4.1 19 4.1 9 0 16.9-1.7 19-4.2"/><path d="M12.7 17.6c.1 9.6.2 21.6.9 31.6"/><path d="M51.3 17.8c-.2 10-.4 21.5-1 31.3"/><path d="M13.6 49.3c2.6 2.9 10.3 4.6 18.6 4.6 8.4 0 15.5-1.8 18.2-4.7"/><path d="M13.5 46.6c2.8 2.6 10.2 4.2 18.7 4.2s15.5-1.6 18.2-4.3"/><path d="M19.4 22.6 19.8 48.4M26.4 23.6l.1 25.9M37.7 23.6l-.2 25.9M44.8 22.4l-.4 26"/><path d="M18.4 24.4h2.2M25.4 25.3h2.2M36.6 25.3h2.2M43.7 24.2h2.2"/><path d="M16 53.4 13.6 60.6M48 53.2l2.6 7.2M32 54.2v6.6"/>`),
+  pandeiro:sv(`<path d="M7.8 30.6c.6-10.4 11.4-17.9 24.4-17.6 13.2.3 24.6 8.4 24 19.3-.6 10.5-11.8 18.3-24.8 17.9C18.4 49.8 7.2 41.3 7.8 30.6Z"/><path d="M12.2 30.9c.5-8.4 9.4-14.2 20.1-13.9 10.9.3 19.7 6.8 19.2 15.4-.5 8.3-9.5 14.3-20.1 14-10.9-.3-19.7-7.1-19.2-15.5Z"/>${plat}<path d="M22 24.6c3.4-2.6 8.2-3.6 12.4-3" stroke-opacity=".5"/>`),
+  rebolo:sv(`<path d="M16.8 10.6c.2-2.7 6.9-4.6 15.2-4.5 8.2.1 14.9 2.1 14.9 4.7 0 2.6-6.8 4.6-15.1 4.5-8.3-.1-15.1-2.1-15-4.7Z"/><path d="M17 13.4c2.1 2 8 3.4 15 3.4s12.9-1.4 14.9-3.5"/><path d="M16.9 11.2c.6 13.2 1.8 27.4 3.8 41.2"/><path d="M46.9 11.3c-.7 13.4-1.9 27.4-3.7 41"/><path d="M20.8 52.3c2.2 2.1 6.4 3.3 11.3 3.3 4.8 0 9-1.2 11.1-3.3"/><path d="M20.3 48.6c2.4 2 6.6 3.2 11.6 3.2s9.3-1.2 11.6-3.3"/><path d="M22.4 16.4 24.6 47.6M29.4 17l.4 31.8M35.4 17l-.4 31.8M41.8 16.2l-2 31.2"/><path d="M48.4 2.4c2.2.6 3.6 2.3 3.4 4.4-.1 1.1-.9 2-2 2.2l-5.6.6" stroke-opacity=".7"/><path d="M44.2 9.6c1.4-.8 3.2-1 4.6-.4" stroke-opacity=".7"/>`),
+  "repique-mao":sv(`<path d="M13.4 22.6c.2-3 8.3-5.2 18.4-5.1 10 .1 18 2.4 18 5.4s-8.2 5.2-18.3 5.1c-10.1-.1-18.2-2.4-18.1-5.4Z"/><path d="M13.6 25.6c2.4 2.3 9.6 3.8 18.2 3.8s15.8-1.6 18-3.9"/><path d="M13.5 23.2c.2 7.4.3 14.6 1 21.4"/><path d="M49.8 23.4c-.2 7.4-.5 14.6-1.1 21.2"/><path d="M14.5 44.6c2.4 2.5 9.4 4 17.3 4 7.8 0 14.4-1.5 16.9-4"/><path d="M14.4 41.8c2.5 2.3 9.4 3.7 17.4 3.7s14.5-1.4 16.9-3.8"/><path d="M19.8 28.8 20.2 44M27 29.6v15.2M36.8 29.6l-.1 15.2M43.8 28.6l-.4 15.2"/><path d="M18.8 31h2.2M26 31.8h2.2M35.7 31.8h2.2M42.7 30.8h2.2"/><path d="M26.4 6.4c3-.9 6.6-.6 9.6.8 1.4.7 1.9 2.4 1 3.7l-1.6 2.3c-.6.9-1.8 1.2-2.8.7l-6.8-3.5" stroke-opacity=".75"/><path d="M25.6 8.2c-1.6.9-2.2 2.7-1.4 4.2" stroke-opacity=".75"/>`),
+  "repique-anel":sv(`<path d="M13.4 24.6c.2-3 8.3-5.2 18.4-5.1 10 .1 18 2.4 18 5.4s-8.2 5.2-18.3 5.1c-10.1-.1-18.2-2.4-18.1-5.4Z"/><path d="M13.6 27.6c2.4 2.3 9.6 3.8 18.2 3.8s15.8-1.6 18-3.9"/><path d="M13.5 25.2c.2 7.4.3 14.6 1 21.4"/><path d="M49.8 25.4c-.2 7.4-.5 14.6-1.1 21.2"/><path d="M14.5 46.6c2.4 2.5 9.4 4 17.3 4 7.8 0 14.4-1.5 16.9-4"/><path d="M19.8 30.8 20.2 46M27 31.6v15.2M36.8 31.6l-.1 15.2M43.8 30.6l-.4 15.2"/><path d="M18.4 5.2 38.8 19.4"/><circle cx="49.6" cy="13.6" r="3.6"/><circle cx="49.6" cy="13.6" r="1.6" fill="currentColor" stroke="none"/><path d="M46.2 16.8 44.2 20" stroke-opacity=".6"/>`),
+  cuica:sv(`<path d="M10.6 31.8c-.1-9.4 2.6-17 6.2-17s6.5 7.5 6.6 17c.1 9.4-2.7 17.1-6.3 17.1s-6.4-7.7-6.5-17.1Z"/><path d="M17 31.8h20.4" stroke-dasharray="2.2 2.6"/><path d="M16.8 14.8c9.6-.4 21.4-.5 33.2-.2"/><path d="M16.6 48.9c9.6.4 21.6.4 33.4.1"/><path d="M50 14.6c2.6 0 4.6 7.6 4.6 17.2 0 9.5-2 17.2-4.6 17.2"/><path d="M22.8 15.6 24.2 48M31.6 15.2l.2 33.4M40.6 15 40.2 48.8"/><path d="M24 49.6c2.4 6.4 18.6 6.6 21.6.4" stroke-opacity=".7"/><path d="M53.4 6.2c2.4 1.6 3.2 4 2 6.2" stroke-opacity=".7"/>`)}})();
+const ICO_METRO='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 3.5h7l3.5 17h-14z"/><path d="M12 16 17 6.5"/><path d="M7 15.5h10"/></svg>';
+const ICO_SUBIR='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></svg>';
+
+/* estado */
+function bMixPadrao(){const m={};for(const i of BRITMO.instrumentos)m[i.id]={on:true,vol:1};
+  try{const s=JSON.parse(localStorage.getItem(BCHAVE)||"null");if(s)for(const id in m)if(s[id])m[id]={on:!!s[id].on,vol:Math.min(BVOLMAX,Math.max(0,+s[id].vol||0))}}catch(e){}return m}
+Object.assign(T.bt,{bpm:90,on:false,loading:false,erro:"",mix:bMixPadrao(),solo:null,geral:.9,contagem:true,metro:false,volMetro:.8,tempo:-1,subir:{ativo:false,de:70,ate:100,cada:4},auto:null,sug:null,shown:false,motor:null,raf:0});
+const bSalvarMix=()=>{try{localStorage.setItem(BCHAVE,JSON.stringify(T.bt.mix))}catch(e){}};
+function bMotor(){const b=T.bt;if(!b.motor)b.motor=new MotorBatucada(BRITMO);return b.motor}
+function bAplicarMix(){const b=T.bt,m=b.motor;if(!m)return;for(const ins of BRITMO.instrumentos){const c=b.mix[ins.id],ouvir=b.solo?b.solo===ins.id:c.on;m.volume(ins.id,ouvir?c.vol:0)}m.volumeGeral(b.geral);m.volumeMetronomo(b.volMetro)}
+function bLoop(){const b=T.bt;cancelAnimationFrame(b.raf);
+  const passo=()=>{const m=b.motor;if(!m||!m.tocando){b.tempo=-1;bTempoUi();return}
+    const pos=m.posicao(),t=pos<0?-1:Math.floor(pos)%2;if(t!==b.tempo){b.tempo=t;bTempoUi()}
+    const a=b.auto;if(a&&pos>=0){const comp=Math.floor((pos-a.inicio)/2),alvo=Math.min(a.ate,a.de+Math.floor(comp/a.cada));
+      if(alvo!==b.bpm){b.bpm=alvo;m.mudarBpm(alvo);btUiLite()}if(alvo>=a.ate){b.auto=null;b.subir.ativo=false;btRedraw()}}
+    b.raf=requestAnimationFrame(passo)};b.raf=requestAnimationFrame(passo)}
+function bTempoUi(){document.querySelectorAll(".bbeats").forEach(el=>el.querySelectorAll("i").forEach((x,k)=>x.className=T.bt.tempo===k?(k===0?"on1":"on2"):""))}
+async function bComecar(v){const b=T.bt,m=bMotor();m.metronomo(b.metro);bAplicarMix();await m.iniciar(v,b.contagem?4:0);b.on=true;bLoop()}
+async function btPlay(){const b=T.bt;if(b.on)return;b.erro="";b.loading=true;b.shown=true;btUi();
+  try{await bComecar(b.bpm)}catch(e){b.erro="Não foi possível carregar a batucada. Verifique a internet e tente de novo."}
+  b.loading=false;btUi()}
+function btPause(){const b=T.bt;if(b.motor)b.motor.parar();b.on=false;b.auto=null;b.subir.ativo=false;b.tempo=-1;btUi()}
+function btStop(){btPause();T.bt.shown=false;btUi()}
+function btSetBpm(v,manter){const b=T.bt;b.bpm=Math.min(BMAX,Math.max(BMIN,Math.round(v)));if(!manter){b.auto=null;if(b.subir.ativo){b.subir.ativo=false;btRedraw()}}if(b.motor)b.motor.mudarBpm(b.bpm);btUiLite()}
+async function bSubir(){const b=T.bt,s=b.subir;const de=Math.min(BMAX,Math.max(BMIN,+s.de||BMIN)),ate=Math.min(BMAX,Math.max(de+1,+s.ate||de+1));b.bpm=de;
+  const m=bMotor();if(!m.tocando){b.loading=true;b.shown=true;btUi();try{await bComecar(de)}catch(e){b.erro="Não foi possível carregar a batucada. Verifique a internet e tente de novo.";b.loading=false;return btUi()}b.loading=false}
+  else await m.mudarBpm(de);
+  b.auto={inicio:Math.max(0,Math.ceil(m.posicao()/2)*2),de,ate,cada:+s.cada||4};Object.assign(s,{de,ate,ativo:true});btUi()}
+
+/* layout (gaveta da música e aba Ferramentas) */
+function btPanel(p){const b=T.bt;
+  const ins=BRITMO.instrumentos.map(i=>{const c=b.mix[i.id],ouvindo=b.solo?b.solo===i.id:c.on,pct=Math.min(1,c.vol/BVOLMAX);
+    return`<div class="bcol${ouvindo?"":" off"}"><button class="bins" data-${p}ins="${i.id}" aria-pressed="${c.on}" aria-label="${i.nome}: ${c.on?"ligado":"desligado"}">${BDES[i.id]}<span>${i.nome}</span></button>
+      <div class="bfad" data-${p}fad="${i.id}" role="slider" tabindex="0" aria-label="Volume do ${i.nome}" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="${BVOLMAX}" aria-valuenow="${c.vol}" style="--p:${pct}"><i></i><b></b><em><s></s></em></div>
+      <button class="bsolo${b.solo===i.id?" on":""}" data-${p}solo="${i.id}" aria-pressed="${b.solo===i.id}" title="Ouvir só este">S</button></div>`}).join("");
+  return `<p class="bnome">${BRITMO.nome}</p>
+   <div class="big"><button class="round" data-${p}d="-1" aria-label="Diminuir 1 BPM">−</button><div style="text-align:center"><span class="num" data-bpmnum>${b.bpm}</span><div class="sub" style="margin:0" data-bpmand>BPM · ${andamento(b.bpm)}</div></div><button class="round" data-${p}d="1" aria-label="Aumentar 1 BPM">+</button></div>
+   <input type="range" data-${p}range min="${BMIN}" max="${BMAX}" step="1" value="${b.bpm}" aria-label="Andamento em BPM">
+   <div class="brange"><span>${BMIN}</span><span class="pills">${[-5,...(b.sug?[b.sug]:[]),5].map(v=>`<button data-${p}d="${v===b.sug?"=":""}${v}">${v===b.sug?v+" ★":(v>0?"+":"")+v}</button>`).join("")}</span><span>${BMAX}</span></div>
+   ${b.sug?`<p class="help" style="text-align:center;margin:2px 0 0">★ andamento sugerido para esta música</p>`:""}
+   <div class="bctl"><button class="bsm${b.contagem?" on":""}" data-${p}cont aria-pressed="${b.contagem}" title="Contagem de 4 tempos antes de começar">1234</button>
+    <button class="bplay${b.on?" on":""}" data-${p}go aria-label="${b.on?"Parar":"Tocar"} batucada">${b.loading?'<span class="bspin"></span>':b.on?'<svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>':'<svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>'}</button>
+    <button class="bsm${b.metro?" on":""}" data-${p}metro aria-pressed="${b.metro}" title="Metrônomo junto com a batucada">${ICO_METRO}</button></div>
+   <div class="bbeats" aria-hidden="true"><i class="${b.tempo===0?"on1":""}">1</i><i class="${b.tempo===1?"on2":""}">2</i></div>
+   <p class="help" style="text-align:center;margin:4px 0 0">${b.metro?"Metrônomo em 2 (acento no 1; o grave do surdo cai no 2)":b.contagem?"Começa com contagem de 4 tempos":"Começa direto, sem contagem"}</p>
+   ${b.metro?`<label class="bvol" style="max-width:300px;margin:8px auto 0"><span>Metrônomo</span><input type="range" data-${p}vm min="0" max="1.5" step="0.05" value="${b.volMetro}" aria-label="Volume do metrônomo"></label>`:""}
+   <div class="bmesa"><div class="bgrid">${ins}</div>
+    <p class="help" style="text-align:center;margin:10px 0 0">Toque no desenho para ligar ou desligar. “S” deixa só aquele instrumento.</p>
+    <label class="bvol bgeral"><span>Volume geral</span><input type="range" data-${p}vg min="0" max="1.2" step="0.05" value="${b.geral}" aria-label="Volume geral"></label></div>
+   <div class="bsubir"><p class="bst">${ICO_SUBIR} Subir o andamento sozinho</p><p class="help" style="margin:2px 0 0">O BPM sobe de 1 em 1 enquanto você toca, sem parar a batucada.</p>
+    <div class="bsg"><label><span>De</span><input type="number" inputmode="numeric" data-${p}sde min="${BMIN}" max="${BMAX}" value="${b.subir.de}"></label>
+     <label><span>Até</span><input type="number" inputmode="numeric" data-${p}sate min="${BMIN}" max="${BMAX}" value="${b.subir.ate}"></label>
+     <label><span>+1 a cada (compassos)</span><select data-${p}scada>${[1,2,4,8].map(c=>`<option value="${c}"${b.subir.cada===c?" selected":""}>${c}</option>`).join("")}</select></label></div>
+    <button class="${b.subir.ativo?"ghost":"primary dark"}" data-${p}sgo style="width:100%;margin-top:10px">${b.subir.ativo?`Subindo… (parar em ${b.bpm} BPM)`:"Começar a subir"}</button></div>
+   ${b.erro?`<p class="status err" style="text-align:center">${esc(b.erro)}</p>`:""}`}
+function btWire(root,p,redraw){const b=T.bt,q=s=>root.querySelector(`[data-${p}${s}]`),qa=s=>root.querySelectorAll(`[data-${p}${s}]`);
+  qa("d").forEach(el=>el.onclick=()=>{const v=el.getAttribute(`data-${p}d`);btSetBpm(v[0]==="="?+v.slice(1):b.bpm+ +v)});
+  const r=q("range");if(r)r.oninput=e=>btSetBpm(+e.target.value);
+  q("go").onclick=()=>{b.on?btPause():btPlay()};
+  q("cont").onclick=()=>{b.contagem=!b.contagem;redraw()};
+  q("metro").onclick=()=>{b.metro=!b.metro;if(b.motor)b.motor.metronomo(b.metro);redraw()};
+  const vm=q("vm");if(vm)vm.oninput=e=>{b.volMetro=+e.target.value;bAplicarMix()};
+  q("vg").oninput=e=>{b.geral=+e.target.value;bAplicarMix();const v=$("btvol");if(v)v.value=b.geral};
+  qa("ins").forEach(el=>el.onclick=()=>{const c=b.mix[el.getAttribute(`data-${p}ins`)];c.on=!c.on;bSalvarMix();bAplicarMix();redraw()});
+  qa("solo").forEach(el=>el.onclick=()=>{const id=el.getAttribute(`data-${p}solo`);b.solo=b.solo===id?null:id;bAplicarMix();redraw()});
+  qa("fad").forEach(el=>{const id=el.getAttribute(`data-${p}fad`);let arr=false;
+    const set=v=>{const c=b.mix[id];c.vol=Math.round(Math.min(BVOLMAX,Math.max(0,v))*20)/20;el.style.setProperty("--p",Math.min(1,c.vol/BVOLMAX));el.setAttribute("aria-valuenow",c.vol);bSalvarMix();bAplicarMix()};
+    const deY=y=>{const rc=el.getBoundingClientRect(),h=rc.height-24;set(Math.min(1,Math.max(0,(rc.bottom-12-y)/h))*BVOLMAX)};
+    el.onpointerdown=e=>{arr=true;el.setPointerCapture&&el.setPointerCapture(e.pointerId);deY(e.clientY);e.preventDefault()};
+    el.onpointermove=e=>{if(arr)deY(e.clientY)};el.onpointerup=el.onpointercancel=()=>{arr=false};
+    el.onkeydown=e=>{const c=b.mix[id];if(e.key==="ArrowUp"||e.key==="ArrowRight")set(c.vol+.05);else if(e.key==="ArrowDown"||e.key==="ArrowLeft")set(c.vol-.05);else return;e.preventDefault()}});
+  const sd=q("sde"),sa=q("sate"),sc=q("scada");sd.oninput=e=>b.subir.de=+e.target.value;sa.oninput=e=>b.subir.ate=+e.target.value;sc.onchange=e=>b.subir.cada=+e.target.value;
+  q("sgo").onclick=()=>{if(b.subir.ativo){b.auto=null;b.subir.ativo=false;redraw()}else bSubir()};
 }
-function btSetBpm(v){const b=T.bt,sty=btStyle();if(!sty)return;b.bpm=Math.min(sty.max,Math.max(sty.min,Math.round(v)));btApply();btUiLite()}
-function btEnsureAudio(){const b=T.bt;if(b.audio)return b.audio;const a=new Audio();a.preload="auto";a.loop=false;a.setAttribute("playsinline","");
-  a.preservesPitch=true;a.mozPreservesPitch=true;a.webkitPreservesPitch=true;
-  a.addEventListener("playing",()=>{b.loading=false;b.on=true;btUi()});a.addEventListener("pause",()=>{if(!a.ended){b.on=false;btUi()}});
-  a.addEventListener("waiting",()=>{b.loading=true;btUi()});
-  a.addEventListener("ended",()=>{const ini=(b.sel&&b.sel.inicio)||0;a.currentTime=ini;a.play().catch(()=>{})}); // loop sem a contagem falada
-  a.addEventListener("timeupdate",()=>{const ini=(b.sel&&b.sel.inicio)||0;if(a.currentTime<ini-0.05)a.currentTime=ini});
-  a.addEventListener("error",()=>{if(!a.getAttribute("src"))return;b.loading=false;b.on=false;toast("Não foi possível tocar a batucada. Verifique a internet.");btUi()});
-  b.audio=a;return a}
-function btApply(){ // escolhe a gravação e a velocidade exata para o BPM pedido
-  const b=T.bt,sty=btStyle();if(!sty||!b.audio)return;
-  const src=btPick(sty,b.bpm);
-  if(!b.sel||b.sel.id!==src.id){const wasOn=b.on,frac=b.audio.duration?b.audio.currentTime/b.audio.duration:0;b.sel=src;b.audio.src=src.url;
-    b.audio.addEventListener("loadedmetadata",()=>{try{b.audio.currentTime=Math.max(src.inicio||0,frac*b.audio.duration)}catch(e){}},{once:true});if(wasOn){b.loading=true;b.audio.play().catch(()=>{})}}
-  b.audio.playbackRate=b.bpm/src.bpm;b.audio.preservesPitch=true;
-}
-async function btPlay(){
-  const b=T.bt;if(b.lista===null)await btLoad();
-  if(b.at&&Date.now()-b.at>100*60*1000){await btLoad();b.sel=null}
-  if(!btStyle())return;
-  unlockIOS();btEnsureAudio();b.audio.loop=false;b.audio.volume=b.vol;btApply();b.loading=true;btUi();
-  try{await b.audio.play();b.audio.playbackRate=b.bpm/b.sel.bpm}catch(e){b.loading=false;btUi()}
-}
-function btPause(){T.bt.audio&&T.bt.audio.pause()}
-function btStop(){const b=T.bt;b.audio&&(b.audio.onended=null);if(b.audio){b.audio.pause();b.audio.removeAttribute("src");b.audio.load()}b.sel=null;b.on=false;b.shown=false;btUi()}
-async function drawBt(){
-  const b=T.bt;
-  if(b.lista===null){$("tbody").innerHTML=`<p class="help" style="text-align:center">Carregando batucadas…</p>`;await btLoad();if(st.view==="tools"&&T.aba==="batucadas")drawBt();return}
-  b.sug=null;
-  $("tbody").innerHTML=`<p class="help" style="text-align:center;margin-top:0">Escolha qualquer andamento, de 1 em 1 BPM. A batucada toca em loop e continua enquanto você abre uma cifra.</p>`+btPanel("t");
-  btWire($("tbody"),"t",drawBt);
-}
-function btUiLite(){const b=T.bt;const n=$("btname");if(n)n.textContent=`${b.style||"Batucada"} · ${b.bpm} BPM`;["tbpm","dbpm"].forEach(id=>{if($(id))$(id).textContent=b.bpm});if(st.view==="song")drawSongHead()}
-function btUi(){
-  if(st.view==="tools"&&T.aba==="batucadas")drawBt();
-  refreshLive();
-  const b=T.bt,bar=$("btbar");
-  if(b.on||b.loading)b.shown=true;
-  if(!b.sel||!b.shown){bar.hidden=true;document.body.classList.remove("hasbt");return}
+function btRedraw(){if(st.view==="tools"&&T.aba==="batucadas")drawBt();if(dr&&dr.kind==="batucada")drawDrawer()}
+function drawBt(){T.bt.sug=null;$("tbody").innerHTML=`<p class="help" style="text-align:center;margin-top:0">Toque junto com surdo, pandeiro, rebolo, repiques e cuíca em qualquer andamento. Ligue, desligue e ajuste cada instrumento. A batucada continua enquanto você abre uma cifra.</p>`+btPanel("t");btWire($("tbody"),"t",drawBt)}
+function btUiLite(){const b=T.bt;const n=$("btname");if(n)n.textContent=`Batucada · ${b.bpm} BPM`;
+  document.querySelectorAll("[data-bpmnum]").forEach(x=>x.textContent=b.bpm);document.querySelectorAll("[data-bpmand]").forEach(x=>x.textContent="BPM · "+andamento(b.bpm));
+  document.querySelectorAll("[data-trange],[data-drange]").forEach(x=>{if(+x.value!==b.bpm)x.value=b.bpm});
+  document.querySelectorAll("[data-tsgo],[data-dsgo]").forEach(x=>{if(b.subir.ativo)x.textContent=`Subindo… (parar em ${b.bpm} BPM)`});
+  if(st.view==="song")drawSongHead()}
+function btUi(){btRedraw();refreshLive();
+  const b=T.bt,bar=$("btbar");if(b.on||b.loading)b.shown=true;
+  if(!b.shown){bar.hidden=true;document.body.classList.remove("hasbt");return}
   bar.hidden=false;document.body.classList.add("hasbt");
   bar.innerHTML=`<div class="wrap"><button class="btp" id="btpp" aria-label="${b.on?"Pausar":"Tocar"} batucada">${b.loading?"…":b.on?"❚❚":"▶"}</button>
-   <div class="bti"><b id="btname">${esc(b.style||"Batucada")} · ${b.bpm} BPM</b><small>em loop</small></div>
+   <button class="bti" id="btopen" style="border:0;background:none;text-align:left;padding:0;font:inherit;color:inherit"><b id="btname">Batucada · ${b.bpm} BPM</b><small>ver instrumentos</small></button>
    <button class="btx" id="btm" aria-label="Diminuir 1 BPM">−</button><button class="btx" id="btpl" aria-label="Aumentar 1 BPM">+</button>
-   <input type="range" id="btvol" min="0" max="1" step="0.01" value="${b.vol}" aria-label="Volume da batucada"><button class="btx" id="btclose" aria-label="Fechar batucada">✕</button></div>`;
-  $("btpp").onclick=()=>b.on?btPause():btPlay();
+   <input type="range" id="btvol" min="0" max="1.2" step="0.05" value="${b.geral}" aria-label="Volume da batucada"><button class="btx" id="btclose" aria-label="Fechar batucada">✕</button></div>`;
+  $("btpp").onclick=()=>b.on?btPause():btPlay();$("btopen").onclick=()=>{if(st.view==="song"){const s=byId(st.id);T.bt.sug=s&&(meta[s.id]||{}).bpm||null}openDrawer("batucada")};
   $("btm").onclick=()=>btSetBpm(b.bpm-1);$("btpl").onclick=()=>btSetBpm(b.bpm+1);
-  $("btvol").oninput=e=>{b.vol=+e.target.value;if(b.audio)b.audio.volume=b.vol};
-  $("btclose").onclick=btStop;
-}
+  $("btvol").oninput=e=>{b.geral=+e.target.value;bAplicarMix()};$("btclose").onclick=btStop}
+// já deixa o andamento padrão baixando quando a pessoa abrir a batucada
+function bPreCarregar(){bConjunto(BRITMO,bReferencia(BRITMO,T.bt.bpm)).catch(()=>{})}
 
-
-/* ================= professor: gestão das batucadas ================= */
-const BAT_ADM="https://rnznqwuoexwspwvnbkri.supabase.co/functions/v1/batucadas-admin";
-const AB={lista:null,msg:"",err:false,busy:false,prev:null,confirm:null,form:{nome:"Samba e Pagode",bpm:"",inicio:"0",file:null,detect:""}};
-async function admCall(acao,extra={}){const r=await fetch(BAT_ADM,{method:"POST",headers:{"content-type":"application/json","x-chave-professor":ADMIN_KEY},body:JSON.stringify({acao,...extra})});
-  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||"falha");return d}
-async function admLoad(){try{AB.lista=(await admCall("listar")).batucadas}catch(e){AB.lista=[];AB.msg="Não foi possível carregar as batucadas.";AB.err=true}}
-function admMsg(m,err){AB.msg=m;AB.err=!!err;if(st.view==="admbt")drawAdmBt()}
-async function drawAdmBt(){
-  $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">Batucadas</span>`;
-  $("bk").onclick=()=>{admPrevStop();go("home",{})};
-  if(!isAdmin){$("view").innerHTML=`<div class="empty">Só o professor vê esta área.</div>`;return}
-  if(AB.lista===null){$("view").innerHTML=`<p class="help">Carregando…</p>`;await admLoad()}
-  const f=AB.form;
-  const grupos=new Map();(AB.lista||[]).forEach(x=>{const n=x.nome.replace(/^\s*\d+\s*bpm\s*[-–]\s*/i,"").trim()||x.nome;if(!grupos.has(n))grupos.set(n,[]);grupos.get(n).push(x)});
-  $("view").innerHTML=`<div class="homepad">
-   <p class="help" style="font-size:14px;color:var(--ink);margin-top:10px">As batucadas valem para os dois apps (Repertório e Minha Evolução). O aluno escolhe qualquer BPM: o app usa a gravação de andamento mais próximo e ajusta a velocidade sem mudar a afinação. Quanto mais andamentos você gravar, mais natural fica.</p>
-   ${AB.msg?`<div class="status ${AB.err?"err":""}" role="status">${esc(AB.msg)}</div>`:""}
-   <div class="subcard"><h4>Enviar nova batucada</h4>
-    <div class="row2" style="margin-top:10px"><div class="field"><label for="abn">Estilo</label><input id="abn" list="abnl" value="${esc(f.nome)}"><datalist id="abnl">${[...grupos.keys()].map(n=>`<option value="${esc(n)}">`).join("")}</datalist></div>
-     <div class="field"><label for="abb">BPM exato da gravação</label><input id="abb" type="number" min="20" max="300" inputmode="numeric" value="${esc(f.bpm)}" placeholder="ex.: 80"></div></div>
-    <div class="field"><label for="abf">Arquivo de áudio (MP3, M4A, WAV)</label><input id="abf" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac">${f.file?`<small style="color:var(--ink)">Selecionado: <b>${esc(f.file.name)}</b> (${(f.file.size/1048576).toFixed(1)} MB)</small>`:""}</div>
-    <div class="field"><label for="abi">Início do loop (segundos)</label><input id="abi" type="number" min="0" max="119" step="0.01" value="${esc(f.inicio)}"></div>
-    <p class="help" style="margin-top:-4px">Se a gravação começa com fala ou contagem, coloque aqui o segundo em que a batucada entra. ${f.detect?`<b style="color:var(--ink)">${esc(f.detect)}</b>`:"Ao escolher o arquivo, o app tenta encontrar esse ponto sozinho."}</p>
-    <button class="primary" id="abgo" style="width:100%" ${AB.busy?"disabled":""}>${AB.busy?"Enviando…":"Enviar batucada"}</button></div>
-   ${[...grupos.entries()].map(([n,it])=>`<div class="sec">${esc(n)}</div>${it.sort((a,b)=>a.bpm-b.bpm).map(x=>`<div class="admbt ${x.ativo?"":"off"}">
-     <button class="btp" data-abprev="${x.id}" aria-label="Ouvir o começo do loop">${AB.prev===x.id?"❚❚":"▶"}</button>
-     <div class="t"><b>${x.bpm} BPM</b><small>${x.ativo?"visível para os alunos":"oculta"} · ${x.duracao_seg?Math.round(x.duracao_seg/60)+" min":""}</small></div>
-     <label class="ini">início <input type="number" min="0" max="119" step="0.01" value="${Number(x.loop_inicio_seg)}" data-abini="${x.id}" aria-label="Início do loop em segundos">s</label>
-     <button class="ghost sm" data-abtog="${x.id}">${x.ativo?"Ocultar":"Mostrar"}</button>
-     ${AB.confirm===x.id?`<button class="ghost sm danger" data-abdelok="${x.id}">Confirmar exclusão</button>`:`<button class="ghost sm" data-abdel="${x.id}" aria-label="Excluir">✕</button>`}
-   </div>`).join("")}`).join("")}
-  </div>`;
-  const sync=()=>{f.nome=$("abn").value;f.bpm=$("abb").value;f.inicio=$("abi").value};
-  ["abn","abb","abi"].forEach(id=>$(id).oninput=sync);
-  $("abf").onchange=async e=>{f.file=e.target.files[0]||null;sync();if(!f.file)return;
-    if(!f.bpm){const m=f.file.name.match(/(\d{2,3})\s*bpm/i)||f.file.name.match(/(\d{2,3})/);if(m)f.bpm=m[1]}
-    f.detect="Procurando onde a batucada entra…";drawAdmBt();
-    const t=await detectarInicio(f.file).catch(()=>null);
-    if(t!=null){f.inicio=String(t);f.detect=t>0.3?`Encontrei a batucada entrando em ${t.toFixed(2)} s. Ouça a prévia depois de enviar e ajuste se precisar.`:"A batucada começa logo no início."}else f.detect="Não consegui analisar o arquivo. Preencha o início à mão, se precisar.";
-    drawAdmBt()};
-  $("abgo").onclick=admEnviar;
-  document.querySelectorAll("[data-abini]").forEach(el=>el.onchange=async()=>{try{await admCall("atualizar",{id:el.dataset.abini,loop_inicio_seg:+el.value});const x=AB.lista.find(y=>y.id===el.dataset.abini);x.loop_inicio_seg=+el.value;T.bt.lista=null;admMsg("Início do loop salvo.")}catch(e){admMsg(e.message,true)}});
-  document.querySelectorAll("[data-abtog]").forEach(el=>el.onclick=async()=>{const x=AB.lista.find(y=>y.id===el.dataset.abtog);try{await admCall("atualizar",{id:x.id,ativo:!x.ativo});x.ativo=!x.ativo;T.bt.lista=null;admMsg(x.ativo?"Batucada visível para os alunos.":"Batucada oculta.")}catch(e){admMsg(e.message,true)}});
-  document.querySelectorAll("[data-abdel]").forEach(el=>el.onclick=()=>{AB.confirm=el.dataset.abdel;drawAdmBt()});
-  document.querySelectorAll("[data-abdelok]").forEach(el=>el.onclick=async()=>{try{await admCall("excluir",{id:el.dataset.abdelok});AB.lista=AB.lista.filter(y=>y.id!==el.dataset.abdelok);AB.confirm=null;T.bt.lista=null;admMsg("Batucada excluída.")}catch(e){admMsg(e.message,true)}});
-  document.querySelectorAll("[data-abprev]").forEach(el=>el.onclick=()=>admPrev(el.dataset.abprev));
-}
-let _admA=null;
-function admPrevStop(){if(_admA){_admA.pause();_admA=null}AB.prev=null}
-function admPrev(id){
-  if(AB.prev===id){admPrevStop();return drawAdmBt()}
-  admPrevStop();const x=AB.lista.find(y=>y.id===id);if(!x||!x.url)return;
-  const a=new Audio(x.url);a.setAttribute("playsinline","");_admA=a;AB.prev=id;
-  a.addEventListener("loadedmetadata",()=>{a.currentTime=Math.max(0,Number(x.loop_inicio_seg)-1.5)},{once:true}); // 1,5 s antes do ponto, para conferir o corte
-  a.play().catch(()=>{});setTimeout(()=>{if(_admA===a){admPrevStop();if(st.view==="admbt")drawAdmBt()}},12000);drawAdmBt();
-}
-async function admEnviar(){
-  const f=AB.form;f.nome=$("abn").value.trim();f.bpm=$("abb").value;f.inicio=$("abi").value;
-  if(!f.file) return admMsg("Escolha o arquivo de áudio.",true);
-  if(!f.nome) return admMsg("Dê um nome para o estilo, por exemplo: Samba e Pagode.",true);
-  const bpm=parseInt(f.bpm,10);if(!(bpm>=20&&bpm<=300)) return admMsg("Informe o BPM exato da gravação (entre 20 e 300).",true);
-  if(f.file.size>26214400) return admMsg("O arquivo passa de 25 MB. Exporte em MP3 de 128 kbps ou corte para uns 10 minutos.",true);
-  AB.busy=true;admMsg("Enviando o áudio…");
-  try{
-    const ext=(f.file.name.split(".").pop()||"mp3").toLowerCase();
-    const link=await admCall("link_envio",{nome:f.nome,bpm,ext});
-    const up=await fetch(link.url,{method:"PUT",headers:{"content-type":f.file.type||"audio/mpeg","x-upsert":"false"},body:f.file});
-    if(!up.ok) throw new Error("O envio do arquivo falhou. Tente de novo.");
-    const dur=await new Promise(ok=>{const a=new Audio();a.preload="metadata";a.onloadedmetadata=()=>ok(a.duration);a.onerror=()=>ok(null);a.src=URL.createObjectURL(f.file)});
-    await admCall("criar",{nome:f.nome,bpm,arquivo:link.arquivo,tamanho_bytes:f.file.size,duracao_seg:dur,loop_inicio_seg:+f.inicio||0});
-    AB.form={nome:f.nome,bpm:"",inicio:"0",file:null,detect:""};AB.busy=false;T.bt.lista=null;await admLoad();admMsg(`Batucada de ${bpm} BPM enviada. Ela já aparece para os alunos nos dois apps.`);
-  }catch(e){AB.busy=false;admMsg(e.message||"Não foi possível enviar.",true)}
-}
-/* acha onde o surdo entra: graves fortes e repetidos, dominando a faixa da voz (mesmo critério usado nas gravações atuais) */
-async function detectarInicio(file){
-  const bytes=await file.slice(0,1500000).arrayBuffer();
-  const C=window.AudioContext||window.webkitAudioContext,tmp=new C();
-  let buf;try{buf=await tmp.decodeAudioData(bytes)}finally{tmp.close&&tmp.close()}
-  const sr=buf.sampleRate,len=Math.min(buf.length,sr*45);
-  const band=async(type,freq,q)=>{const oc=new OfflineAudioContext(1,len,sr),src=oc.createBufferSource();src.buffer=buf;const f=oc.createBiquadFilter();f.type=type;f.frequency.value=freq;if(q)f.Q.value=q;src.connect(f).connect(oc.destination);src.start();return(await oc.startRendering()).getChannelData(0)};
-  const lo=await band("lowpass",160),mi=await band("bandpass",1000,.7);
-  const hop=Math.round(sr*.02),win=Math.round(sr*.06),L=[],M=[],ts=[];
-  for(let i=0;i+win<len;i+=hop){let a=0,b=0;for(let j=i;j<i+win;j++){a+=lo[j]*lo[j];b+=mi[j]*mi[j]}L.push(Math.sqrt(a/win));M.push(Math.sqrt(b/win));ts.push(i/sr)}
-  const after=L.filter((_,k)=>ts[k]>Math.min(20,ts[ts.length-1]*.5)).sort((a,b)=>a-b);if(!after.length)return 0;
-  const ref=after[Math.floor(after.length*.95)],thr=.5*ref;
-  const hit=L.map((v,k)=>v>thr&&v>1.3*M[k]);
-  for(let k=0;k<hit.length;k++){if(!hit[k])continue;let n=0;for(let j=k+1;j<hit.length&&ts[j]<ts[k]+5;j++)if(hit[j]&&ts[j]>ts[k]+.25)n++;if(n>=5)return Math.max(0,Math.round((ts[k]-.05)*100)/100)}
-  return 0;
-}
 
 initCaps();
 
