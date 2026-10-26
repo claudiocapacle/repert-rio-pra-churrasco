@@ -957,6 +957,7 @@ function loginForm(id,modo){const ext=(AUTHCFG&&AUTHCFG.external)||{};modo=modo|
       <button class="primary" type="submit">${modo==="criar"?"Criar minha conta":"Entrar"}</button>
       ${modo==="entrar"?`<button type="button" class="linkbtn" data-esq="1">Esqueci minha senha</button>`:""}
       <p class="status" hidden></p>
+      <p class="help" style="text-align:center;margin:2px 0 0;font-size:12px">Ao entrar você concorda com a <a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</p>
     </form></div>`}
 function loginWire(id){const W=document.querySelector(`[data-lg="${id}"]`);if(!W)return;const S=W.querySelector(".status"),F=W.querySelector("form");
   const msg=(t,err)=>{S.hidden=false;S.className="status"+(err?" err":"");S.textContent=t};
@@ -1581,7 +1582,7 @@ function drawDrawer(){
     B.innerHTML=`<h3>Minha conta</h3><p class="sub">${esc(md.full_name||md.name||"")}${md.full_name||md.name?"<br>":""}${esc(USER.email||"")}</p>
      <p class="help">Seus repertórios, favoritas e últimas tocadas ficam salvos na sua conta.</p>
      ${PROF?`<p class="help"><b style="color:var(--orange)">Você é professor.</b> O painel e a edição das cifras aparecem para você em qualquer aparelho.</p><button class="ghost" id="goPainel" style="width:100%;margin-bottom:8px">Abrir o painel do professor</button>`:""}
-     <button class="ghost" id="sairC" style="width:100%">Sair da conta</button>`;
+     <button class="ghost" id="sairC" style="width:100%">Sair da conta</button><p class="help" style="text-align:center;margin-top:12px"><a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a></p>`;
     if($("goPainel"))$("goPainel").onclick=()=>{closeDrawer();go("review",{})};
     $("sairC").onclick=sairConta;
   } else if(dr.kind==="novasenha"){
