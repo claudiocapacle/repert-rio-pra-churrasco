@@ -388,6 +388,20 @@ body.stage .btbar{display:none}
 .tvid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .tfine{font-size:11px;line-height:1.4;color:var(--muted);text-align:center;margin:14px 4px 0}
 
+.learn{cursor:pointer}
+.ouvirbar{position:fixed;z-index:27;left:0;right:0;background:var(--paper);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(31,36,48,.12)}
+.ouvirbar .wrap{padding:8px 12px 10px}
+.ohead{display:flex;align-items:center;gap:6px}
+.ohead .ot{flex:1;min-width:0;display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.ohead .ot svg{width:18px;height:18px;flex:none;color:var(--orange)}
+.ohead .ot small{color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.obtn{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 10px;font-weight:600;font-size:13px;color:var(--ink);text-decoration:none;flex:none;min-height:34px;display:inline-flex;align-items:center}
+.obtn.ox{width:34px;justify-content:center;padding:0}
+.osub{margin:8px 2px 2px;font-size:14px;color:var(--muted)}.osub a{color:var(--orange);font-weight:700}
+.ovid{position:relative;margin-top:8px;width:100%;max-width:560px;aspect-ratio:16/9;max-height:34vh;border-radius:12px;overflow:hidden;background:#000}
+.ovid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.ovid.min{height:1px;margin:0;opacity:0;aspect-ratio:auto}
+
 </style>
 </head>
 <body>
@@ -415,6 +429,7 @@ body.stage .btbar{display:none}
 </div></nav>
 
 <div class="btbar" id="btbar" hidden></div>
+<div class="ouvirbar" id="ouvirbar" hidden></div>
 <div class="scrim" id="scrim" hidden></div>
 <section class="drawer" id="drawer" hidden role="dialog" aria-modal="true"><div class="grab"></div><div class="wrap" id="dbody"></div></section>
 <div class="toast" id="toast" hidden role="status"></div>
@@ -1018,6 +1033,27 @@ function drawSongTop(){
   $("favBtn").onclick=()=>{const i=store.fav.indexOf(s.id);if(i>=0)store.fav.splice(i,1);else store.fav.unshift(s.id);save();drawSongTop();toast(i>=0?"Removida dos favoritos":"Guardada nos favoritos")};
   $("addBtn").onclick=()=>openDrawer("addrep",{id:s.id});
 }
+const ICO_FONE='<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><path d="M21 15a2 2 0 0 1-2 2h-1v-6h1a2 2 0 0 1 2 2zM3 15a2 2 0 0 0 2 2h1v-6H5a2 2 0 0 0-2 2z"/></svg>';
+/* ----- ouvir a música: player do YouTube dentro do app ----- */
+const OUV={on:false,song:null,vid:null,state:"",min:false};
+function ytIdFrom(u){const m=/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/.exec(u||"");return m?m[1]:null}
+function ytSearch(s){return "https://www.youtube.com/results?search_query="+encodeURIComponent(s.title+" "+s.artist)}
+async function ouvir(s){if(!s)return;OUV.on=true;OUV.song=s.id;OUV.vid=null;OUV.min=false;
+  let id=ytIdFrom((meta[s.id]||{}).aula);OUV.state=id?"tocar":"busca";OUV.vid=id;drawOuvir();if(id)return;
+  try{const r=await fetch(SB_URL+"/functions/v1/ouvir",{method:"POST",headers:{"Content-Type":"application/json",apikey:SB_KEY,Authorization:"Bearer "+SB_KEY},body:JSON.stringify({song:s.id,q:s.title+" "+s.artist})});const d=await r.json();id=d&&d.id}catch(e){}
+  if(OUV.song!==s.id||!OUV.on)return;OUV.vid=id||null;OUV.state=id?"tocar":"fora";drawOuvir()}
+function closeOuvir(){OUV.on=false;drawOuvir();placeOuvir()}
+function placeOuvir(){const b=$("ouvirbar"),bt=$("btbar");document.body.style.paddingBottom=b&&!b.hidden?(b.offsetHeight+8)+"px":"";if(!b||b.hidden)return;b.style.bottom=`calc(var(--tb) + env(safe-area-inset-bottom,0px) + ${bt&&!bt.hidden?bt.offsetHeight:0}px)`}
+function drawOuvir(){const b=$("ouvirbar");if(!b)return;if(!OUV.on){b.hidden=true;b.innerHTML="";return}
+  const s=byId(OUV.song);if(!s)return closeOuvir();b.hidden=false;
+  const yt=OUV.vid?"https://www.youtube.com/watch?v="+OUV.vid:ytSearch(s);
+  b.innerHTML=`<div class="wrap"><div class="ohead"><span class="ot">${ICO_FONE}<b>${esc(s.title)}</b><small>${esc(s.artist)}</small></span>
+    ${OUV.vid?`<button class="obtn" id="omin">${OUV.min?"Mostrar vídeo":"Esconder vídeo"}</button>`:""}<a class="obtn" href="${esc(yt)}" target="_blank" rel="noopener">YouTube</a><button class="obtn ox" id="ox" aria-label="Fechar o player">✕</button></div>
+    ${OUV.state==="busca"?`<p class="osub">Procurando a música…</p>`:OUV.state==="fora"?`<p class="osub">Não deu para tocar aqui dentro. <a href="${esc(ytSearch(s))}" target="_blank" rel="noopener">Ouvir no YouTube</a></p>`:`<div class="ovid${OUV.min?" min":""}"><iframe src="https://www.youtube-nocookie.com/embed/${OUV.vid}?autoplay=1&playsinline=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Música no YouTube"></iframe></div>`}</div>`;
+  $("ox").onclick=closeOuvir;
+  const m=$("omin");if(m)m.onclick=()=>{OUV.min=!OUV.min;b.querySelector(".ovid").classList.toggle("min",OUV.min);m.textContent=OUV.min?"Mostrar vídeo":"Esconder vídeo";placeOuvir()};
+  placeOuvir()}
+new MutationObserver(placeOuvir).observe(document.getElementById("btbar"),{attributes:true,childList:true,subtree:true});
 function aulaUrl(s){const m=meta[s.id];return m&&m.aula||("https://www.youtube.com/results?search_query="+encodeURIComponent(s.title+" cavaquinho"))}
 const ICM={met:'<svg viewBox="0 0 24 24" width="15" height="15" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round"><path d="M9 3h6l4 18H5L9 3zM12 16l5-9"/></svg>',
   drum:'<svg viewBox="0 0 24 24" width="15" height="15" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round"><ellipse cx="12" cy="8" rx="8" ry="3"/><path d="M4 8v8c0 1.7 3.6 3 8 3s8-1.3 8-3V8M3 3l6 5M21 3l-6 5"/></svg>'};
@@ -1031,7 +1067,7 @@ function drawSongHead(){
     ${vers(s).length>1?`<button class="chip" data-tool="versao">${esc(curVer(s).label)}${IC.caret}</button>`:""}
     <button class="chip ${T.met.on?"live":""}" data-tool="metronomo">${ICM.met}Metrônomo${T.met.on?` <span class="v">${T.met.bpm}</span>`:""}</button>
     <button class="chip ${T.bt.on?"live":""}" data-tool="batucada">${ICM.drum}Batucada${T.bt.on||T.bt.loading?` <span class="v">${T.bt.bpm}</span>`:""}</button>
-    </div><div class="chips" style="margin-top:8px"><a class="learn" href="${esc(aulaUrl(s))}" target="_blank" rel="noopener">${IC.yt.replace('<svg','<svg style="fill:currentColor"')}Aprender essa música</a></div>`;
+    </div><div class="chips" style="margin-top:8px"><button class="learn" data-tool="ouvir">${ICO_FONE}Ouvir a música</button></div>`;
   $("tbKey").textContent=cur;
 }
 let MEASURES=0;
@@ -1303,7 +1339,7 @@ function drawDrawer(){
      <label class="switch"><span><b>Quebrar linhas</b><br><small style="color:var(--muted)">Ajusta a cifra à largura da tela, levando o acorde junto com a sílaba.</small></span><input type="checkbox" id="fitc" ${st.fit?"checked":""}></label>
      <button class="opt" id="goTools" style="margin-top:12px"><b>Ferramentas</b><small>Afinador, metrônomo e batucadas. A batucada continua tocando com a cifra aberta.</small></button>
      <label class="switch"><span><b>Modo palco</b><br><small style="color:var(--muted)">Tela escura, letra maior, sem botões. Funciona com pedal Bluetooth: <span class="kbd">↓</span> rola, <span class="kbd">→</span> próxima, <span class="kbd">espaço</span> toca.</small></span><input type="checkbox" id="stg" ${st.stage?"checked":""}></label>
-     ${isAdmin?`<div class="switch" style="display:block"><b>Aula desta música</b> <small style="color:var(--muted)">(só você vê)</small><form class="newrep" id="af"><input id="au" placeholder="Link do vídeo no YouTube" value="${esc((meta[s.id]||{}).aula||"")}"><button class="ghost">Salvar</button></form><p class="help">Sem link, o botão busca “nome da música + cavaquinho” no YouTube.</p></div>`:""}`;
+     ${isAdmin?`<div class="switch" style="display:block"><b>Vídeo para “Ouvir a música”</b> <small style="color:var(--muted)">(só você vê)</small><form class="newrep" id="af"><input id="au" placeholder="Link do vídeo no YouTube" value="${esc((meta[s.id]||{}).aula||"")}"><button class="ghost">Salvar</button></form><p class="help">Sem link, o botão busca “nome da música + cavaquinho” no YouTube.</p></div>`:""}`;
     $("fm").onclick=()=>{st.fs=Math.max(10,st.fs-1);drawSong();drawDrawer()};$("fp").onclick=()=>{st.fs=Math.min(26,st.fs+1);drawSong();drawDrawer()};
     $("fitc").onchange=e=>{st.fit=e.target.checked;drawSong()};
     $("stg").onchange=e=>{closeDrawer();setStage(e.target.checked)};
@@ -1609,6 +1645,7 @@ document.addEventListener("click",e=>{
     openDrawer("acorde",{name:d.ch,i:0})}
   else if(d.tool){
     if(d.tool==="palco") return setStage(!st.stage);
+    if(d.tool==="ouvir") return ouvir(byId(st.id));
     if(d.tool==="roda"&&!roda.code) return openDrawer("roda");
     openDrawer(d.tool)}
 });
