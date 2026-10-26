@@ -1303,6 +1303,8 @@ function drawSongHead(){
   $("tbKey").textContent=cur;
 }
 let MEASURES=0;
+/* só dá para seguir o tempo quando a cifra marca as trocas com barras (| e %); sem isso, um acorde pode durar 4 ou 8 tempos e o app não tem como saber */
+function temTempos(lines){let b=0;for(const l of lines)if(l.ch)for(const[,t] of l.ch)if(t==="|")b++;return b>=4}
 function placeTokensM(items,sp,mref){ // igual a placeTokens, marcando cada acorde com o número do compasso
   const out=[];let cur=0,has=false,prev="";
   const bars=items.some(([,r])=>r==="|"); // sem barras: cada acorde (ou grupo ligado por >) é um compasso
@@ -1335,7 +1337,7 @@ function drawSong(){
   drawSongHead();
   $("sheet").style.setProperty("--fs",(st.stage?st.fs+4:st.fs)+"px");
   const {html,used,n}=renderSheet(lines,sp,$("sheet").parentElement.clientWidth,st.stage?st.fs+4:st.fs);
-  MEASURES=n;
+  MEASURES=temTempos(lines)?n:0;if(!MEASURES&&play.speed==="bpm")play.speed=3;
   $("sheet").innerHTML=html;
   $("strip").innerHTML=[...used].map(c=>`<button data-ch="${esc(c)}" aria-label="Ver ${esc(c)}">${svgShape(shapes(c)[0],52)}<span class="nm">${esc(c)}</span></button>`).join("");
   if(st.rep){const r=curRep(),n=r.items.length,p=r.items[st.idx-1],q=r.items[st.idx+1];
@@ -1553,9 +1555,11 @@ function drawDrawer(){
     B.innerHTML=`<h3>Versão da cifra</h3><p class="sub">${vers(sv).length} versões desta música.</p>`+vers(sv).map(v=>`<button class="opt ${v.k===cvk?"on":""}" data-v="${v.k}"><b>${esc(v.label)}</b><small>${esc(DESC[v.label]||"Outro arranjo desta música.")}${v.key&&v.key!==sv.key?` Tom ${esc(v.key)}.`:""}</small></button>`).join("");
     B.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{st.ver=b.dataset.v;drawSong();closeDrawer()});
   } else if(dr.kind==="tocar"){
+    if(!MEASURES)play.mode="continua";
     const bpm=bpmOf(s),comp=play.mode==="compasso"&&MEASURES,porBpm=comp||play.speed==="bpm";
     B.innerHTML=`<h3>Rolagem automática</h3>
-     <button class="opt ${play.mode==="compasso"?"on":""}" data-pm="compasso"><b>No tempo da música</b><small>A cifra anda compasso por compasso no BPM e o compasso atual fica laranja. ${MEASURES} compassos nesta versão.</small></button>
+     ${MEASURES?`<button class="opt ${play.mode==="compasso"?"on":""}" data-pm="compasso"><b>No tempo da música</b><small>A cifra anda compasso por compasso no BPM e o compasso atual fica laranja. ${MEASURES} compassos nesta versão.</small></button>`:
+     `<div class="opt" style="opacity:.6;cursor:default"><b>No tempo da música</b><small>Indisponível nesta cifra: ela não marca os tempos de troca com barras ( | e % ), então o app não tem como saber quanto tempo cada acorde dura. Use a rolagem contínua.</small></div>`}
      <button class="opt ${play.mode==="continua"?"on":""}" data-pm="continua"><b>Rolagem contínua</b><small>Desce sem parar, na velocidade que der tempo de você tocar.</small></button>
      ${play.mode==="continua"?`<p class="lbl2" style="margin-top:12px">Velocidade</p><div class="pills rolniv">${[1,2,3,4,5,6,7,8,9,10].map(v=>`<button data-rv="${v}" class="${play.speed===v?"on":""}">${v}</button>`).join("")}${MEASURES?`<button data-rv="bpm" class="${play.speed==="bpm"?"on":""}">No BPM</button>`:""}</div>
       <p class="help" style="margin-top:4px">${play.speed==="bpm"?"A cifra inteira passa no tempo da música, de acordo com o BPM abaixo.":"1 é bem devagar, 10 é bem rápido. Dá para mudar enquanto toca."}</p>`:""}
@@ -1968,7 +1972,7 @@ document.addEventListener("click",e=>{
   else if(d.mv){const[i,dir]=d.mv.split(":").map(Number);const r=repById(st.rep),j=i+dir;if(j<0||j>=r.items.length)return;[r.items[i],r.items[j]]=[r.items[j],r.items[i]];save();drawRep()}
   else if(d.rm!=null){const r=repById(st.rep);const [x]=r.items.splice(+d.rm,1);save();drawRep();toast("Removida: "+(byId(x.id)||{}).title)}
   else if(d.ch){
-    if((play.on||play.shown)&&play.mode==="compasso"&&d.m!==undefined&&t.closest("#sheet")){play.m=+d.m;showMeasure(play.m);drawRol();return}
+    if((play.on||play.shown)&&play.mode==="compasso"&&MEASURES&&d.m!==undefined&&t.closest("#sheet")){play.m=+d.m;showMeasure(play.m);drawRol();return}
     openDrawer("acorde",{name:d.ch,i:0})}
   else if(d.tool){
     if(d.tool==="palco") return setStage(!st.stage);
