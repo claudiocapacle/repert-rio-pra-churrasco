@@ -708,6 +708,33 @@ details.admcard[open] summary{margin-bottom:8px}
 .canc p{margin:6px 0 0;font-size:13.5px;line-height:1.45;color:var(--muted)}
 .canc .cpasso{color:var(--ink);font-size:12.5px}
 .canc a.ghost{display:grid;place-items:center;width:100%;margin-top:10px;text-decoration:none;min-height:42px}
+/* painel: aba Acessos */
+.admtabs{grid-template-columns:repeat(4,1fr)}
+.admtabs button{font-size:13px;padding:10px 2px}
+.aceagora{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:14px;background:#e7f6ec;color:#1d5c34;font-size:14px;margin-bottom:10px}
+.aceagora b{font:900 22px/1 var(--f-body)}
+.aceagora .dot{width:10px;height:10px;border-radius:50%;background:#2f9e5b;box-shadow:0 0 0 0 rgba(47,158,91,.5);animation:acepulse 2s infinite}
+@keyframes acepulse{70%{box-shadow:0 0 0 8px rgba(47,158,91,0)}100%{box-shadow:0 0 0 0 rgba(47,158,91,0)}}
+.admstats.ace4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:420px){.admstats.ace4{grid-template-columns:repeat(2,1fr)}}
+.acebars{display:grid;grid-template-columns:repeat(30,1fr);gap:2px;align-items:end;height:120px;margin-top:10px;border-bottom:1px solid var(--line)}
+.acebar{height:100%;display:flex;align-items:flex-end;border:0;background:none;padding:0;cursor:pointer}
+.acebar i{display:block;width:100%;height:max(var(--h),2px);background:var(--orange);border-radius:4px 4px 0 0;opacity:.85}
+.acebars.alt .acebar i{background:var(--blue,#1f4fa3)}
+.acebar:hover i,.acebar.on i{opacity:1;filter:brightness(1.1)}
+.acebar.on i{outline:2px solid var(--ink);outline-offset:1px}
+.aceaxis{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:4px}
+.acetip{margin:8px 0 0;font-size:13px;color:var(--ink);min-height:1.3em}
+.acepl{display:grid;grid-template-columns:110px 1fr 40px;align-items:center;gap:10px;padding:7px 0;font-size:14px}
+.acepl div{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.acepl i{display:block;height:100%;background:var(--orange);border-radius:5px}
+.acepl b{text-align:right;font-variant-numeric:tabular-nums}
+.acetop{margin:6px 0 0;padding:0 0 0 22px}
+.acetop li{padding:7px 0;border-top:1px solid var(--line);font-size:14px}
+.acetop li:first-child{border-top:0}
+.acetop li{display:list-item}
+.acetop li span small{color:var(--muted)}
+.acetop li b{float:right;font-variant-numeric:tabular-nums}
 
 </style>
 </head>
@@ -1016,7 +1043,7 @@ async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edico
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="28/10 17:35";
+const APP_BUILD="28/10 17:59";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1149,7 +1176,16 @@ async function loadPlays(){if(!sb)return;const [a,b]=await Promise.all([sb.rpc("
   if(a.error&&b.error)return;const ok=x=>byId(x.song_id)&&!byId(x.song_id).pending,seen=new Set();TOP=[...(a.data||[]),...(b.data||[])].filter(x=>ok(x)&&!seen.has(x.song_id)&&seen.add(x.song_id));if(st.view==="home"&&st.tab==="inicio"&&!st.q.trim())drawTab()}
 setInterval(()=>{if(document.visibilityState==="visible"&&st.view==="home"){loadPlays();loadCatalog()}},120000);
 let _lastPlay={};
-function contarToque(s){if(!sb||s.pending)return;const k=s.id;if(_lastPlay[k]&&Date.now()-_lastPlay[k]<30*60000)return;_lastPlay[k]=Date.now();
+/* estatística anônima: um código aleatório do aparelho (hash no servidor). Testes automáticos e o professor não contam. */
+const naoConta=()=>!sb||navigator.webdriver||PROF||isAdmin;
+const plataforma=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)?"ios":/Android/i.test(navigator.userAgent)?"android":"desktop";
+const instalado=()=>{try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}};
+let _visT=0;
+function registrarVisita(abertura){if(naoConta())return;const t=Date.now();if(!abertura&&t-_visT<100000)return;_visT=t;
+  sb.rpc("registrar_visita",{p_device:DEVICE,p_plat:plataforma(),p_inst:instalado(),p_abertura:!!abertura}).then(()=>{}).catch(()=>{})}
+setInterval(()=>{if(document.visibilityState==="visible")registrarVisita(false)},120000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")registrarVisita(false)});
+function contarToque(s){if(naoConta()||s.pending)return;const k=s.id;if(_lastPlay[k]&&Date.now()-_lastPlay[k]<30*60000)return;_lastPlay[k]=Date.now();
   sb.rpc("registrar_toque",{p_device:DEVICE,p_song:k}).then(()=>{}).catch(()=>{})}
 async function initCaps(){
   try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce",storageKey:"sc-auth"}})}catch(e){sb=null}
@@ -1158,6 +1194,7 @@ async function initCaps(){
   AUTH_OK=true;
   if(gateOn()) draw(); else if(st.view==="home") drawHome();
   handleHash();
+  registrarVisita(true);
 }
 function fromSubmission(v,approved){
   return{addedAt:Date.parse(v.created_at||0)||0,id:(approved?"c-":"p-")+v.id,subId:v.id,at:Date.parse(v.created_at||0),title:v.title,artist:v.artist||"",key:v.key||"C",block:null,credit:v.credit||"",isNew:approved,pending:!approved,status:v.status,
@@ -2018,6 +2055,31 @@ function premiumDrawer(B,why){
 /* painel: premium */
 const ADM_ORIG={hotmart:"Assinatura",escola:"Aluno",manual:"Cortesia"}, ADM_ST={ativo:["Ativo","ok"],cancelado:["Cancelado","off"],atrasado:["Pagamento atrasado","warn"],reembolsado:["Reembolsado","off"]};
 const admVale=x=>x.status==="ativo"||(x.expira_em&&new Date(x.expira_em)>new Date()&&x.status!=="reembolsado");
+/* aba Acessos: visitas anônimas por aparelho, cifras abertas, contas e assinantes */
+let _aceT=null;
+async function admAcessos(){
+  const box=$("admAce");if(!box)return;clearTimeout(_aceT);
+  const {data:d,error}=await sb.rpc("admin_acessos",{p_key:ADMIN_KEY});
+  if(!$("admAce"))return;
+  if(error||!d){box.innerHTML=`<p class="help">Não foi possível carregar.</p>`;return}
+  const S=d.serie||[],mx=Math.max(1,...S.map(x=>x.visitantes)),mc=Math.max(1,...S.map(x=>x.cifras)),pl=d.plataformas||{},tp=Object.values(pl).reduce((a,b)=>a+b,0)||1;
+  const dd=x=>{const [y,m,dia]=x.split("-");return `${dia}/${m}`};
+  const barras=(campo,max,cls)=>`<div class="acebars ${cls}" role="img" aria-label="${campo} por dia nos últimos 30 dias">${S.map((x,i)=>`<button class="acebar" style="--h:${(x[campo]/max*100).toFixed(1)}%" data-tip="${dd(x.dia)}: ${x[campo]} ${campo==="visitantes"?(x[campo]===1?"visitante":"visitantes"):campo==="cifras"?"cifras abertas":"cadastros"}"><i></i></button>`).join("")}</div><div class="aceaxis"><span>${S.length?dd(S[0].dia):""}</span><span>hoje</span></div>`;
+  const nome=id=>{const s=byId(id);return s?esc(s.title)+` <small>${esc(s.artist)}</small>`:esc(id)};
+  box.innerHTML=`
+   <div class="aceagora"><span class="dot"></span><b>${d.agora}</b> ${d.agora===1?"pessoa usando o app agora":"pessoas usando o app agora"}</div>
+   <div class="admstats ace4"><div><b>${d.hoje}</b><span>Visitantes hoje</span></div><div><b>${d.ontem}</b><span>Ontem</span></div><div><b>${d.d7}</b><span>Últimos 7 dias</span></div><div><b>${d.d30}</b><span>Últimos 30 dias</span></div></div>
+   <section class="admcard"><h3>Visitantes por dia <small>últimos 30 dias</small></h3>${barras("visitantes",mx,"")}<p class="acetip" id="aceTip1">Toque numa barra para ver o dia.</p></section>
+   <section class="admcard"><h3>Cifras abertas por dia</h3>${barras("cifras",mc,"alt")}<p class="acetip" id="aceTip2">&nbsp;</p></section>
+   <div class="admstats"><div><b>${d.contas}</b><span>Contas criadas</span></div><div><b>${d.cadastros7}</b><span>Cadastros em 7 dias</span></div><div><b>${d.premium}</b><span>Com Premium</span></div></div>
+   <section class="admcard"><h3>Aparelhos <small>últimos 30 dias</small></h3>
+    ${[["android","Android"],["ios","iPhone / iPad"],["desktop","Computador"]].map(([k,l])=>`<div class="acepl"><span>${l}</span><div><i style="width:${((pl[k]||0)/tp*100).toFixed(0)}%"></i></div><b>${pl[k]||0}</b></div>`).join("")}
+    <p class="admhelp" style="margin:10px 0 0">${d.instalados30} usam o app instalado na tela inicial · ${d.recorrentes30} voltaram em mais de um dia · ${d.logados_hoje} entraram logados hoje</p></section>
+   <section class="admcard"><h3>Mais abertas <small>7 dias, por aparelhos diferentes</small></h3><ol class="acetop">${(d.top7||[]).map(x=>`<li><span>${nome(x.id)}</span><b>${x.n}</b></li>`).join("")||`<p class="admhelp">Ainda sem dados.</p>`}</ol></section>
+   <p class="admhelp" style="text-align:center">As visitas começaram a ser contadas em 28/10. Cada aparelho conta uma vez por dia, de forma anônima. Seus acessos como professor e os testes automáticos não entram. Atualiza sozinho a cada 30 segundos.</p>`;
+  box.querySelectorAll(".acebars").forEach((g,gi)=>g.querySelectorAll(".acebar").forEach(b=>{const show=()=>{const t=$(gi?"aceTip2":"aceTip1");if(t)t.textContent=b.dataset.tip;g.querySelectorAll(".acebar").forEach(x=>x.classList.toggle("on",x===b))};b.onclick=show;b.onmouseenter=show}));
+  _aceT=setTimeout(()=>{if(st.view==="review"&&(st.admTab||"acessos")==="acessos")admAcessos()},30000);
+}
 async function admAssin(){
   const box=$("admPrem");if(!box)return;
   const {data,error}=await sb.rpc("admin_premium_list",{p_key:ADMIN_KEY});
@@ -2342,10 +2404,10 @@ function drawReview(){
   const ep=EDS_ALL.filter(x=>x.status==="pendente");
   const need=[...new Set(ep.map(x=>byId(x.song_id)).filter(s=>s&&!songReady(s)).map(s=>s.c))];
   if(need.length){Promise.all(need.map(loadChunk)).then(()=>{if(st.view==="review")drawReview()}).catch(()=>{})}
-  const tab=st.admTab||"assin", nRev=pend.length+ep.length;
-  const tabs=`<div class="admtabs" role="tablist">${[["assin","Assinantes"],["config","Configurações"],["rev","Revisão"+(nRev?` <b>${nRev}</b>`:"")]].map(([k,l])=>`<button role="tab" data-at="${k}" aria-selected="${tab===k}">${l}</button>`).join("")}</div>`;
+  const tab=st.admTab||"acessos", nRev=pend.length+ep.length;
+  const tabs=`<div class="admtabs" role="tablist">${[["acessos","Acessos"],["assin","Assinantes"],["config","Ajustes"],["rev","Revisão"+(nRev?` <b>${nRev}</b>`:"")]].map(([k,l])=>`<button role="tab" data-at="${k}" aria-selected="${tab===k}">${l}</button>`).join("")}</div>`;
   const wireTabs=()=>document.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{st.admTab=b.dataset.at;drawReview();scrollTo(0,0)});
-  if(tab!=="rev"){$("view").innerHTML=`<div class="adm">${tabs}<div id="${tab==="assin"?"admPrem":"admCfg"}"><p class="help">Carregando…</p></div></div>`;wireTabs();return tab==="assin"?admAssin():admConfig()}
+  if(tab!=="rev"){$("view").innerHTML=`<div class="adm">${tabs}<div id="${({assin:"admPrem",config:"admCfg",acessos:"admAce"})[tab]}"><p class="help">Carregando…</p></div></div>`;wireTabs();return tab==="assin"?admAssin():tab==="acessos"?admAcessos():admConfig()}
   let eh="";
   eh+=`<div class="sec">Compositores sugeridos</div><div id="admComp"><p class="help">Carregando…</p></div>`;
   eh+=`<div class="sec">Alterações sugeridas pelos alunos (${ep.length})</div>`;
