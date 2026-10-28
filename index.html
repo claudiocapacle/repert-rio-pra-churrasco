@@ -537,6 +537,13 @@ details.admbox summary{cursor:pointer;font-weight:700}
 .av.rk{width:40px;height:40px;font-size:13px;border-radius:10px}
 .compos{margin:22px 0 8px;padding-top:12px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted);opacity:.85;line-height:1.5}
 .compos .lnk{background:none;border:0;padding:0;font:inherit;color:var(--orange);text-decoration:underline;cursor:pointer}
+.bpmsug{margin-bottom:4px}.bpmsug b{color:var(--ink)}
+.premimg{display:block;width:100%;max-width:420px;height:auto;aspect-ratio:340/210;border-radius:16px;margin:4px auto 12px;object-fit:cover;background:#f7ead8}
+.premshow{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:4px -4px 12px;padding:0 4px 6px;-webkit-overflow-scrolling:touch}
+.premshow figure{flex:0 0 78%;max-width:300px;margin:0;scroll-snap-align:start}
+.premshow .premimg{margin:0 0 6px}
+.premshow figcaption{font-size:13px;font-weight:700;color:var(--ink);text-align:center}
+.premlock .premimg{margin-bottom:10px}
 
 </style>
 </head>
@@ -871,7 +878,8 @@ const save=()=>{try{localStorage.setItem("rpc2",JSON.stringify(store));localStor
 delete store.plan;
 const cobrando=()=>CFG.cobranca===true;
 const isPro=()=>PREMIUM||PROF||!cobrando();
-const temAulas=()=>PROF||!cobrando()||(PREMIUM&&PLANO.nivel==="aulas");
+const aulasOn=()=>CFG.aulas_ativo===true;
+const temAulas=()=>aulasOn()&&(PROF||!cobrando()||(PREMIUM&&PLANO.nivel==="aulas"));
 const semRep=()=>!isPro()&&FREE_REPS<1;
 const repsUsados=()=>store.reps.filter(r=>!r.example).length;
 const repsCheios=()=>!isPro()&&repsUsados()>=FREE_REPS;
@@ -1411,7 +1419,9 @@ $("next").onclick=()=>openRepSong(st.idx+1);
 /* ================= tocar: compasso ou contínua ================= */
 const play={mode:"compasso",bpm:92,beats:2,click:true,speed:3,on:false,m:0,timer:null,raf:null,beat:0};
 let ac=null,wake=null;
-function bpmOf(s){return(meta[s.id]&&+meta[s.id].bpm)||play.bpm}
+function bpmDz(r){r=+r;if(!r)return null;while(r>=125)r/=2;while(r<45)r*=2;return Math.round(r)}
+function bpmSug(s){if(!s)return null;return(meta[s.id]&&+meta[s.id].bpm)||bpmDz((INFO[s.id]||{}).bpm_raw)||null}
+function bpmOf(s){return bpmSug(s)||play.bpm}
 function tickSound(hi){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=hi?1500:1000;g.gain.setValueAtTime(.3,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.06);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.07)}catch(e){}}
 function startPlay(){
   if(!isPro()){openDrawer("upsell",{why:"rol"});return}
@@ -1688,7 +1698,7 @@ function drawDrawer(){
   } else if(dr.kind==="upsell"){
     premiumDrawer(B,dr.why);
   } else if(dr.kind==="metronomo"){
-    const m=T.met,sug=(meta[s.id]||{}).bpm;
+    const m=T.met,sug=bpmSug(s);
     B.innerHTML=`<h3>Metrônomo</h3><p class="sub">Continua tocando enquanto você lê a cifra.${sug?` Andamento sugerido para esta música: <b>${sug} BPM</b>.`:""}</p>
      <div class="big"><button class="round" id="dmm" aria-label="Diminuir 1 BPM">−</button><div style="text-align:center"><span class="num" id="dmb">${m.bpm}</span><div class="sub" style="margin:0" id="dmn">BPM · ${andamento(m.bpm)}</div></div><button class="round" id="dmp" aria-label="Aumentar 1 BPM">+</button></div>
      <input type="range" id="dmr" min="30" max="240" value="${m.bpm}" aria-label="Andamento em BPM">
@@ -1703,7 +1713,7 @@ function drawDrawer(){
     B.querySelectorAll("[data-dms]").forEach(b=>b.onclick=()=>{m.sub=+b.dataset.dms;m.passo=0;drawDrawer()});
     $("dmgo").onclick=()=>{m.on?metStop():metStart();refreshLive()};
   } else if(dr.kind==="batucada"){
-    const b=T.bt;b.sug=st.view==="song"&&s?(meta[s.id]||{}).bpm||null:null;bPreCarregar();
+    const b=T.bt;b.sug=st.view==="song"&&s?bpmSug(s):null;bPreCarregar();
     B.innerHTML=`<h3>Batucada</h3><p class="sub">Surdo, pandeiro, rebolo, repiques e cuíca gravados separados. Ligue, desligue e ajuste cada um. Ela fica em loop enquanto você rola a cifra ou troca de música.</p>`+btPanel("d");
     btWire(B,"d",drawDrawer);
   } else if(dr.kind==="professor"){
@@ -1742,6 +1752,10 @@ function drawDrawer(){
 const PREM_WHY={reps:"Repertórios são do Premium: monte quantos quiser, na ordem da roda, com o tom de cada música salvo.",songs:"",ready:"Os repertórios prontos são do Premium.",roda:"Abrir uma roda ao vivo é do Premium. Entrar na roda de alguém continua grátis.",aulas:"As aulas fazem parte do Premium + Aulas.",rol:"A rolagem automática no tempo da música é do Premium.",met:"O metrônomo é do Premium.",bt:"A batucada (surdo, pandeiro, rebolo, repiques e cuíca, em qualquer BPM) é do Premium.",af:"O afinador é do Premium.",tom:"O detector de tom (“Qual o tom?”) é do Premium."};
 const PREM_BEN=["Rolagem automática no tempo da música","Batucada com 6 instrumentos, em qualquer BPM","Afinador, metrônomo e detector de tom","Repertórios ilimitados, com o tom de cada música salvo","Abrir a roda ao vivo pelo QR code","Repertórios prontos para a roda"];
 const AULAS_BEN=["Tudo do Premium","Videoaulas de palhetada, levadas e teoria","Professores convidados"];
+const PREM_IMG={rol:"rol",met:"bt",bt:"bt",af:"af",tom:"af",roda:"roda",reps:"reps",songs:"reps",ready:"reps"};
+const PREM_SHOW=[["rol","Rolagem no tempo da música"],["bt","Batucada em qualquer BPM"],["roda","Roda ao vivo pelo QR code"],["reps","Repertórios ilimitados"],["af","Afinador e metrônomo"]];
+const premImg=k=>`<img class="premimg" src="img/premium/${k}.webp" alt="" width="340" height="210" loading="lazy">`;
+const premShow=()=>`<div class="premshow">${PREM_SHOW.map(([k,t])=>`<figure>${premImg(k)}<figcaption>${t}</figcaption></figure>`).join("")}</div>`;
 const premBen=l=>`<ul class="premben">${l.map(t=>`<li>${t}</li>`).join("")}</ul>`;
 function checkoutUrl(u){if(!u)return"";try{const x=new URL(u);if(USER&&USER.email)x.searchParams.set("email",USER.email);return x.toString()}catch(e){return""}}
 function planBtns(m,a,pm,pa){m=checkoutUrl(m);a=checkoutUrl(a);if(!m&&!a)return`<p class="help" style="margin:6px 0 0"><b>Abre em breve.</b></p>`;
@@ -1751,13 +1765,14 @@ function premiumDrawer(B,why){
   if(isPro()&&!(why==="aulas"&&!temAulas())){
     const o=PLANO.origem, canc=(PLANO.status==="cancelado"||PLANO.status==="atrasado")&&PLANO.expira_em;
     B.innerHTML=`<h3>Seu plano: ${temAulas()?"Premium + Aulas":"Premium"}</h3><p class="sub">${PROF&&!o?"Você é o professor: tudo liberado.":o==="escola"?"Incluído no seu plano de aluno.":o==="manual"?"Liberado pelo professor.":"Assinatura ativa."}${canc?` Vale até ${new Date(PLANO.expira_em).toLocaleDateString("pt-BR")}.`:""}</p>${premBen(temAulas()?[...PREM_BEN,...AULAS_BEN.slice(1)]:PREM_BEN)}
-     ${!temAulas()?`<div class="premtier"><b>Premium + Aulas</b>${premBen(AULAS_BEN.slice(1))}${planBtns(CFG.checkout_aulas_mensal,CFG.checkout_aulas_anual,CFG.preco_aulas_mensal,CFG.preco_aulas_anual)}</div>`:""}
+     ${aulasOn()&&!temAulas()?`<div class="premtier"><b>Premium + Aulas</b>${premBen(AULAS_BEN.slice(1))}${planBtns(CFG.checkout_aulas_mensal,CFG.checkout_aulas_anual,CFG.preco_aulas_mensal,CFG.preco_aulas_anual)}</div>`:""}
      ${o==="hotmart"?`<a class="ghost" style="width:100%;display:grid;place-items:center;text-decoration:none;margin-top:8px" href="https://consumer.hotmart.com/" target="_blank" rel="noopener">Gerenciar assinatura na Hotmart</a>`:""}`;
     return;
   }
-  B.innerHTML=`<h3>Assine o SambaCifra</h3><p class="sub">${motivo||"As cifras e a troca de tom são grátis para todo mundo. As ferramentas para tocar e comandar a roda ficam no Premium."}</p>
+  const hi=PREM_IMG[why];
+  B.innerHTML=`${hi?premImg(hi):premShow()}<h3>${hi?"Isso é do Premium":"Assine o SambaCifra Premium"}</h3><p class="sub">${motivo||"As cifras e a troca de tom são grátis para todo mundo. As ferramentas para tocar e comandar a roda ficam no Premium."}</p>
    <div class="premtier ${why!=="aulas"?"dest":""}"><b>Premium</b>${premBen(PREM_BEN)}${USER?planBtns(CFG.checkout_mensal,CFG.checkout_anual,CFG.preco_mensal,CFG.preco_anual):`<p class="help" style="margin:4px 0 0">${esc(CFG.preco_mensal||"")}/mês ou ${esc(CFG.preco_anual||"")}/ano</p>`}</div>
-   <div class="premtier ${why==="aulas"?"dest":""}"><b>Premium + Aulas</b>${premBen(AULAS_BEN)}${USER?planBtns(CFG.checkout_aulas_mensal,CFG.checkout_aulas_anual,CFG.preco_aulas_mensal,CFG.preco_aulas_anual):`<p class="help" style="margin:4px 0 0">${esc(CFG.preco_aulas_mensal||"")}/mês ou ${esc(CFG.preco_aulas_anual||"")}/ano</p>`}</div>
+   ${aulasOn()?`<div class="premtier ${why==="aulas"?"dest":""}"><b>Premium + Aulas</b>${premBen(AULAS_BEN)}${USER?planBtns(CFG.checkout_aulas_mensal,CFG.checkout_aulas_anual,CFG.preco_aulas_mensal,CFG.preco_aulas_anual):`<p class="help" style="margin:4px 0 0">${esc(CFG.preco_aulas_mensal||"")}/mês ou ${esc(CFG.preco_aulas_anual||"")}/ano</p>`}</div>`:""}
    ${!USER?`<button class="primary" id="prLogin" style="width:100%">Entrar para assinar</button><p class="help" style="text-align:center">Crie a conta com o e-mail que você vai usar no pagamento.</p>`:
     `<p class="help">Pague com o mesmo e-mail da sua conta: <b>${esc(USER.email||"")}</b>. Libera sozinho assim que o pagamento for aprovado.</p><button class="ghost" id="prJa" style="width:100%">Já paguei, liberar agora</button>`}`;
   if($("prLogin"))$("prLogin").onclick=()=>openDrawer("conta");
@@ -1769,21 +1784,21 @@ async function admPremium(){
   const {data,error}=await sb.rpc("admin_premium_list",{p_key:ADMIN_KEY});
   if(error||!data){box.innerHTML=`<p class="help">Não foi possível carregar.</p>`;return}
   const po=data.por_origem||{}, pn=data.por_nivel||{}, lab={hotmart:"assinatura",escola:"aluno da escola",manual:"cortesia"};
-  box.innerHTML=`<p class="help" style="font-size:14px;color:var(--ink)"><b>${data.ativos}</b> com Premium ativo (${pn.aulas||0} com Aulas)${Object.keys(po).length?" · "+Object.entries(po).map(([k,v])=>`${v} ${lab[k]||k}`).join(" · "):""}</p>
+  box.innerHTML=`<p class="help" style="font-size:14px;color:var(--ink)"><b>${data.ativos}</b> com Premium ativo ${aulasOn()?`(${pn.aulas||0} com Aulas)`:""}${Object.keys(po).length?" · "+Object.entries(po).map(([k,v])=>`${v} ${lab[k]||k}`).join(" · "):""}</p>
    <div class="card admbox"><b>Liberar ou retirar por e-mail</b><small>Cole um ou vários e-mails (um por linha ou separados por vírgula). Use para os alunos atuais da escola.</small>
     <textarea id="apE" rows="4" placeholder="aluno@email.com"></textarea>
-    <div class="pills" id="apO"><button data-o="escola" class="on">Aluno da escola</button><button data-o="manual">Cortesia</button></div><div class="pills" id="apN"><button data-n="aulas" class="on">Premium + Aulas</button><button data-n="premium">Só Premium</button></div>
+    <div class="pills" id="apO"><button data-o="escola" class="on">Aluno da escola</button><button data-o="manual">Cortesia</button></div>${aulasOn()?`<div class="pills" id="apN"><button data-n="aulas" class="on">Premium + Aulas</button><button data-n="premium">Só Premium</button></div>`:""}
     <div class="row2"><button class="primary" id="apOk">Liberar Premium</button><button class="ghost" id="apNo">Retirar</button></div></div>
    <div class="card admbox"><b>Plano grátis e preços</b>
     <div class="row2"><label>Repertórios grátis (0 = nenhum)<input id="cfR" type="number" min="0" value="${FREE_REPS}"></label><label>Músicas por repertório<input id="cfM" type="number" min="1" value="${FREE_SONGS}"></label></div>
     <b style="font-size:14px">Premium</b><div class="row2"><label>Preço mensal<input id="cfPm" value="${esc(CFG.preco_mensal||"")}"></label><label>Preço anual<input id="cfPa" value="${esc(CFG.preco_anual||"")}"></label></div>
     <label>Link do checkout mensal (Hotmart)<input id="cfCm" value="${esc(CFG.checkout_mensal||"")}" placeholder="https://pay.hotmart.com/..."></label>
     <label>Link do checkout anual (Hotmart)<input id="cfCa" value="${esc(CFG.checkout_anual||"")}" placeholder="https://pay.hotmart.com/..."></label>
-    <b style="font-size:14px">Premium + Aulas</b><div class="row2"><label>Preço mensal<input id="cfAPm" value="${esc(CFG.preco_aulas_mensal||"")}"></label><label>Preço anual<input id="cfAPa" value="${esc(CFG.preco_aulas_anual||"")}"></label></div>
+    <div ${aulasOn()?"":"hidden"} style="display:${aulasOn()?"grid":"none"};gap:8px"><b style="font-size:14px">Premium + Aulas</b><div class="row2"><label>Preço mensal<input id="cfAPm" value="${esc(CFG.preco_aulas_mensal||"")}"></label><label>Preço anual<input id="cfAPa" value="${esc(CFG.preco_aulas_anual||"")}"></label></div>
     <label>Link do checkout mensal (Hotmart)<input id="cfACm" value="${esc(CFG.checkout_aulas_mensal||"")}" placeholder="https://pay.hotmart.com/..."></label>
-    <label>Link do checkout anual (Hotmart)<input id="cfACa" value="${esc(CFG.checkout_aulas_anual||"")}" placeholder="https://pay.hotmart.com/..."></label>
+    <label>Link do checkout anual (Hotmart)<input id="cfACa" value="${esc(CFG.checkout_aulas_anual||"")}" placeholder="https://pay.hotmart.com/..."></label></div>
     <button class="primary" id="cfSave" style="width:100%">Salvar</button></div>
-   <details class="admbox"><summary>Últimos alunos Premium (${(data.lista||[]).length})</summary>${(data.lista||[]).map(x=>`<p class="help" style="margin:4px 0">${esc(x.email)} · <b>${esc(x.status)}</b> · ${esc(lab[x.origem]||x.origem)} · ${x.nivel==="aulas"?"com Aulas":"Premium"}${x.plano?" · "+esc(x.plano):""}${x.expira_em?" · até "+new Date(x.expira_em).toLocaleDateString("pt-BR"):""}</p>`).join("")||`<p class="help">Ninguém ainda.</p>`}</details>
+   <details class="admbox"><summary>Últimos alunos Premium (${(data.lista||[]).length})</summary>${(data.lista||[]).map(x=>`<p class="help" style="margin:4px 0">${esc(x.email)} · <b>${esc(x.status)}</b> · ${esc(lab[x.origem]||x.origem)}${aulasOn()?` · ${x.nivel==="aulas"?"com Aulas":"Premium"}`:""}${x.plano?" · "+esc(x.plano):""}${x.expira_em?" · até "+new Date(x.expira_em).toLocaleDateString("pt-BR"):""}</p>`).join("")||`<p class="help">Ninguém ainda.</p>`}</details>
    <details class="admbox"><summary>Avisos recebidos da Hotmart (${(data.eventos||[]).length})</summary>${(data.eventos||[]).map(x=>`<p class="help" style="margin:4px 0">${new Date(x.em).toLocaleString("pt-BR")} · ${esc(x.evento)} · ${esc(x.email||"")} · produto ${esc(x.produto||"")} → <b>${esc(x.aplicado||"")}</b></p>`).join("")||`<p class="help">Nenhum aviso ainda.</p>`}</details>`;
   let org="escola",niv="aulas";box.querySelectorAll("#apN [data-n]").forEach(b=>b.onclick=()=>{niv=b.dataset.n;box.querySelectorAll("#apN [data-n]").forEach(x=>x.classList.toggle("on",x===b))});box.querySelectorAll("#apO [data-o]").forEach(b=>b.onclick=()=>{org=b.dataset.o;box.querySelectorAll("#apO [data-o]").forEach(x=>x.classList.toggle("on",x===b))});
   const envia=async st=>{const em=$("apE").value.split(/[\s,;]+/).map(x=>x.trim()).filter(Boolean);if(!em.length)return toast("Cole pelo menos um e-mail");
@@ -1802,9 +1817,10 @@ async function loadInfo(id){if(!sb||INFO[id]!==undefined)return INFO[id];INFO[id
 async function drawCompos(s){const box=$("compos");if(!box)return;const id=s.id;
   if(INFO[id]===undefined||INFO[id]===null){box.innerHTML="";await loadInfo(id)}
   if(st.view!=="song"||st.id!==id||!$("compos"))return;
-  const c=(INFO[id]||{}).compositores;
-  $("compos").innerHTML=c?`<span>Composição: ${esc(c)}</span>${isAdmin?` <button class="lnk" id="compSug">editar</button>`:` <button class="lnk" id="compSug">corrigir</button>`}`
-    :`<span>Composição: não informada</span> <button class="lnk" id="compSug">${isAdmin?"informar":"Sabe quem compôs? Sugira"}</button>`;
+  const c=(INFO[id]||{}).compositores, bq=bpmSug(s), bOwn=meta[id]&&+meta[id].bpm;
+  const bl=bq?`<div class="bpmsug">Andamento ${bOwn?"":"sugerido"}: <b>${bq} BPM</b>${bOwn?"":" · referência da gravação original"}</div>`:"";
+  $("compos").innerHTML=bl+(c?`<span>Composição: ${esc(c)}</span>${isAdmin?` <button class="lnk" id="compSug">editar</button>`:` <button class="lnk" id="compSug">corrigir</button>`}`
+    :`<span>Composição: não informada</span> <button class="lnk" id="compSug">${isAdmin?"informar":"Sabe quem compôs? Sugira"}</button>`);
   $("compSug").onclick=()=>openDrawer("compositor",{id})}
 async function admCompos(){const box=$("admComp");if(!box)return;
   const {data,error}=await sb.rpc("admin_compositor_sugs",{p_key:ADMIN_KEY});if(error||!data){box.innerHTML="";return}
@@ -2139,7 +2155,7 @@ function drawTools(){
   $("topbar").innerHTML=`<h1>Ferramentas</h1>`;
   $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucada"],["tom","Qual o tom?"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
   document.querySelectorAll("[data-aba]").forEach(b=>b.onclick=()=>{if(b.dataset.aba!=="afinador"&&T.af.on)afOff();if(b.dataset.aba!=="tom"&&T.tom.mic)tomOff(false);T.aba=b.dataset.aba;drawTools()});
-  if(!isPro()){const w={metronomo:"met",afinador:"af",batucadas:"bt",tom:"tom"}[T.aba];$("tbody").innerHTML=`<div class="premlock"><span class="lock">Premium</span><h3>${{met:"Metrônomo",af:"Afinador",bt:"Batucada",tom:"Qual o tom?"}[w]}</h3><p class="sub">${PREM_WHY[w]}</p><button class="primary" id="tlk" style="width:100%">Conhecer o Premium</button></div>`;$("tlk").onclick=()=>openDrawer("upsell",{why:w});return}
+  if(!isPro()){const w={metronomo:"met",afinador:"af",batucadas:"bt",tom:"tom"}[T.aba];$("tbody").innerHTML=`<div class="premlock">${premImg(PREM_IMG[w])}<span class="lock">Premium</span><h3>${{met:"Metrônomo",af:"Afinador",bt:"Batucada",tom:"Qual o tom?"}[w]}</h3><p class="sub">${PREM_WHY[w]}</p><button class="primary" id="tlk" style="width:100%">Conhecer o Premium</button></div>`;$("tlk").onclick=()=>openDrawer("upsell",{why:w});return}
   ({metronomo:drawMet,afinador:drawAf,batucadas:drawBt,tom:drawTom})[T.aba]();
 }
 
@@ -2378,7 +2394,7 @@ function btUi(){btRedraw();refreshLive();
    <button class="bti" id="btopen" style="border:0;background:none;text-align:left;padding:0;font:inherit;color:inherit"><b id="btname">Batucada · ${b.bpm} BPM</b><small>ver instrumentos</small></button>
    <button class="btx" id="btm" aria-label="Diminuir 1 BPM">−</button><button class="btx" id="btpl" aria-label="Aumentar 1 BPM">+</button>
    <input type="range" id="btvol" min="0" max="1.2" step="0.05" value="${b.geral}" aria-label="Volume da batucada"><button class="btx" id="btclose" aria-label="Fechar batucada">✕</button></div>`;
-  $("btpp").onclick=()=>b.on?btPause():btPlay();$("btopen").onclick=()=>{if(st.view==="song"){const s=byId(st.id);T.bt.sug=s&&(meta[s.id]||{}).bpm||null}openDrawer("batucada")};
+  $("btpp").onclick=()=>b.on?btPause():btPlay();$("btopen").onclick=()=>{if(st.view==="song"){const s=byId(st.id);T.bt.sug=bpmSug(s)}openDrawer("batucada")};
   $("btm").onclick=()=>btSetBpm(b.bpm-1);$("btpl").onclick=()=>btSetBpm(b.bpm+1);
   $("btvol").oninput=e=>{b.geral=+e.target.value;bAplicarMix()};$("btclose").onclick=btStop}
 // já deixa o andamento padrão baixando quando a pessoa abrir a batucada
