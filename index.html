@@ -695,6 +695,12 @@ details.admcard[open] summary{margin-bottom:8px}
 .cordas.cv button.ok{background:#2f6b3a;border-color:#2f6b3a;color:#fff}.cordas.cv button.ok small{color:#fff}
 .cordas.cv small{display:block;line-height:1.3}.cordas.cv small.oit{font-weight:700;opacity:.8}
 .cvwrap{max-width:360px}
+.afinst{justify-content:center;margin:0 0 10px}
+.cvwrap.seis{max-width:400px}
+.cvwrap.seis .cordas.cv{gap:5px}
+.cvwrap.seis .cordas.cv button{padding:8px 0}
+.cvwrap.seis .cordas.cv b{font-size:15px}
+.cvwrap.seis .cordas.cv small{font-size:10.5px}
 
 </style>
 </head>
@@ -1003,7 +1009,7 @@ async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edico
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="28/10 14:24";
+const APP_BUILD="28/10 15:26";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -2393,7 +2399,7 @@ function clique(ac,q,tipo){const o=ac.createOscillator(),g=ac.createGain();const
 
 const T={aba:"metronomo",
   met:{bpm:80,comp:2,sub:1,on:false,beat:-1,prox:0,passo:0,timer:null,fila:[],raf:0,taps:[]},
-  af:{on:false,la:440,leit:null,ativo:false,stream:null,raf:0,hist:[],ultimo:0,voz:0,erro:""},
+  af:{on:false,la:440,inst:(()=>{try{return localStorage.getItem("sc-af-inst")||"cav"}catch(e){return"cav"}})(),leit:null,ativo:false,stream:null,raf:0,hist:[],ultimo:0,voz:0,erro:""},
   bt:{lista:null,erro:false,sel:null,on:false,loading:false,audio:null,vol:.9,bpm:90,style:null,sug:null,shown:false}};
 const andamento=b=>b<60?"Bem lento":b<80?"Lento":b<100?"Moderado":b<125?"Andante":b<160?"Rápido":"Muito rápido";
 
@@ -2438,7 +2444,10 @@ function metStop(){const m=T.met;clearInterval(m.timer);cancelAnimationFrame(m.r
 
 /* ----- afinador (método de McLeod) com braço do cavaquinho e som de referência das cordas ----- */
 const NOMES=["Dó","Dó♯","Ré","Ré♯","Mi","Fá","Fá♯","Sol","Sol♯","Lá","Lá♯","Si"],CIF=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-const CORDAS=[{c:4,midi:62},{c:3,midi:67},{c:2,midi:71},{c:1,midi:74}];
+const INSTR={cav:{nome:"Cavaquinho / Banjo",curto:"Cavaquinho e banjo",cordas:[{c:4,midi:62},{c:3,midi:67},{c:2,midi:71},{c:1,midi:74}],fmin:100,lp:.65,corpo:320},
+  vio:{nome:"Violão",curto:"Violão",cordas:[{c:6,midi:40},{c:5,midi:45},{c:4,midi:50},{c:3,midi:55},{c:2,midi:59},{c:1,midi:64}],fmin:65,lp:.42,corpo:120}};
+const CORDAS=INSTR.cav.cordas;
+const instAf=()=>INSTR[T.af.inst]||INSTR.cav;
 function detectarFrequencia(buf,sr,fmin=60,fmax=1400){
   const n=buf.length;let rms=0;for(let i=0;i<n;i++)rms+=buf[i]*buf[i];rms=Math.sqrt(rms/n);if(rms<.005)return -1;
   const minLag=Math.floor(sr/fmax),maxLag=Math.min(Math.ceil(sr/fmin),n>>1),nsdf=new Float32Array(maxLag+2),W=n-maxLag;
@@ -2457,80 +2466,76 @@ function detectarFrequencia(buf,sr,fmin=60,fmax=1400){
 }
 /* som de referência: corda dedilhada (Karplus-Strong), afinado exatamente pelo Lá escolhido */
 const _cordaBuf=new Map();
-function cordaBuffer(ac,midi,la){const k=ac.sampleRate+"|"+midi+"|"+la;if(_cordaBuf.has(k))return _cordaBuf.get(k);
+function cordaBuffer(ac,midi,la,lpc=.65){const k=ac.sampleRate+"|"+midi+"|"+la+"|"+lpc;if(_cordaBuf.has(k))return _cordaBuf.get(k);
   const sr=ac.sampleRate,f=la*2**((midi-69)/12),N=Math.max(2,Math.floor(sr/f-.5)),len=Math.floor(sr*3.2),buf=ac.createBuffer(1,len,sr),y=buf.getChannelData(0);
   let s=1234567;const rnd=()=>((s=(s*16807)%2147483647)/2147483647)*2-1;const dl=new Float32Array(N),pp=Math.max(1,Math.round(N*.18));
-  for(let i=0;i<N;i++)dl[i]=rnd();for(let i=N-1;i>=pp;i--)dl[i]-=dl[i-pp];let lp=0;for(let i=0;i<N;i++){lp+=(dl[i]-lp)*.65;dl[i]=lp}
-  const dec=Math.pow(.5,1/(f*(midi>70?1.5:2.2)));let idx=0,prev=dl[N-1],mx=0;
+  for(let i=0;i<N;i++)dl[i]=rnd();for(let i=N-1;i>=pp;i--)dl[i]-=dl[i-pp];let lp=0;for(let i=0;i<N;i++){lp+=(dl[i]-lp)*lpc;dl[i]=lp}
+  const dec=Math.pow(.5,1/(f*(midi>70?1.5:midi<52?3.2:2.2)));let idx=0,prev=dl[N-1],mx=0;
   for(let i=0;i<len;i++){const v=dl[idx],nv=dec*.5*(v+prev);prev=v;dl[idx]=nv;y[i]=v;idx=(idx+1)%N;const a=Math.abs(v);if(a>mx)mx=a}
   const g=.7/(mx||1),fade=Math.floor(sr*.25);for(let i=0;i<len;i++)y[i]*=g*(i>len-fade?(len-i)/fade:1)*Math.min(1,i/24);
   const out={buf,rate:f*(N+.5)/sr};_cordaBuf.set(k,out);return out}
-function tocarCorda(midi){const f=T.af,ac=audioCtx();if(ac.state==="suspended")ac.resume();const {buf,rate}=cordaBuffer(ac,midi,f.la);
-  const src=ac.createBufferSource(),bd=ac.createBiquadFilter(),g=ac.createGain();src.buffer=buf;src.playbackRate.value=rate;bd.type="peaking";bd.frequency.value=320;bd.Q.value=1.2;bd.gain.value=4;g.gain.value=.9;
+function tocarCorda(midi){const f=T.af,I=instAf(),ac=audioCtx();if(ac.state==="suspended")ac.resume();const {buf,rate}=cordaBuffer(ac,midi,440,I.lp);
+  const src=ac.createBufferSource(),bd=ac.createBiquadFilter(),g=ac.createGain();src.buffer=buf;src.playbackRate.value=rate;bd.type="peaking";bd.frequency.value=I.corpo;bd.Q.value=1.2;bd.gain.value=4;g.gain.value=.9;
   src.connect(bd).connect(g).connect(ac.destination);src.start();f.surdo=performance.now()+2600}
-function cavaquinhoSVG(){const xs=[37.5,112.5,187.5,262.5],nx=[126,142,158,174],ys=[[24,"l"],[52,"l"],[24,"r"],[52,"r"]];
+function bracoSVG(){const C=instAf().cordas,n=C.length,xs=C.map((_,i)=>(i+.5)*300/n),meia=n===6?32:24,nx=C.map((_,i)=>150-meia+i*(2*meia/(n-1)));
+  const lados=C.map((_,i)=>i<n/2?"l":"r"),pos=C.map((_,i)=>{const k=i<n/2?i:i-n/2;return 16+k*(n===6?19:28)});
   let fr="";for(let k=1;k<=7;k++){const y=74+186*(1-Math.pow(.8,k));const w=(y-74)/186;fr+=`<line x1="${(116-106*w).toFixed(1)}" y1="${y.toFixed(1)}" x2="${(184+106*w).toFixed(1)}" y2="${y.toFixed(1)}" class="cvfret"/>`}
-  const yd=74+186*(1-Math.pow(.8,4.5)),wd=(yd-74)/186;
+  const yd=74+186*(1-Math.pow(.8,4.5)),wd=(yd-74)/186,esp=[3.6,3.1,2.6,2.2,1.8,1.5].slice(6-n);
   return`<svg viewBox="0 0 300 262" class="cvneck" aria-hidden="true"><defs><linearGradient id="cvw" x1="0" x2="1"><stop offset="0" stop-color="#7a4a24"/><stop offset=".5" stop-color="#a8692f"/><stop offset="1" stop-color="#7a4a24"/></linearGradient><linearGradient id="cvf" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3a2416"/><stop offset="1" stop-color="#22150d"/></linearGradient></defs>
-   <path d="M112 72 L108 18 Q110 4 128 2 L172 2 Q190 4 192 18 L188 72 Z" fill="url(#cvw)"/>
-   ${ys.map(([y,l],i)=>`<g class="cvpeg"><rect x="${l==="l"?84:200}" y="${y-5}" width="16" height="10" rx="3"/><circle cx="${l==="l"?80:220}" cy="${y}" r="9"/><circle cx="${nx[i]}" cy="${y-(i%2?0:0)}" r="3.2" class="cvpost"/></g>`).join("")}
+   <path d="M112 72 L108 ${n===6?8:18} Q110 0 128 0 L172 0 Q190 0 192 ${n===6?8:18} L188 72 Z" fill="url(#cvw)"/>
+   ${C.map((_,i)=>{const l=lados[i]==="l",y=pos[i];return`<g class="cvpeg"><rect x="${l?84:200}" y="${y-5}" width="16" height="10" rx="3"/><circle cx="${l?80:220}" cy="${y}" r="${n===6?7.5:9}"/><circle cx="${nx[i]}" cy="${y}" r="3" class="cvpost"/></g>`}).join("")}
    <path d="M116 74 L184 74 L290 262 L10 262 Z" fill="url(#cvf)"/>${fr}
    <circle cx="150" cy="${yd.toFixed(1)}" r="${(3+4*wd).toFixed(1)}" class="cvdot"/>
    <rect x="113" y="70" width="74" height="6" rx="2" class="cvnut"/>
-   ${CORDAS.map((c,i)=>`<g class="cvstr" data-corda="${i}"><line x1="${nx[i]}" y1="${ys[i][0]}" x2="${nx[i]}" y2="74" class="cvs s${i}"/><line x1="${nx[i]}" y1="74" x2="${xs[i]}" y2="262" class="cvs s${i} cvv"/><line x1="${nx[i]}" y1="74" x2="${xs[i]}" y2="262" class="cvhit"/></g>`).join("")}
+   ${C.map((c,i)=>`<g class="cvstr" data-corda="${i}"><line x1="${nx[i].toFixed(1)}" y1="${pos[i]}" x2="${nx[i].toFixed(1)}" y2="74" class="cvs" style="stroke-width:${esp[i]}"/><line x1="${nx[i].toFixed(1)}" y1="74" x2="${xs[i].toFixed(1)}" y2="262" class="cvs cvv" style="stroke-width:${esp[i]}"/><line x1="${nx[i].toFixed(1)}" y1="74" x2="${xs[i].toFixed(1)}" y2="262" class="cvhit" style="stroke-width:${n===6?34:46}"/></g>`).join("")}
   </svg>`}
 function drawAf(){
-  const f=T.af;
-  $("tbody").innerHTML=`<div class="tuner" id="afbox">
-    <div class="afmode pills"><button data-afm="cav" class="${f.modo!=="crom"?"on":""}">Cavaquinho</button><button data-afm="crom" class="${f.modo==="crom"?"on":""}">Cromático</button></div>
-    <p class="sub" style="margin:6px 0 0" id="afst"></p>
+  const f=T.af,I=instAf(),C=I.cordas;
+  $("tbody").innerHTML=`<div class="afinst pills">${Object.entries(INSTR).map(([k,v])=>`<button data-afi="${k}" class="${(INSTR[f.inst]?f.inst:"cav")===k?"on":""}">${v.nome}</button>`).join("")}</div>
+   <div class="tuner" id="afbox">
+    <p class="sub" style="margin:0" id="afst"></p>
     <p class="tnote" id="afnote">—</p>
     <p class="sub" style="margin:0" id="afhz"></p>
     <div class="gauge" aria-hidden="true"><span class="bar"></span>${[-50,-25,0,25,50].map(m=>`<span class="tick ${m===0?"z":""}" style="left:${50+m}%"></span>`).join("")}<span class="okzone"></span><span class="needle" id="afndl" style="left:50%"></span></div>
     <p class="tmsg" aria-live="polite" id="afmsg">&nbsp;</p></div>
    <button class="primary" id="afgo" style="width:100%;margin-top:12px">${f.on?"Desligar afinador":"Ligar afinador"}</button>
    ${f.erro?`<p class="status err">${esc(f.erro)}</p>`:""}
-   <p class="cvtit">Toque numa corda para ouvir o som dela</p>
-   <div class="cvwrap">${cavaquinhoSVG()}<div class="cordas cv">${CORDAS.map((c,i)=>`<button data-corda="${i}" id="afc${i}"><b>${NOMES[c.midi%12]}</b><small>${c.c}ª corda</small><small class="oit">${CIF[c.midi%12]}${Math.floor(c.midi/12)-1}</small></button>`).join("")}</div></div>
-   <p style="text-align:center;font-weight:600;margin:10px 0 4px">Afinação do cavaquinho: Ré · Sol · Si · Ré</p>
-   <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;color:var(--muted);font-size:14px">Referência Lá <button class="ghost" id="lam" style="min-height:30px;padding:2px 10px">−</button><b style="color:var(--ink);font-variant-numeric:tabular-nums">${f.la} Hz</b><button class="ghost" id="lap" style="min-height:30px;padding:2px 10px">+</button></div>
-   <p class="help" style="text-align:center">Ligue o afinador e toque uma corda de cada vez, perto do celular, em lugar silencioso. No modo Cavaquinho o app reconhece qual corda você tocou, mesmo se ela estiver bem desafinada.</p>`;
+   <p class="cvtit">Afinação do ${I.curto.toLowerCase()}: ${C.map(c=>NOMES[c.midi%12]).join(" · ")}</p>
+   <p class="help" style="text-align:center;margin:0 0 6px">Toque numa corda para ouvir o som dela</p>
+   <div class="cvwrap ${C.length===6?"seis":""}">${bracoSVG()}<div class="cordas cv" style="grid-template-columns:repeat(${C.length},1fr)">${C.map((c,i)=>`<button data-corda="${i}" id="afc${i}"><b>${NOMES[c.midi%12]}</b><small>${c.c}ª corda</small><small class="oit">${CIF[c.midi%12]}${Math.floor(c.midi/12)-1}</small></button>`).join("")}</div></div>
+   <p class="help" style="text-align:center">Ligue o afinador e toque uma corda de cada vez, perto do celular, em lugar silencioso. O afinador mostra a nota que está soando: deixe cada corda igual à nota dela (Lá = 440 Hz).</p>`;
   $("afgo").onclick=()=>f.on?afOff():afOn();
-  $("lam").onclick=()=>{f.la=Math.max(430,f.la-1);drawAf()};$("lap").onclick=()=>{f.la=Math.min(450,f.la+1);drawAf()};
-  document.querySelectorAll("[data-afm]").forEach(b=>b.onclick=()=>{f.modo=b.dataset.afm;f.hist=[];f.disp=null;drawAf()});
-  document.querySelectorAll("#tbody [data-corda]").forEach(el=>el.onclick=()=>{const i=+el.dataset.corda,c=CORDAS[i];tocarCorda(c.midi);f.toque=i;
+  document.querySelectorAll("[data-afi]").forEach(b=>b.onclick=()=>{f.inst=b.dataset.afi;f.toque=null;try{localStorage.setItem("sc-af-inst",f.inst)}catch(e){}drawAf()});
+  document.querySelectorAll("#tbody [data-corda]").forEach(el=>el.onclick=()=>{const i=+el.dataset.corda,c=instAf().cordas[i];tocarCorda(c.midi);f.toque=i;
     const g=document.querySelector(`.cvstr[data-corda="${i}"]`);if(g){g.classList.remove("vib");void g.getBoundingClientRect();g.classList.add("vib");clearTimeout(g._t);g._t=setTimeout(()=>g.classList.remove("vib"),2400)}afPaint()});
   afPaint();
 }
-function afPaint(){const f=T.af;if(!$("afbox"))return;const l=f.leit,cav=f.modo!=="crom";
-  let alvo=null,cents=0,nota=null,oit=null;
-  if(l){nota=((l.midi%12)+12)%12;oit=Math.floor(l.midi/12)-1;cents=l.cents;
-    if(cav){alvo=CORDAS.reduce((a,c)=>Math.abs(l.mx-c.midi)<Math.abs(l.mx-a.midi)?c:a);cents=(l.mx-alvo.midi)*100}}
-  const dsp=f.disp==null?cents:f.disp,ok=f.ativo&&l&&Math.abs(dsp)<=4&&f.firme,longe=f.ativo&&cav&&Math.abs(dsp)>50;
+function afPaint(){const f=T.af;if(!$("afbox"))return;const l=f.leit,C=instAf().cordas;
+  const nota=l?((l.midi%12)+12)%12:null,oit=l?Math.floor(l.midi/12)-1:null,dsp=f.disp==null?(l?l.cents:0):f.disp,ok=f.ativo&&l&&Math.abs(dsp)<=4&&f.firme;
+  const corda=l&&f.ativo?C.findIndex(c=>c.midi===l.midi):-1;
   $("afbox").className="tuner "+(!f.ativo?"":ok?"ok":"off");
-  $("afst").textContent=f.on?(f.ativo?(cav&&alvo?`${alvo.c}ª corda · ${NOMES[alvo.midi%12]}`:"Nota tocada"):"Toque uma corda…"):(cav?"Afinador de cavaquinho":"Afinador cromático");
-  $("afnote").innerHTML=nota!==null?(cav&&alvo?NOMES[alvo.midi%12]+`<small>${Math.floor(alvo.midi/12)-1}</small>`:NOMES[nota]+`<small>${oit}</small>`):"—";
-  $("afhz").textContent=nota!==null?`${l.freq.toFixed(1)} Hz${cav&&alvo?` · tocando ${CIF[nota]}${oit}`:""} · ${dsp>0?"+":""}${Math.round(dsp)} cents`:"Lá = "+f.la+" Hz";
+  $("afst").textContent=f.on?(f.ativo?(corda>=0?`Nota da ${C[corda].c}ª corda`:"Nota tocada"):"Toque uma corda…"):"Afinador";
+  $("afnote").innerHTML=nota!==null?NOMES[nota]+`<small>${oit}</small>`:"—";
+  $("afhz").textContent=nota!==null?`${CIF[nota]}${oit} · ${l.freq.toFixed(1)} Hz · ${dsp>0?"+":""}${Math.round(dsp)} cents`:"Lá = 440 Hz";
   const nd=$("afndl");nd.style.left=(50+Math.max(-50,Math.min(50,dsp)))+"%";nd.className="needle "+(ok?"ok":f.ativo?"on":"");
-  $("afmsg").innerHTML=!f.ativo?"&nbsp;":ok?"Afinado! ✓":longe?(dsp<0?"Bem grave · aperte a tarraxa":"Bem agudo · afrouxe a tarraxa"):Math.abs(dsp)<=4?"Quase lá… segure a nota":dsp<0?`Grave · aperte um pouco a tarraxa`:`Agudo · afrouxe um pouco a tarraxa`;
-  CORDAS.forEach((c,i)=>{const b=$("afc"+i);if(b)b.className=(alvo&&alvo===c&&f.ativo?(ok?"ok":"on"):"")+(f.toque===i?" sel":"")});
-  document.querySelectorAll(".cvstr").forEach((g,i)=>{g.classList.toggle("det",!!(alvo&&f.ativo&&CORDAS[i]===alvo));g.classList.toggle("af",!!(ok&&alvo&&CORDAS[i]===alvo))});
+  $("afmsg").innerHTML=!f.ativo?"&nbsp;":ok?"Afinado! ✓":Math.abs(dsp)<=4?"Quase lá… segure a nota":dsp<0?"Grave · aperte um pouco a tarraxa":"Agudo · afrouxe um pouco a tarraxa";
+  C.forEach((c,i)=>{const b=$("afc"+i);if(b)b.className=(corda===i?(ok?"ok":"on"):"")+(f.toque===i?" sel":"")});
+  document.querySelectorAll(".cvstr").forEach((g,i)=>{g.classList.toggle("det",corda===i);g.classList.toggle("af",!!(ok&&corda===i))});
 }
 async function afOn(){
   if(!isPro()){openDrawer("upsell",{why:"af"});return}
-  const f=T.af;f.erro="";
+  const f=T.af;f.erro="";f.la=440;
   try{
     const ac=audioCtx();if(ac.state==="suspended")await ac.resume();const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
-    const src=ac.createMediaStreamSource(stream),hp=ac.createBiquadFilter();hp.type="highpass";hp.frequency.value=70;const an=ac.createAnalyser();an.fftSize=4096;src.connect(hp).connect(an);
+    const src=ac.createMediaStreamSource(stream),hp=ac.createBiquadFilter();hp.type="highpass";hp.frequency.value=55;const an=ac.createAnalyser();an.fftSize=4096;src.connect(hp).connect(an);
     const buf=new Float32Array(an.fftSize);f.stream=stream;f.hist=[];f.disp=null;f.on=true;f.firme=false;f.okDesde=0;
     const loop=t=>{f.raf=requestAnimationFrame(loop);if(f.ultimo&&t-f.ultimo<40)return;f.ultimo=t;
       if(f.surdo&&t<f.surdo){if(st.view==="tools"&&T.aba==="afinador")afPaint();return}
-      an.getFloatTimeDomainData(buf);const cav=f.modo!=="crom",r=cav?detectarFrequencia(buf,ac.sampleRate,130,1250):detectarFrequencia(buf,ac.sampleRate,60,1400);
+      an.getFloatTimeDomainData(buf);const r=detectarFrequencia(buf,ac.sampleRate,instAf().fmin,1400);
       if(r&&r.f>0){f.hist.push(r.f);if(f.hist.length>7)f.hist.shift();const o=[...f.hist].sort((a,b)=>a-b),med=o[Math.floor(o.length/2)];
-        // descarta saltos de oitava isolados (ataque da palhetada)
-        const mx=69+12*Math.log2(med/f.la),mi=Math.round(mx);f.leit={freq:med,midi:mi,mx,cents:(mx-mi)*100};
-        let alvoC=(mx-mi)*100;if(cav){const a=CORDAS.reduce((p,c)=>Math.abs(mx-c.midi)<Math.abs(mx-p.midi)?c:p);alvoC=(mx-a.midi)*100}
-        f.disp=f.disp==null||Math.abs(alvoC-f.disp)>30?alvoC:f.disp+(alvoC-f.disp)*.35;
+        const mx=69+12*Math.log2(med/440),mi=Math.round(mx),ce=(mx-mi)*100;
+        if(f.leit&&f.leit.midi!==mi)f.disp=null;f.leit={freq:med,midi:mi,mx,cents:ce};
+        f.disp=f.disp==null||Math.abs(ce-f.disp)>30?ce:f.disp+(ce-f.disp)*.35;
         if(Math.abs(f.disp)<=4){if(!f.okDesde)f.okDesde=t;if(!f.firme&&t-f.okDesde>250){f.firme=true;try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}}}else{f.okDesde=0;f.firme=false}
         f.ativo=true;f.voz=t}
       else if(t-f.voz>700){f.hist=[];f.ativo=false;f.disp=null;f.firme=false;f.okDesde=0}
@@ -2710,7 +2715,7 @@ function bPreCarregar(){bConjunto(BRITMO,bReferencia(BRITMO,T.bt.bpm)).catch(()=
 initCaps();
 
 /* ----- descobrir o tom pelo som (arquivo, microfone ou vídeo do YouTube) ----- */
-T.tom={modo:"arquivo",estado:"pronto",prog:0,acc:null,rank:null,croma:new Array(12).fill(0),viz:new Array(12).fill(0),nome:"",yt:"",erro:"",mic:null,raf:0,t0:0,afin:0};
+T.tom={modo:"mic",estado:"pronto",prog:0,acc:null,rank:null,croma:new Array(12).fill(0),viz:new Array(12).fill(0),nome:"",yt:"",erro:"",mic:null,raf:0,t0:0,afin:0};
 const QUINTAS=[0,7,2,9,4,11,6,1,8,3,10,5];
 const PT={C:"Dó",D:"Ré",E:"Mi",F:"Fá",G:"Sol",A:"Lá",B:"Si"};
 function tomPt(k){const n=keyName(k.pc,k.minor),l=n[0],a=n[1]==="#"?" sustenido":n[1]==="b"?" bemol":"";return PT[l]+a+(k.minor?" menor":" maior")}
@@ -2734,7 +2739,7 @@ function rodaSVG(){const t=T.tom,lead=t.rank?t.rank[0]:null,esc=lead?escala(lead
 function tomLiveHTML(){const t=T.tom,r=t.rank,fim=t.estado==="pronto"&&r,ok=r&&t.acc&&t.acc.quadros()>=(t.estado==="ouvindo"?14:6);
   const P=tomPares(r),cf=r?parConf(r):0,cl=[["baixa","Confiança baixa · confira as outras opções"],["media","Confiança média"],["alta","Confiança alta"]][cf];
   return`${t.estado==="analisando"?`<div class="tprog"><i style="width:${Math.round(t.prog*100)}%"></i></div><p class="help" style="text-align:center;margin-top:6px">Analisando ${esc(t.nome)}…</p>`:""}
-   ${t.estado==="ouvindo"?`<div class="tprog"><i style="width:${Math.min(100,Math.round(t.prog*100))}%"></i></div><p class="help" style="text-align:center;margin-top:6px">${t.prog<1?"Deixe tocar uns 30 segundos para o tom se firmar":"Já dá para confiar. Pode parar quando quiser."}</p>`:""}
+   ${t.estado==="ouvindo"?`<div class="tprog"><i style="width:${Math.min(100,Math.round(t.prog*100))}%"></i></div><p class="help" style="text-align:center;margin-top:6px">${t.prog<1?(t.modo==="voz"?"Continue cantando. A busca termina sozinha quando a barra encher (uns 20 segundos de melodia).":"Ouvindo… A busca termina sozinha quando a barra encher (até 30 segundos), ou antes, se o tom já estiver firme."):"Quase lá…"}</p>`:""}
    ${ok?`<div class="tres"><p class="lbl2" style="text-align:center">${fim?"A música está em":"Por enquanto"}</p>
      <p class="tpar"><b>${tomCif(P[0].prefMenor?P[0].min:P[0].maj)}</b><i>ou</i><b>${tomCif(P[0].prefMenor?P[0].maj:P[0].min)}</b></p>
      <p class="tbig2">${parTxt(P[0],true)}</p>
@@ -2743,24 +2748,26 @@ function tomLiveHTML(){const t=T.tom,r=t.rank,fim=t.estado==="pronto"&&r,ok=r&&t
      ${P.length>2?`<p class="lbl2" style="text-align:center;margin-top:12px">Se não bater, teste também</p><div class="pills" style="justify-content:center">${P.slice(1,cf===2?2:3).map(q=>`<span class="talt">${parTxt(q)}</span>`).join("")}</div>`:""}
      ${fim&&Math.abs(t.afin)>=15?`<p class="help" style="text-align:center">A gravação está ${Math.abs(t.afin)} cents ${t.afin>0?"acima":"abaixo"} do Lá 440. Para tocar junto, ajuste a afinação do cavaquinho.</p>`:""}</div>`:""}
    ${t.erro?`<p class="status err">${esc(t.erro)}</p>`:""}`}
-function tomBtn(){const t=T.tom,r=t.rank;return t.mic?"Parar e ver o resultado":r?"Ouvir de novo":t.modo==="yt"?"Dei play, começar a ouvir":"Começar a ouvir"}
+function tomBtn(){const t=T.tom,r=t.rank;return t.mic?"Parar agora e ver o resultado":t.modo==="voz"?(r?"Cantar de novo":"Começar a cantar"):r?"Buscar de novo":t.modo==="yt"?"Dei play, começar a ouvir":"Começar a ouvir"}
 function tomLive(){if(!(st.view==="tools"&&T.aba==="tom"))return;const el=$("tlive");if(!el)return drawTom();el.innerHTML=tomLiveHTML();const rd=$("troda");if(rd&&T.tom.estado==="pronto")rd.innerHTML=rodaSVG();const m=$("tmic");if(m)m.textContent=tomBtn();
   const l=document.querySelector("label.tbtn");if(l){const t=T.tom;l.textContent=t.estado==="analisando"?"Analisando…":t.rank?"Analisar outra música":"Escolher música do celular";l.toggleAttribute("aria-disabled",t.estado==="analisando")}}
 function drawTom(){const t=T.tom,r=t.rank,id=ytId(t.yt);
-  $("tbody").innerHTML=`<div class="pills tmodo" style="justify-content:center">${[["arquivo","Enviar música"],["mic","Ouvir pelo microfone"],["yt","Link do YouTube"]].map(([k,l])=>`<button data-tm="${k}" class="${t.modo===k?"on":""}">${l}</button>`).join("")}</div>
+  $("tbody").innerHTML=`<div class="pills tmodo" style="justify-content:center">${[["mic","Ouvir pelo microfone"],["voz","Cantar"],["yt","Link do YouTube"]].map(([k,l])=>`<button data-tm="${k}" class="${t.modo===k?"on":""}">${l}</button>`).join("")}</div>
    <div id="troda">${rodaSVG()}</div><div id="tlive">${tomLiveHTML()}</div>
    ${t.modo==="arquivo"?`<label class="primary tbtn" for="tfile">Escolher música do celular</label><input type="file" id="tfile" accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.opus,.aac,.flac,.mp4" hidden>
      <p class="help" style="text-align:center">MP3, áudio do WhatsApp, gravação do celular ou vídeo. O áudio é analisado no seu aparelho e não é enviado para lugar nenhum.</p>`:""}
+   ${t.modo==="voz"?`<button class="primary tbtn" id="tmic"></button>
+     <p class="help" style="text-align:center">Cante o refrão ou um trecho da música por uns 20 a 30 segundos, perto do celular, sem instrumento tocando junto. Pode ser só no “lá-lá-lá”. O app segue a sua melodia nota por nota.</p>`:""}
    ${t.modo==="mic"?`<button class="primary tbtn" id="tmic"></button>
      <p class="help" style="text-align:center">Coloque o celular perto da caixa de som, do rádio ou da TV. Quanto menos conversa em volta, melhor.</p>`:""}
    ${t.modo==="yt"?`<div class="tyt"><input id="tyt" type="url" inputmode="url" placeholder="Cole aqui o link do vídeo" value="${esc(t.yt)}"><button class="ghost" id="tytok">Abrir</button></div>
      ${id?`<div class="tvid"><iframe src="https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0" title="Vídeo do YouTube" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
      <button class="primary tbtn" id="tmic"></button>
      <p class="help" style="text-align:center">Dê play no vídeo, aumente o volume e toque no botão. O app ouve o som pelo microfone. Se no seu celular o som do vídeo baixar quando o microfone liga, toque o vídeo em outro aparelho (TV ou computador) e use “Ouvir pelo microfone”.</p>`:`<p class="help" style="text-align:center">O vídeo abre aqui mesmo, e o app ouve a música enquanto ele toca.</p>`}`:""}
-   <p class="tfine">Estimativa automática pelo som. O resultado vem em par (tom maior e relativo menor) porque os dois têm a mesma escala e os mesmos acordes. Em testes com o repertório do app, o par certo ficou em 1º lugar em cerca de 8 a cada 10 músicas e entre as 2 primeiras opções em mais de 9 a cada 10. Pode errar em músicas que mudam de tom.</p>`;
+   <p class="tfine">Estimativa automática pelo som (cantando, a precisão é um pouco menor que ouvindo a música com os instrumentos). O resultado vem em par (tom maior e relativo menor) porque os dois têm a mesma escala e os mesmos acordes. Em testes com o repertório do app, o par certo ficou em 1º lugar em cerca de 8 a cada 10 músicas e entre as 2 primeiras opções em mais de 9 a cada 10. Pode errar em músicas que mudam de tom.</p>`;
   document.querySelectorAll("[data-tm]").forEach(b=>b.onclick=()=>{if(T.tom.mic)tomOff(false);t.modo=b.dataset.tm;t.erro="";drawTom()});
   const f=$("tfile");if(f)f.onchange=e=>{const x=e.target.files[0];if(x)tomArquivo(x)};
-  const m=$("tmic");if(m){m.textContent=tomBtn();m.onclick=()=>t.mic?tomOff(true):tomMic()}
+  const m=$("tmic");if(m){m.textContent=tomBtn();m.onclick=()=>t.mic?tomOff(true):t.modo==="voz"?(isPro()?tomVoz():openDrawer("upsell",{why:"tom"})):tomMic()}
   const y=$("tyt");if(y){const ab=()=>{const v=$("tyt").value.trim();if(v===t.yt&&ytId(v))return;t.yt=v;t.erro=ytId(v)?"":"Esse link não parece ser de um vídeo do YouTube.";if(t.mic)tomOff(false);drawTom()};$("tytok").onclick=ab;y.onkeydown=e=>{if(e.key==="Enter")ab()};y.onpaste=()=>setTimeout(ab,0)}
   tomLive();
 }
@@ -2778,6 +2785,30 @@ async function tomArquivo(file){const t=T.tom;if(t.estado==="analisando")return;
     t.rank=t.acc.ranking();t.afin=t.acc.afinacao();t.estado="pronto";
   }catch(e){t.estado="pronto";t.rank=null;t.acc=null;t.erro=e&&e.message==="curto"?"Não deu para ouvir notas suficientes nesse arquivo. Tente um trecho maior da música.":"Não foi possível ler esse arquivo neste aparelho. Tente um MP3 ou M4A."}
   const f=$("tfile");if(f)f.value="";tomVivo()}
+const OPTV={peso:r=>1};
+function vozAcc(){const ch=new Float64Array(12);let q=0,cs=0,sn=0,prev=null,run=0,ult=new Float64Array(12);
+  return{add(buf,sr){const r=detectarFrequencia(buf,sr,75,1100);if(!r||r.q<.85){prev=null;run=0;return false}
+      const m=69+12*Math.log2(r.f/440);cs+=Math.cos(2*Math.PI*m);sn+=Math.sin(2*Math.PI*m);const tun=Math.atan2(sn,cs)/(2*Math.PI),mm=m-tun,ri=Math.round(mm);
+      if(Math.abs(mm-ri)>.35){run=0;return false} // passagem entre notas
+      if(prev===ri)run++;else{prev=ri;run=1}if(run<3)return false; // a nota precisa ficar ~0,1 s
+      const pc=((ri%12)+12)%12;ch[pc]+=OPTV.peso(run);q++;ult=new Float64Array(12);ult[pc]=1;return true},
+    vozeadas:()=>q,quadros:()=>Math.floor(q/10),afinacao:()=>0,agora:()=>ult,
+    croma:()=>{let s=0;for(const v of ch)s=Math.max(s,v);return Array.from(ch,v=>s?v/s:0)},ranking:()=>KD.rank(ch)}}
+/* encerra sozinho: quando a barra completa, ou antes, se o par de tons já está firme há 8 s com confiança alta */
+function tomAutoFim(){const t=T.tom,now=performance.now(),dt=now-t.t0;if(!t.mic)return false;
+  if(t.prog>=1||dt>90000){tomOff(true);return true}
+  const P=t.rank&&t.acc&&t.acc.quadros()>=6?tomPares(t.rank):null;if(!P||!P.length){t.estavel=null;return false}
+  if(!t.estavel||t.estavel.pc!==P[0].maj.pc)t.estavel={pc:P[0].maj.pc,desde:now};
+  if(dt>=15000&&now-t.estavel.desde>=8000&&parConf(t.rank)===2){tomOff(true);return true}return false}
+async function tomVoz(){const t=T.tom;t.erro="";
+  try{const ac=audioCtx();if(ac.state==="suspended")await ac.resume();const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:true,autoGainControl:true}});
+    const src=ac.createMediaStreamSource(stream),hp=ac.createBiquadFilter();hp.type="highpass";hp.frequency.value=70;const an=ac.createAnalyser();an.fftSize=2048;src.connect(hp).connect(an);
+    const buf=new Float32Array(an.fftSize);t.mic={stream,src};t.acc=vozAcc();t.rank=null;t.estado="ouvindo";t.prog=0;t.t0=performance.now();let ult=0;
+    const loop=now=>{t.raf=requestAnimationFrame(loop);if(now-ult<40)return;ult=now;an.getFloatTimeDomainData(buf);if(t.acc.add(buf,ac.sampleRate)&&t.acc.quadros()>=3)t.rank=t.acc.ranking();t.prog=t.acc.vozeadas()*.04/20;tomViz()};
+    t.raf=requestAnimationFrame(loop);
+    t.estavel=null;t.tick=setInterval(()=>{if(tomAutoFim())return;tomLive()},1000);
+    tomLive();
+  }catch(e){t.erro=e&&e.name==="NotAllowedError"?"O microfone foi bloqueado. Libere o acesso ao microfone nas configurações do navegador e tente de novo.":"Não foi possível usar o microfone neste aparelho.";tomOff(false)}}
 async function tomMic(){if(!isPro()){openDrawer("upsell",{why:"tom"});return}const t=T.tom;t.erro="";
   try{const ac=audioCtx();const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     const src=ac.createMediaStreamSource(stream),an=ac.createAnalyser();an.fftSize=KD.tamanho(ac.sampleRate)>32768?32768:KD.tamanho(ac.sampleRate);an.smoothingTimeConstant=0;src.connect(an);
@@ -2785,7 +2816,7 @@ async function tomMic(){if(!isPro()){openDrawer("upsell",{why:"tom"});return}con
     const loop=now=>{t.raf=requestAnimationFrame(loop);if(now-ult>=hop){ult=now;an.getFloatTimeDomainData(buf);if(t.acc.add(buf,ac.sampleRate,0))t.rank=t.acc.ranking()}
       t.prog=t.acc.quadros()*hop/30000;tomViz()};
     t.raf=requestAnimationFrame(loop);
-    t.tick=setInterval(()=>{if(performance.now()-t.t0>90000)return tomOff(true);tomLive()},1000);
+    t.estavel=null;t.tick=setInterval(()=>{if(tomAutoFim())return;tomLive()},1000);
     tomLive();
   }catch(e){t.erro=e&&e.name==="NotAllowedError"?"O microfone foi bloqueado. Libere o acesso ao microfone nas configurações do navegador e tente de novo.":"Não foi possível usar o microfone neste aparelho.";tomOff(false)}}
 function tomOff(mostrar){const t=T.tom;cancelAnimationFrame(t.raf);clearInterval(t.tick);t.mic?.stream.getTracks().forEach(x=>x.stop());t.mic=null;
