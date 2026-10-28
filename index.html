@@ -653,6 +653,16 @@ details.admcard[open] summary{margin-bottom:8px}
 .admsave button{width:100%;min-height:50px;box-shadow:0 6px 18px rgba(226,100,15,.3)}
 @media(max-width:360px){.admstats b{font-size:22px}.admbtns{grid-template-columns:1fr}}
 .admmore{display:block;width:100%;margin-top:8px;padding:10px;border:1px dashed var(--line);border-radius:12px;background:none;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer}
+/* atualizar o app */
+#updbar{position:fixed;left:12px;right:12px;bottom:calc(var(--tb,64px) + 14px + env(safe-area-inset-bottom,0px));z-index:60;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 16px;border-radius:14px;background:#1f2430;color:#fff;font-weight:600;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:520px;margin:0 auto}
+#updbar span{flex:1}
+#updbar button{border:0;border-radius:10px;padding:9px 14px;background:var(--orange);color:#fff;font-weight:800}
+.errbox{margin:40px auto 0;max-width:460px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;text-align:center}
+.errbox b{font-size:17px}
+.errbox p{color:var(--muted);font-size:14px;line-height:1.45;margin:8px 0 14px}
+.appfoot{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin:28px 0 8px;font-size:12.5px;color:var(--muted)}
+.appfoot .lnk,.updlnk{font-size:13px;font-weight:700}
+.updlnk{display:block;margin:14px auto 0}
 
 </style>
 </head>
@@ -960,7 +970,22 @@ async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edico
   const m={};for(const e of data)m[e.song_id+"|"+e.versao]=e;EDITS=m;for(const e of data){const s=byId(e.song_id);if(s)delete s.vers}if(st.view==="song")drawSong()}
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
-function loadChunk(n){if(!_chunkP[n])_chunkP[n]=fetch("data/"+CHUNKS[n]).then(r=>{if(!r.ok)throw new Error("rede");return r.json()}).then(o=>{for(const id in o){const s=byId("s"+id);if(s){Object.assign(s,o[id]);delete s.vers}}}).catch(e=>{delete _chunkP[n];throw e});return _chunkP[n]}
+/* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
+const APP_BUILD="28/10 13:41";
+async function appAtualizar(auto){
+  if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
+  toast("Atualizando o app…");
+  try{const rs=navigator.serviceWorker&&navigator.serviceWorker.getRegistrations?await navigator.serviceWorker.getRegistrations():[];await Promise.all(rs.map(r=>r.update().catch(()=>{})))}catch(e){}
+  try{const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}
+  setTimeout(()=>location.replace(location.pathname+"?v="+Date.now()+location.hash),300)}
+function avisoVersaoNova(){if($("updbar"))return;const d=document.createElement("div");d.id="updbar";d.innerHTML=`<span>Tem versão nova do app.</span><button>Atualizar</button>`;d.querySelector("button").onclick=()=>appAtualizar();document.body.appendChild(d)}
+if("serviceWorker" in navigator){
+  let tinha=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(tinha)avisoVersaoNova();tinha=true});
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{})});
+}
+if(/[?&]v=\d/.test(location.search))history.replaceState(null,"",location.pathname+location.hash);
+function loadChunk(n){if(!_chunkP[n])_chunkP[n]=fetch("data/"+CHUNKS[n]).then(r=>{if(!r.ok){const e=new Error("http");e.status=r.status;if(r.status===404)appAtualizar(true);throw e}return r.json()}).then(o=>{for(const id in o){const s=byId("s"+id);if(s){Object.assign(s,o[id]);delete s.vers}}}).catch(e=>{delete _chunkP[n];throw e});return _chunkP[n]}
 function prefetchChunks(){let i=0;const nx=()=>{if(i>=CHUNKS.length)return;const n=i++;loadChunk(n).catch(()=>{}).finally(()=>setTimeout(nx,400))};nx()}
 setTimeout(()=>{if(!(navigator.connection&&navigator.connection.saveData))prefetchChunks()},5000);
 function vers(s){if(!songReady(s))return[{k:"completa",label:"Completa",lines:[]}];if(!s.vers){const v=[];if(s.completa)v.push({k:"completa",label:s.rot||"Completa",lines:s.completa});if(s.simplificada)v.push({k:"simplificada",label:"Simplificada",lines:s.simplificada});(s.extra||[]).forEach((x,i)=>v.push({k:"v"+(i+2),label:x.rot||("Versão "+(v.length+1)),lines:x.lines,key:x.key}));if(!v.length)v.push({k:"completa",label:"Completa",lines:[]});for(const x of v){const e=EDITS[s.id+"|"+x.label];if(e){x.lines=parseChordText(e.texto);if(e.tom)x.key=e.tom;x.edited=true}}s.vers=v}return s.vers}
@@ -1322,7 +1347,8 @@ function drawTab(){
     h+=`<div class="sec">Músicas em alta</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,st.altaMais?20:5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>${TOP.length>5?`<button class="ghost" id="altaMais" style="width:100%;margin-top:6px">${st.altaMais?"Mostrar menos":"Ver o top 20"}</button>`:""}`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
     if(news.length) h+=`<div class="sec">Últimas adicionadas</div><div class="rows" style="padding-bottom:0">${news.map(s=>songRow(s)).join("")}</div>`;
     const ex=store.reps[0]; if(ex) h+=`<div class="sec">Seu repertório</div><button class="card" data-rep="${ex.id}" style="margin-top:4px"><b>${esc(ex.name)}</b><small>${ex.items.length} músicas · toque para abrir e tocar em sequência</small><span class="go">›</span></button>`;
-    tb.innerHTML=h;if($("altaMais"))$("altaMais").onclick=()=>{st.altaMais=!st.altaMais;drawTab()};
+    h+=`<div class="appfoot"><span>SambaCifra · versão ${esc(APP_BUILD)}</span><button class="lnk" id="updHome">↻ Atualizar o app</button></div>`;
+    tb.innerHTML=h;$("updHome").onclick=()=>appAtualizar();if($("altaMais"))$("altaMais").onclick=()=>{st.altaMais=!st.altaMais;drawTab()};
   } else if(st.tab==="musicas"){
     const q=st.q.trim();
     let list=q?searchSongs(q):[...PRIVATE,...SONGS];
@@ -1507,7 +1533,9 @@ function drawSong(){
   drawSongTop();
   const s=byId(st.id); if(!s) return go("home",{});
   if(!songReady(s)){$("view").innerHTML=`<div class="homepad"><p class="help" style="text-align:center;margin-top:40px">Carregando a cifra…</p></div>`;
-    loadChunk(s.c).then(()=>{if(st.view==="song"&&st.id===s.id)drawSong()}).catch(()=>{if(st.view==="song"&&st.id===s.id)$("view").innerHTML=`<div class="homepad"><p class="status err">Sem internet. Abra esta música uma vez com internet para ela ficar guardada no aparelho.</p></div>`});return}
+    loadChunk(s.c).then(()=>{if(st.view==="song"&&st.id===s.id)drawSong()}).catch(e=>{if(st.view!=="song"||st.id!==s.id)return;const off=navigator.onLine===false;
+      $("view").innerHTML=`<div class="homepad"><div class="errbox"><b>${off?"Sem internet":"Não deu para abrir esta cifra"}</b><p>${off?"Conecte à internet e tente de novo. A música que você abrir uma vez com internet fica guardada no aparelho.":"Pode ser que o app esteja numa versão antiga. Toque em Atualizar o app: seus repertórios e favoritos continuam salvos."}</p><div class="row2"><button class="ghost" id="errTry">Tentar de novo</button><button class="primary" id="errUpd">Atualizar o app</button></div></div></div>`;
+      $("errTry").onclick=()=>drawSong();$("errUpd").onclick=()=>appAtualizar()});return}
   const cv=curVer(s), sp=makeSpeller(cv.key||s.key,st.delta), lines=cv.lines;
   $("view").innerHTML=`<div class="shead" id="shead"></div><div class="strip" id="strip" aria-label="Acordes da música"></div>
     <div class="sheetwrap"><pre class="sheet" id="sheet"></pre><div class="compos" id="compos"></div></div>`;
@@ -1855,15 +1883,16 @@ function drawDrawer(){
       if(data){ADMIN_KEY=k;lsSet("rpc-admin",k);await loadAdmin();loadAdminEdits();closeDrawer();draw();toast("Modo professor ativado")}else toast("Chave incorreta")};
     if($("sairP")) $("sairP").onclick=()=>{ADMIN_KEY="";lsSet("rpc-admin","");isAdmin=false;SUBS_ALL=[];closeDrawer();draw()};
   } else if(dr.kind==="conta"){
-    if(!USER){B.innerHTML=`<h3>Entrar</h3><p class="sub">Entre para guardar seus repertórios, favoritas e últimas tocadas em qualquer aparelho.</p>`+loginForm("d");loginWire("d");return}
+    if(!USER){B.innerHTML=`<h3>Entrar</h3><p class="sub">Entre para guardar seus repertórios, favoritas e últimas tocadas em qualquer aparelho.</p>`+loginForm("d")+`<button class="lnk updlnk" id="updC">↻ Atualizar o app</button>`;loginWire("d");$("updC").onclick=()=>appAtualizar();return}
     const md=USER.user_metadata||{};
     B.innerHTML=`<h3>Minha conta</h3><p class="sub">${esc(md.full_name||md.name||"")}${md.full_name||md.name?"<br>":""}${esc(USER.email||"")}</p>
      <p class="help">Seus repertórios, favoritas e últimas tocadas ficam salvos na sua conta.</p>
      <button class="opt ${isPro()?"on":""}" id="cPlano" style="width:100%;margin-bottom:10px"><b>Plano: ${isPro()?"Premium":"Grátis"}</b><small>${isPro()?"Tudo liberado.":"Conheça o Premium: repertórios ilimitados, roda ao vivo e aulas."}</small></button>
      ${PROF?`<p class="help"><b style="color:var(--orange)">Você é professor.</b> O painel e a edição das cifras aparecem para você em qualquer aparelho.</p><button class="ghost" id="goPainel" style="width:100%;margin-bottom:8px">Abrir o painel do professor</button>`:""}
+     <button class="ghost" id="updC" style="width:100%;margin-bottom:8px">↻ Atualizar o app</button>
      <button class="ghost" id="sairC" style="width:100%">Sair da conta</button><p class="help" style="text-align:center;margin-top:12px"><a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a></p>`;
     if($("goPainel"))$("goPainel").onclick=()=>{closeDrawer();go("review",{})};
-    $("sairC").onclick=sairConta;
+    $("sairC").onclick=sairConta;$("updC").onclick=()=>appAtualizar();
     $("cPlano").onclick=()=>openDrawer("plano");
   } else if(dr.kind==="novasenha"){
     B.innerHTML=`<h3>Nova senha</h3><p class="sub">Escolha uma senha nova para a sua conta.</p><form class="lgform" id="nsf"><input id="ns1" type="password" placeholder="Nova senha (mínimo 6 caracteres)" autocomplete="new-password" minlength="6" required><button class="primary">Salvar senha</button><p class="status" id="nsst" hidden></p></form>`;
