@@ -507,6 +507,29 @@ body.gate #btbar,body.gate #ouvirbar{display:none!important}
 body.hasrol .sheetwrap{padding-bottom:calc(var(--tb) + 170px)}
 body.hasrol.hasbt .sheetwrap{padding-bottom:calc(var(--tb) + 230px)}
 .rolniv{flex-wrap:wrap;gap:6px}.rolniv button{min-width:38px}
+/* premium */
+.premben{list-style:none;margin:6px 0 14px;padding:0;display:grid;gap:8px}
+.premben li{display:grid;grid-template-columns:22px 1fr;column-gap:8px;align-items:start}
+.premben li::before{content:"";width:18px;height:18px;margin-top:2px;border-radius:50%;background:var(--orange) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/12px no-repeat;grid-row:1/3}
+.premben b{font-size:15px}.premben small{color:var(--muted);font-size:13px;line-height:1.35}
+.premplans{display:grid;gap:8px;margin-bottom:6px}
+.premplans a.opt{text-decoration:none;color:inherit}
+.admbox{display:grid;gap:8px;margin:8px 0;padding:12px 14px}
+.admbox small{color:var(--muted)}
+.admbox textarea,.admbox input{width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--paper,#fff);color:var(--ink)}
+.admbox label{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+details.admbox{background:var(--paper,#fff);border:1px solid var(--line);border-radius:14px}
+details.admbox summary{cursor:pointer;font-weight:700}
+.premben li{display:flex;gap:8px;align-items:flex-start;font-size:14px;line-height:1.35}
+.premben li::before{flex:0 0 18px;grid-row:auto}
+.premtier{border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px;background:var(--bg)}
+.premtier.dest{border-color:var(--orange);background:var(--orange-soft)}
+.premtier>b{font-size:17px;display:block;margin-bottom:2px}
+.premtier .premben{margin:6px 0 10px}
+.premlock{text-align:center;padding:10px 4px}
+.premlock h3{margin:10px 0 4px}
+.lock.sm{font-size:10px;padding:1px 5px;margin-left:5px;vertical-align:1px}
+.premtier a.ghost,.drawer a.ghost{color:var(--ink)}
 
 </style>
 </head>
@@ -820,7 +843,7 @@ setTimeout(()=>{if(!(navigator.connection&&navigator.connection.saveData))prefet
 function vers(s){if(!songReady(s))return[{k:"completa",label:"Completa",lines:[]}];if(!s.vers){const v=[];if(s.completa)v.push({k:"completa",label:s.rot||"Completa",lines:s.completa});if(s.simplificada)v.push({k:"simplificada",label:"Simplificada",lines:s.simplificada});(s.extra||[]).forEach((x,i)=>v.push({k:"v"+(i+2),label:x.rot||("Versão "+(v.length+1)),lines:x.lines,key:x.key}));if(!v.length)v.push({k:"completa",label:"Completa",lines:[]});for(const x of v){const e=EDITS[s.id+"|"+x.label];if(e){x.lines=parseChordText(e.texto);if(e.tom)x.key=e.tom;x.edited=true}}s.vers=v}return s.vers}
 function curVer(s){const vs=vers(s);return vs.find(v=>v.k===st.ver)||(st.ver==="simplificada"&&vs.find(v=>/simplif/i.test(v.label)))||vs[0]}
 function songKey(s){return curVer(s).key||s.key}
-const FREE_REPS=1, FREE_SONGS=25;
+let FREE_REPS=1, FREE_SONGS=20, PREMIUM=false, PLANO={};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const norm=s=>String(s).toLowerCase().normalize("NFD").replace(/\p{Mn}/gu,"");
@@ -838,7 +861,13 @@ if(!store.reps.length){
   store.reps.push({id:"r1",name:"Roda de sábado",items:ids,example:true});
 }
 const save=()=>{try{localStorage.setItem("rpc2",JSON.stringify(store));localStorage.setItem("rpc2p",JSON.stringify({fs:st.fs,fit:st.fit,ver:st.ver}))}catch(e){};if(USER)syncPush()};
-const isPro=()=>store.plan==="pro";
+delete store.plan;
+const cobrando=()=>CFG.cobranca===true;
+const isPro=()=>PREMIUM||PROF||!cobrando();
+const temAulas=()=>PROF||!cobrando()||(PREMIUM&&PLANO.nivel==="aulas");
+const semRep=()=>!isPro()&&FREE_REPS<1;
+const repsUsados=()=>store.reps.filter(r=>!r.example).length;
+const repsCheios=()=>!isPro()&&repsUsados()>=FREE_REPS;
 const repById=id=>store.reps.find(r=>r.id===id);
 const meta={}; // bpm/aula por música (do banco)
 const IC={
@@ -948,7 +977,9 @@ const ICO_G='<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true">
 const ICO_APPLE='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8s2 .8 3.4.8c1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>';
 const gateOn=()=>!!(AUTH_OK&&CFG.exigir_login&&!USER);
 async function authHdr(){if(!sb||!USER)return{};const {data}=await sb.auth.getSession();const t=data&&data.session&&data.session.access_token;return t?{Authorization:"Bearer "+t}:{}}
-async function loadCfg(){const {data}=await sb.from("app_cfg").select("k,v");(data||[]).forEach(x=>CFG[x.k]=x.v)}
+async function loadCfg(){const {data}=await sb.from("app_cfg").select("k,v");(data||[]).forEach(x=>CFG[x.k]=x.v);if(CFG.free_reps!=null&&+CFG.free_reps>=0)FREE_REPS=+CFG.free_reps;if(+CFG.free_musicas>0)FREE_SONGS=+CFG.free_musicas}
+async function loadPlano(){if(!USER||!sb){PREMIUM=false;PLANO={};return}try{const {data}=await sb.rpc("meu_plano");PLANO=data||{};PREMIUM=!!PLANO.premium}catch(e){}}
+document.addEventListener("visibilitychange",async()=>{if(document.visibilityState!=="visible"||!USER||PREMIUM)return;await loadPlano();if(PREMIUM){toast("Premium liberado! Bom som 🎶");closeDrawer();draw()}});
 async function loadAuthCfg(){try{const r=await fetch(SB_URL+"/auth/v1/settings",{headers:{apikey:SB_KEY}});AUTHCFG=await r.json()}catch(e){AUTHCFG=null}}
 async function authInit(){
   await Promise.allSettled([loadCfg(),loadAuthCfg()]);
@@ -958,13 +989,14 @@ async function authInit(){
     if(ev==="PASSWORD_RECOVERY"){USER=ses&&ses.user||USER;openDrawer("novasenha");return}
     const novo=ses?ses.user:null;
     if(novo&&(!USER||USER.id!==novo.id)){USER=novo;await aoEntrar(true)}
-    else if(!novo&&USER&&ev==="SIGNED_OUT"){USER=null;PROF=false}
+    else if(!novo&&USER&&ev==="SIGNED_OUT"){USER=null;PROF=false;PREMIUM=false}
   },0)});
 }
 async function aoEntrar(avisar){
   const md=USER.user_metadata||{};if(!myName&&(md.full_name||md.name))myName=md.full_name||md.name;
   await syncPull();
   try{const {data}=await sb.rpc("sou_professor");PROF=data===true}catch(e){PROF=false}
+  await loadPlano();
   if(PROF){isAdmin=true;await loadAdmin();loadAdminEdits()}
   if(avisar){closeDrawer();toast("Pronto, você entrou"+(md.full_name||md.name?", "+String(md.full_name||md.name).split(" ")[0]:"")+"!");if(st.view==="login")st.view="home";draw()}
 }
@@ -1062,8 +1094,8 @@ function drawTop(){
    <button class="icon" id="upBtn" aria-label="Enviar cifra" title="Enviar cifra">${IC.upload}</button>
    ${isAdmin?`<button class="icon badge" id="revBtn" aria-label="Revisar cifras enviadas" title="Revisão">${IC.review}${pend?`<b>${pend}</b>`:""}</button>`:""}
    <button class="icon acct ${USER?"on":""}" id="acctBtn" aria-label="${USER?"Minha conta":"Entrar"}" title="${USER?"Minha conta":"Entrar"}">${USER?`<span>${esc(((USER.user_metadata||{}).full_name||(USER.user_metadata||{}).name||USER.email||"?").trim()[0].toUpperCase())}</span>`:ICO_USER}</button>
-   <button class="plan ${isPro()?"pro":""}" id="planBtn">${isPro()?"Premium":"Grátis"}</button></div>`;
-  $("planBtn").onclick=()=>openDrawer("plano");
+   ${cobrando()||isAdmin?`<button class="plan ${isPro()?"pro":""}" id="planBtn">${isPro()?"Premium":"Grátis"}</button>`:""}</div>`;
+  if($("planBtn"))$("planBtn").onclick=()=>openDrawer("plano");
   $("acctBtn").onclick=()=>openDrawer("conta");
   $("upBtn").onclick=()=>go("import",{});
   if($("revBtn")) $("revBtn").onclick=()=>go("review",{});
@@ -1183,7 +1215,7 @@ function drawTab(){
     if(!isPro()) h+=`<p class="help">Plano grátis: ${FREE_REPS} repertório com até ${FREE_SONGS} músicas. No Premium, ilimitados.</p>`;
     h+=`<p class="help">Os repertórios ficam neste aparelho. Para levar para outro, use <b>Compartilhar</b> dentro do repertório.</p>`;
     tb.innerHTML=h;
-    $("newRep").onclick=()=>{if(!isPro()&&store.reps.length>=FREE_REPS) return openDrawer("upsell",{why:"reps"}); openDrawer("novo")};
+    $("newRep").onclick=()=>{if(repsCheios()) return openDrawer("upsell",{why:"reps"}); openDrawer("novo")};
   } else {
     const blocks=[...new Set(SONGS.filter(s=>s.block).map(s=>s.block))];
     const cols=[...new Set(SONGS.filter(s=>s.colecao).map(s=>s.colecao))];
@@ -1235,13 +1267,14 @@ function drawRep(){
   if($("shareRep")) $("shareRep").onclick=()=>shareRep(r);
   if($("copy")) $("copy").onclick=()=>{
     if(st.rep==="ready"&&!isPro()) return openDrawer("upsell",{why:"ready"});
-    if(!isPro()&&store.reps.length>=FREE_REPS) return openDrawer("upsell",{why:"reps"});
+    if(repsCheios()) return openDrawer("upsell",{why:"reps"});
     const nr={id:"r"+Date.now(),name:r.name,items:r.items.filter(x=>byId(x.id)).map(x=>({...x}))};store.reps.push(nr);save();toast("Salvo em Repertórios");go("rep",{rep:nr.id})};
 }
 function openRepSong(i){const r=curRep();const it=r.items[i];if(!it)return;go("song",{id:it.id,delta:it.delta,idx:i,rep:st.rep})}
 
 /* ================= adicionar ================= */
 function addTo(rep,id){
+  if(semRep()) return openDrawer("upsell",{why:"reps"});
   if(rep.items.some(i=>i.id===id)){toast("Essa música já está em “"+rep.name+"”");return}
   if(!isPro()&&rep.items.length>=FREE_SONGS) return openDrawer("upsell",{why:"songs"});
   rep.items.push({id,delta:st.view==="song"?st.delta:0});rep.example=false;save();
@@ -1297,8 +1330,8 @@ function drawSongHead(){
     ${s.credit&&(s.isNew||s.pending)?`<div class="credit">${s.pending?`<span class="tag pend" style="margin:0">em revisão · só você vê</span>`:`Contribuição de <b>${esc(s.credit)}</b>`}</div>`:""}
     <div class="chips"><button class="chip key" data-tool="tom">Tom <span class="v">${esc(cur)}</span>${IC.caret}</button>
     ${vers(s).length>1?`<button class="chip" data-tool="versao">${esc(curVer(s).label)}${IC.caret}</button>`:""}
-    <button class="chip ${T.met.on?"live":""}" data-tool="metronomo">${ICM.met}Metrônomo${T.met.on?` <span class="v">${T.met.bpm}</span>`:""}</button>
-    <button class="chip ${T.bt.on?"live":""}" data-tool="batucada">${ICM.drum}Batucada${T.bt.on||T.bt.loading?` <span class="v">${T.bt.bpm}</span>`:""}</button>
+    <button class="chip ${T.met.on?"live":""}" data-tool="metronomo">${ICM.met}Metrônomo${!isPro()?`<span class="lock sm">PRO</span>`:""}${T.met.on?` <span class="v">${T.met.bpm}</span>`:""}</button>
+    <button class="chip ${T.bt.on?"live":""}" data-tool="batucada">${ICM.drum}Batucada${!isPro()?`<span class="lock sm">PRO</span>`:""}${T.bt.on||T.bt.loading?` <span class="v">${T.bt.bpm}</span>`:""}</button>
     </div><div class="chips" style="margin-top:8px"><button class="learn" data-tool="ouvir">${ICO_FONE}Ouvir a música</button><button class="learn alt" data-tool="editar">${ICO_LAPIS}${isAdmin?"Editar cifra":"Sugerir correção"}</button></div>`;
   $("tbKey").textContent=cur;
 }
@@ -1374,6 +1407,7 @@ let ac=null,wake=null;
 function bpmOf(s){return(meta[s.id]&&+meta[s.id].bpm)||play.bpm}
 function tickSound(hi){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=hi?1500:1000;g.gain.setValueAtTime(.3,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.06);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.07)}catch(e){}}
 function startPlay(){
+  if(!isPro()){openDrawer("upsell",{why:"rol"});return}
   stopPlay();play.on=true;try{navigator.wakeLock?.request("screen").then(w=>wake=w).catch(()=>{})}catch(e){}
   $("tbPlay").classList.add("on");
   if(play.mode==="continua"||!MEASURES){
@@ -1454,6 +1488,7 @@ const roda={code:null,host:false,following:false,unsub:null};
 function newCode(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<5;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
 async function startRoda(){
   if(!sb) return toast("Sem conexão com o servidor agora.");
+  if(!isPro()) return openDrawer("upsell",{why:"roda"});
   roda.code=newCode();roda.host=true;roda.token=rnd(16);
   const ok=await pushRoda(true).catch(()=>false);
   if(!ok){roda.host=false;roda.code=null;return toast("Não foi possível abrir a roda agora.")}
@@ -1538,7 +1573,11 @@ async function saveMeta(id,m,msg){
 }
 /* ================= gavetas ================= */
 let dr=null;
-function openDrawer(kind,arg={}){$("toast").hidden=true;dr={kind,...arg};$("scrim").hidden=false;$("drawer").hidden=false;drawDrawer()}
+const PRO_DR={metronomo:"met",batucada:"bt",tocar:"rol",afinador:"af"};
+function openDrawer(kind,arg={}){$("toast").hidden=true;
+  if(!isPro()&&PRO_DR[kind]){arg={why:PRO_DR[kind]};kind="upsell"}
+  if(semRep()&&(kind==="addrep"||kind==="novo")){arg={why:"reps"};kind="upsell"}
+  dr={kind,...arg};$("scrim").hidden=false;$("drawer").hidden=false;drawDrawer()}
 function closeDrawer(){$("scrim").hidden=true;$("drawer").hidden=true;dr=null}
 $("scrim").onclick=closeDrawer;
 function drawDrawer(){
@@ -1624,7 +1663,7 @@ function drawDrawer(){
      <div class="replist">${store.reps.map(r=>{const has=r.items.some(i=>i.id===dr.id);return`<button class="opt ${has?"on":""}" data-to="${r.id}"><span><b>${esc(r.name)}</b><br><small>${r.items.length}${!isPro()?"/"+FREE_SONGS:""} músicas</small></span>${has?ico("check",22,"stroke:var(--orange);stroke-width:2.6"):""}</button>`}).join("")}</div>
      <button class="ghost" id="nr" style="width:100%">${ico("plus",16,"vertical-align:-3px")} Novo repertório</button>`;
     B.querySelectorAll("[data-to]").forEach(b=>b.onclick=()=>{const r=repById(b.dataset.to);if(r.items.some(i=>i.id===dr.id)){r.items=r.items.filter(i=>i.id!==dr.id);save();toast("Removida de “"+r.name+"”");if(st.view==="song")drawSongTop();else if(st.view==="home")drawTab();drawDrawer()}else{addTo(r,dr.id);if(dr)drawDrawer()}});
-    $("nr").onclick=()=>{if(!isPro()&&store.reps.length>=FREE_REPS) return openDrawer("upsell",{why:"reps"});openDrawer("novo",{id:dr.id})};
+    $("nr").onclick=()=>{if(repsCheios()) return openDrawer("upsell",{why:"reps"});openDrawer("novo",{id:dr.id})};
   } else if(dr.kind==="novo"){
     B.innerHTML=`<h3>Novo repertório</h3><p class="sub">Dê um nome que lembre a ocasião.</p>
      <form class="newrep" id="nf"><input id="nn" placeholder="Ex.: Roda de domingo" required><button class="primary">Criar</button></form>`;
@@ -1632,12 +1671,7 @@ function drawDrawer(){
     $("nf").onsubmit=e=>{e.preventDefault();const r={id:"r"+Date.now(),name:$("nn").value.trim()||"Novo repertório",items:[]};store.reps.push(r);save();
       if(dr.id){addTo(r,dr.id);closeDrawer()} else go("rep",{rep:r.id})};
   } else if(dr.kind==="upsell"){
-    const why={reps:`No plano grátis você tem ${FREE_REPS} repertório.`,songs:`No plano grátis cada repertório vai até ${FREE_SONGS} músicas.`,ready:"Os repertórios prontos são do Premium."}[dr.why];
-    B.innerHTML=`<h3>Libere o Premium</h3><p class="sub">${why}</p>
-     <div class="opt on" style="cursor:default"><b>Premium</b><small>Repertórios ilimitados, sem limite de músicas, e os repertórios prontos para a roda não parar.</small></div>
-     <button class="primary" id="goPro" style="width:100%">Ativar Premium (demonstração)</button>
-     <p class="sub" style="margin-top:10px;text-align:center">No protótipo, o botão só simula o plano pago.</p>`;
-    $("goPro").onclick=()=>{store.plan="pro";save();closeDrawer();draw();toast("Premium ativado (demonstração)")};
+    premiumDrawer(B,dr.why);
   } else if(dr.kind==="metronomo"){
     const m=T.met,sug=(meta[s.id]||{}).bpm;
     B.innerHTML=`<h3>Metrônomo</h3><p class="sub">Continua tocando enquanto você lê a cifra.${sug?` Andamento sugerido para esta música: <b>${sug} BPM</b>.`:""}</p>
@@ -1668,19 +1702,76 @@ function drawDrawer(){
     const md=USER.user_metadata||{};
     B.innerHTML=`<h3>Minha conta</h3><p class="sub">${esc(md.full_name||md.name||"")}${md.full_name||md.name?"<br>":""}${esc(USER.email||"")}</p>
      <p class="help">Seus repertórios, favoritas e últimas tocadas ficam salvos na sua conta.</p>
+     <button class="opt ${isPro()?"on":""}" id="cPlano" style="width:100%;margin-bottom:10px"><b>Plano: ${isPro()?"Premium":"Grátis"}</b><small>${isPro()?"Tudo liberado.":"Conheça o Premium: repertórios ilimitados, roda ao vivo e aulas."}</small></button>
      ${PROF?`<p class="help"><b style="color:var(--orange)">Você é professor.</b> O painel e a edição das cifras aparecem para você em qualquer aparelho.</p><button class="ghost" id="goPainel" style="width:100%;margin-bottom:8px">Abrir o painel do professor</button>`:""}
      <button class="ghost" id="sairC" style="width:100%">Sair da conta</button><p class="help" style="text-align:center;margin-top:12px"><a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a></p>`;
     if($("goPainel"))$("goPainel").onclick=()=>{closeDrawer();go("review",{})};
     $("sairC").onclick=sairConta;
+    $("cPlano").onclick=()=>openDrawer("plano");
   } else if(dr.kind==="novasenha"){
     B.innerHTML=`<h3>Nova senha</h3><p class="sub">Escolha uma senha nova para a sua conta.</p><form class="lgform" id="nsf"><input id="ns1" type="password" placeholder="Nova senha (mínimo 6 caracteres)" autocomplete="new-password" minlength="6" required><button class="primary">Salvar senha</button><p class="status" id="nsst" hidden></p></form>`;
     $("nsf").onsubmit=async e=>{e.preventDefault();const {error}=await sb.auth.updateUser({password:$("ns1").value});if(error){$("nsst").hidden=false;$("nsst").className="status err";$("nsst").textContent=authErr(error)}else{closeDrawer();toast("Senha alterada")}};
   } else if(dr.kind==="plano"){
-    B.innerHTML=`<h3>Seu plano</h3><p class="sub">Simulação para testar os limites do protótipo.</p>
-     <button class="opt ${!isPro()?"on":""}" data-p="free"><b>Grátis</b><small>${FREE_REPS} repertório com até ${FREE_SONGS} músicas. Todas as cifras liberadas.</small></button>
-     <button class="opt ${isPro()?"on":""}" data-p="pro"><b>Premium</b><small>Repertórios ilimitados e repertórios prontos.</small></button>`;
-    B.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{store.plan=b.dataset.p;save();closeDrawer();draw()});
+    premiumDrawer(B,null);
   }
+}
+
+/* ================= premium ================= */
+const PREM_WHY={reps:"Repertórios são do Premium: monte quantos quiser, na ordem da roda, com o tom de cada música salvo.",songs:"",ready:"Os repertórios prontos são do Premium.",roda:"Abrir uma roda ao vivo é do Premium. Entrar na roda de alguém continua grátis.",aulas:"As aulas fazem parte do Premium + Aulas.",rol:"A rolagem automática no tempo da música é do Premium.",met:"O metrônomo é do Premium.",bt:"A batucada (surdo, pandeiro, rebolo, repiques e cuíca, em qualquer BPM) é do Premium.",af:"O afinador é do Premium.",tom:"O detector de tom (“Qual o tom?”) é do Premium."};
+const PREM_BEN=["Rolagem automática no tempo da música","Batucada com 6 instrumentos, em qualquer BPM","Afinador, metrônomo e detector de tom","Repertórios ilimitados, com o tom de cada música salvo","Abrir a roda ao vivo pelo QR code","Repertórios prontos para a roda"];
+const AULAS_BEN=["Tudo do Premium","Videoaulas de palhetada, levadas e teoria","Professores convidados"];
+const premBen=l=>`<ul class="premben">${l.map(t=>`<li>${t}</li>`).join("")}</ul>`;
+function checkoutUrl(u){if(!u)return"";try{const x=new URL(u);if(USER&&USER.email)x.searchParams.set("email",USER.email);return x.toString()}catch(e){return""}}
+function planBtns(m,a,pm,pa){m=checkoutUrl(m);a=checkoutUrl(a);if(!m&&!a)return`<p class="help" style="margin:6px 0 0"><b>Abre em breve.</b></p>`;
+  return`<div class="premplans">${a?`<a class="opt on" href="${esc(a)}" target="_blank" rel="noopener"><b>Anual · ${esc(pa||"")}</b><small>O melhor preço. Pode parcelar.</small></a>`:""}${m?`<a class="opt" href="${esc(m)}" target="_blank" rel="noopener"><b>Mensal · ${esc(pm||"")}</b><small>Cancele quando quiser.</small></a>`:""}</div>`}
+function premiumDrawer(B,why){
+  const motivo=why==="songs"?`No plano grátis cada repertório vai até ${FREE_SONGS} músicas.`:why==="reps"&&FREE_REPS>0?`No plano grátis você tem ${FREE_REPS} repertório${FREE_REPS>1?"s":""} com até ${FREE_SONGS} músicas.`:(PREM_WHY[why]||"");
+  if(isPro()&&!(why==="aulas"&&!temAulas())){
+    const o=PLANO.origem, canc=(PLANO.status==="cancelado"||PLANO.status==="atrasado")&&PLANO.expira_em;
+    B.innerHTML=`<h3>Seu plano: ${temAulas()?"Premium + Aulas":"Premium"}</h3><p class="sub">${PROF&&!o?"Você é o professor: tudo liberado.":o==="escola"?"Incluído no seu plano de aluno.":o==="manual"?"Liberado pelo professor.":"Assinatura ativa."}${canc?` Vale até ${new Date(PLANO.expira_em).toLocaleDateString("pt-BR")}.`:""}</p>${premBen(temAulas()?[...PREM_BEN,...AULAS_BEN.slice(1)]:PREM_BEN)}
+     ${!temAulas()?`<div class="premtier"><b>Premium + Aulas</b>${premBen(AULAS_BEN.slice(1))}${planBtns(CFG.checkout_aulas_mensal,CFG.checkout_aulas_anual,CFG.preco_aulas_mensal,CFG.preco_aulas_anual)}</div>`:""}
+     ${o==="hotmart"?`<a class="ghost" style="width:100%;display:grid;place-items:center;text-decoration:none;margin-top:8px" href="https://consumer.hotmart.com/" target="_blank" rel="noopener">Gerenciar assinatura na Hotmart</a>`:""}`;
+    return;
+  }
+  B.innerHTML=`<h3>Assine o SambaCifra</h3><p class="sub">${motivo||"As cifras e a troca de tom são grátis para todo mundo. As ferramentas para tocar e comandar a roda ficam no Premium."}</p>
+   <div class="premtier ${why!=="aulas"?"dest":""}"><b>Premium</b>${premBen(PREM_BEN)}${USER?planBtns(CFG.checkout_mensal,CFG.checkout_anual,CFG.preco_mensal,CFG.preco_anual):`<p class="help" style="margin:4px 0 0">${esc(CFG.preco_mensal||"")}/mês ou ${esc(CFG.preco_anual||"")}/ano</p>`}</div>
+   <div class="premtier ${why==="aulas"?"dest":""}"><b>Premium + Aulas</b>${premBen(AULAS_BEN)}${USER?planBtns(CFG.checkout_aulas_mensal,CFG.checkout_aulas_anual,CFG.preco_aulas_mensal,CFG.preco_aulas_anual):`<p class="help" style="margin:4px 0 0">${esc(CFG.preco_aulas_mensal||"")}/mês ou ${esc(CFG.preco_aulas_anual||"")}/ano</p>`}</div>
+   ${!USER?`<button class="primary" id="prLogin" style="width:100%">Entrar para assinar</button><p class="help" style="text-align:center">Crie a conta com o e-mail que você vai usar no pagamento.</p>`:
+    `<p class="help">Pague com o mesmo e-mail da sua conta: <b>${esc(USER.email||"")}</b>. Libera sozinho assim que o pagamento for aprovado.</p><button class="ghost" id="prJa" style="width:100%">Já paguei, liberar agora</button>`}`;
+  if($("prLogin"))$("prLogin").onclick=()=>openDrawer("conta");
+  if($("prJa"))$("prJa").onclick=async()=>{await loadPlano();if(PREMIUM){closeDrawer();draw();toast("Premium liberado! Bom som 🎶")}else toast("Ainda não chegou a confirmação. Pix e cartão costumam liberar em poucos minutos.")};
+}
+/* painel: premium */
+async function admPremium(){
+  const box=$("admPrem");if(!box)return;
+  const {data,error}=await sb.rpc("admin_premium_list",{p_key:ADMIN_KEY});
+  if(error||!data){box.innerHTML=`<p class="help">Não foi possível carregar.</p>`;return}
+  const po=data.por_origem||{}, pn=data.por_nivel||{}, lab={hotmart:"assinatura",escola:"aluno da escola",manual:"cortesia"};
+  box.innerHTML=`<p class="help" style="font-size:14px;color:var(--ink)"><b>${data.ativos}</b> com Premium ativo (${pn.aulas||0} com Aulas)${Object.keys(po).length?" · "+Object.entries(po).map(([k,v])=>`${v} ${lab[k]||k}`).join(" · "):""}</p>
+   <div class="card admbox"><b>Liberar ou retirar por e-mail</b><small>Cole um ou vários e-mails (um por linha ou separados por vírgula). Use para os alunos atuais da escola.</small>
+    <textarea id="apE" rows="4" placeholder="aluno@email.com"></textarea>
+    <div class="pills" id="apO"><button data-o="escola" class="on">Aluno da escola</button><button data-o="manual">Cortesia</button></div><div class="pills" id="apN"><button data-n="aulas" class="on">Premium + Aulas</button><button data-n="premium">Só Premium</button></div>
+    <div class="row2"><button class="primary" id="apOk">Liberar Premium</button><button class="ghost" id="apNo">Retirar</button></div></div>
+   <div class="card admbox"><b>Plano grátis e preços</b>
+    <div class="row2"><label>Repertórios grátis (0 = nenhum)<input id="cfR" type="number" min="0" value="${FREE_REPS}"></label><label>Músicas por repertório<input id="cfM" type="number" min="1" value="${FREE_SONGS}"></label></div>
+    <b style="font-size:14px">Premium</b><div class="row2"><label>Preço mensal<input id="cfPm" value="${esc(CFG.preco_mensal||"")}"></label><label>Preço anual<input id="cfPa" value="${esc(CFG.preco_anual||"")}"></label></div>
+    <label>Link do checkout mensal (Hotmart)<input id="cfCm" value="${esc(CFG.checkout_mensal||"")}" placeholder="https://pay.hotmart.com/..."></label>
+    <label>Link do checkout anual (Hotmart)<input id="cfCa" value="${esc(CFG.checkout_anual||"")}" placeholder="https://pay.hotmart.com/..."></label>
+    <b style="font-size:14px">Premium + Aulas</b><div class="row2"><label>Preço mensal<input id="cfAPm" value="${esc(CFG.preco_aulas_mensal||"")}"></label><label>Preço anual<input id="cfAPa" value="${esc(CFG.preco_aulas_anual||"")}"></label></div>
+    <label>Link do checkout mensal (Hotmart)<input id="cfACm" value="${esc(CFG.checkout_aulas_mensal||"")}" placeholder="https://pay.hotmart.com/..."></label>
+    <label>Link do checkout anual (Hotmart)<input id="cfACa" value="${esc(CFG.checkout_aulas_anual||"")}" placeholder="https://pay.hotmart.com/..."></label>
+    <button class="primary" id="cfSave" style="width:100%">Salvar</button></div>
+   <details class="admbox"><summary>Últimos alunos Premium (${(data.lista||[]).length})</summary>${(data.lista||[]).map(x=>`<p class="help" style="margin:4px 0">${esc(x.email)} · <b>${esc(x.status)}</b> · ${esc(lab[x.origem]||x.origem)} · ${x.nivel==="aulas"?"com Aulas":"Premium"}${x.plano?" · "+esc(x.plano):""}${x.expira_em?" · até "+new Date(x.expira_em).toLocaleDateString("pt-BR"):""}</p>`).join("")||`<p class="help">Ninguém ainda.</p>`}</details>
+   <details class="admbox"><summary>Avisos recebidos da Hotmart (${(data.eventos||[]).length})</summary>${(data.eventos||[]).map(x=>`<p class="help" style="margin:4px 0">${new Date(x.em).toLocaleString("pt-BR")} · ${esc(x.evento)} · ${esc(x.email||"")} · produto ${esc(x.produto||"")} → <b>${esc(x.aplicado||"")}</b></p>`).join("")||`<p class="help">Nenhum aviso ainda.</p>`}</details>`;
+  let org="escola",niv="aulas";box.querySelectorAll("#apN [data-n]").forEach(b=>b.onclick=()=>{niv=b.dataset.n;box.querySelectorAll("#apN [data-n]").forEach(x=>x.classList.toggle("on",x===b))});box.querySelectorAll("#apO [data-o]").forEach(b=>b.onclick=()=>{org=b.dataset.o;box.querySelectorAll("#apO [data-o]").forEach(x=>x.classList.toggle("on",x===b))});
+  const envia=async st=>{const em=$("apE").value.split(/[\s,;]+/).map(x=>x.trim()).filter(Boolean);if(!em.length)return toast("Cole pelo menos um e-mail");
+    const {data:n,error}=await sb.rpc("admin_premium_set",{p_key:ADMIN_KEY,p_emails:em,p_status:st,p_origem:org,p_nivel:niv});
+    if(error||n<0)return toast("Não foi possível salvar");toast(`${n} e-mail${n===1?"":"s"} ${st==="ativo"?"com Premium":"sem Premium"}`);admPremium()};
+  $("apOk").onclick=()=>envia("ativo");$("apNo").onclick=()=>envia("cancelado");
+  $("cfSave").onclick=async()=>{const vals=[["free_reps",Math.max(0,+$("cfR").value||0)],["free_musicas",Math.max(1,+$("cfM").value||20)],["preco_mensal",$("cfPm").value.trim()],["preco_anual",$("cfPa").value.trim()],["checkout_mensal",$("cfCm").value.trim()],["checkout_anual",$("cfCa").value.trim()],["preco_aulas_mensal",$("cfAPm").value.trim()],["preco_aulas_anual",$("cfAPa").value.trim()],["checkout_aulas_mensal",$("cfACm").value.trim()],["checkout_aulas_anual",$("cfACa").value.trim()]];
+    for(const [k,v] of vals){if(/^checkout/.test(k)&&v&&!/^https:\/\//.test(v))return toast("O link precisa começar com https://");}
+    const r=await Promise.all(vals.map(([k,v])=>sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:k,p_v:v})));
+    if(r.some(x=>x.error||!x.data))return toast("Não foi possível salvar tudo");vals.forEach(([k,v])=>CFG[k]=v);FREE_REPS=CFG.free_reps;FREE_SONGS=CFG.free_musicas;toast("Salvo")};
 }
 
 /* ================= importar / enviar cifra ================= */
@@ -1914,7 +2005,7 @@ async function edDecide(id,action){const x=EDS_ALL.find(y=>y.id===id);if(!x)retu
   const {data,error}=await sb.rpc("admin_publicar_edicao",{p_key:ADMIN_KEY,p_song:x.song_id,p_ver:x.versao,p_texto:x.texto,p_tom:x.tom||"",p_origem:x.id});
   if(error||!data)return toast("Não foi possível publicar");EDITS[x.song_id+"|"+x.versao]={texto:x.texto,tom:x.tom};const s=byId(x.song_id);if(s)delete s.vers;x.status="aprovada";toast("Aprovada e publicada");loadAdminEdits();drawReview()}
 function edCurrent(x){const s=byId(x.song_id);if(!s||!songReady(s))return null;const v=vers(s).find(v=>v.label===x.versao)||vers(s)[0];return linesToText(v.lines)}
-function drawReviewWire(){const c=$("cfgLogin");if(!c)return;c.onchange=async()=>{const v=c.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"exigir_login",p_v:v});
+function drawReviewWire(){admPremium();const cb=$("cfgCob");if(cb)cb.onchange=async()=>{const v=cb.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"cobranca",p_v:v});if(error||!data){cb.checked=!v;return toast("Não foi possível mudar agora.")}CFG.cobranca=v;toast(v?"Cobrança ligada: o Premium está valendo":"Cobrança desligada: tudo liberado")};const c=$("cfgLogin");if(!c)return;c.onchange=async()=>{const v=c.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"exigir_login",p_v:v});
   if(error||!data){c.checked=!v;return toast("Não foi possível mudar agora.")}CFG.exigir_login=v;toast(v?"Login obrigatório ligado":"Login obrigatório desligado")}}
 function drawReview(){
   $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">Painel do professor</span>`;
@@ -1924,7 +2015,8 @@ function drawReview(){
   const ep=EDS_ALL.filter(x=>x.status==="pendente");
   const need=[...new Set(ep.map(x=>byId(x.song_id)).filter(s=>s&&!songReady(s)).map(s=>s.c))];
   if(need.length){Promise.all(need.map(loadChunk)).then(()=>{if(st.view==="review")drawReview()}).catch(()=>{})}
-  let eh=`<div class="sec">Acesso ao app</div><label class="cfgsw"><input type="checkbox" id="cfgLogin" ${CFG.exigir_login?"checked":""}><span><b>Exigir login para usar o app</b><small>Ligado: quem abrir o app vê primeiro a tela de entrar ou criar conta. Desligado: as cifras ficam abertas e o login serve para salvar repertórios.</small></span></label>`;
+  let eh=`<div class="sec">Acesso ao app</div><label class="cfgsw"><input type="checkbox" id="cfgLogin" ${CFG.exigir_login?"checked":""}><span><b>Exigir login para usar o app</b><small>Ligado: quem abrir o app vê primeiro a tela de entrar ou criar conta. Desligado: as cifras ficam abertas e o login serve para salvar repertórios.</small></span></label><label class="cfgsw"><input type="checkbox" id="cfgCob" ${cobrando()?"checked":""}><span><b>Cobrança ligada (Premium valendo)</b><small>Desligado: todas as ferramentas ficam liberadas para todos, como hoje. Ligue quando os checkouts da Hotmart estiverem configurados.</small></span></label>`;
+  eh+=`<div class="sec">Premium</div><div id="admPrem"><p class="help">Carregando…</p></div>`;
   eh+=`<div class="sec">Alterações sugeridas pelos alunos (${ep.length})</div>`;
   eh+=ep.map(x=>{const s=byId(x.song_id),cur=edCurrent(x);return`<div class="card edcard"><b>${esc(s?s.title:x.song_id)}</b> <small style="color:var(--muted)">${esc(s?s.artist:"")} · versão ${esc(x.versao)}${x.tom?" · tom "+esc(x.tom):""}</small>
      <p class="help" style="margin:4px 0">${esc(x.nome||"Aluno sem nome")} · ${new Date(x.criado_em).toLocaleDateString("pt-BR")}${x.nota?` · “${esc(x.nota)}”`:""}</p>
@@ -2005,6 +2097,7 @@ function drawTools(){
   $("topbar").innerHTML=`<h1>Ferramentas</h1>`;
   $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucada"],["tom","Qual o tom?"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
   document.querySelectorAll("[data-aba]").forEach(b=>b.onclick=()=>{if(b.dataset.aba!=="afinador"&&T.af.on)afOff();if(b.dataset.aba!=="tom"&&T.tom.mic)tomOff(false);T.aba=b.dataset.aba;drawTools()});
+  if(!isPro()){const w={metronomo:"met",afinador:"af",batucadas:"bt",tom:"tom"}[T.aba];$("tbody").innerHTML=`<div class="premlock"><span class="lock">Premium</span><h3>${{met:"Metrônomo",af:"Afinador",bt:"Batucada",tom:"Qual o tom?"}[w]}</h3><p class="sub">${PREM_WHY[w]}</p><button class="primary" id="tlk" style="width:100%">Conhecer o Premium</button></div>`;$("tlk").onclick=()=>openDrawer("upsell",{why:w});return}
   ({metronomo:drawMet,afinador:drawAf,batucadas:drawBt,tom:drawTom})[T.aba]();
 }
 
@@ -2028,6 +2121,7 @@ function drawMet(){
   $("mtap").onclick=()=>{const t=performance.now();m.taps=m.taps.filter(x=>t-x<2500);m.taps.push(t);m.taps=m.taps.slice(-6);if(m.taps.length>=2){const iv=m.taps.slice(1).map((x,i)=>x-m.taps[i]);set(60000/(iv.reduce((a,b)=>a+b,0)/iv.length))}};
 }
 function metStart(){
+  if(!isPro()){openDrawer("upsell",{why:"met"});return}
   const ac=audioCtx(),m=T.met;m.prox=ac.currentTime+.08;m.passo=0;m.fila=[];
   const ag=()=>{const dur=60/m.bpm/m.sub;while(m.prox<ac.currentTime+.12){const tc=Math.floor(m.passo/m.sub)%m.comp,eh=m.passo%m.sub===0;
     clique(ac,m.prox,!eh?"sub":m.comp>1&&tc===0?"acento":"tempo");if(eh)m.fila.push({t:m.prox,tc});m.prox+=dur;m.passo=(m.passo+1)%(m.comp*m.sub)}};
@@ -2067,6 +2161,7 @@ function drawAf(){
   $("lam").onclick=()=>{f.la=Math.max(430,f.la-1);drawAf()};$("lap").onclick=()=>{f.la=Math.min(450,f.la+1);drawAf()};
 }
 async function afOn(){
+  if(!isPro()){openDrawer("upsell",{why:"af"});return}
   const f=T.af;f.erro="";
   try{
     const ac=audioCtx();const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
@@ -2170,7 +2265,7 @@ function bLoop(){const b=T.bt;cancelAnimationFrame(b.raf);
     b.raf=requestAnimationFrame(passo)};b.raf=requestAnimationFrame(passo)}
 function bTempoUi(){document.querySelectorAll(".bbeats").forEach(el=>el.querySelectorAll("i").forEach((x,k)=>x.className=T.bt.tempo===k?(k===0?"on1":"on2"):""))}
 async function bComecar(v){const b=T.bt,m=bMotor();m.metronomo(b.metro);bAplicarMix();await m.iniciar(v,b.contagem?4:0);b.on=true;bLoop()}
-async function btPlay(){const b=T.bt;if(b.on)return;b.erro="";b.loading=true;b.shown=true;btUi();
+async function btPlay(){if(!isPro()){openDrawer("upsell",{why:"bt"});return}const b=T.bt;if(b.on)return;b.erro="";b.loading=true;b.shown=true;btUi();
   try{await bComecar(b.bpm)}catch(e){b.erro="Não foi possível carregar a batucada. Verifique a internet e tente de novo."}
   b.loading=false;btUi()}
 function btPause(){const b=T.bt;if(b.motor)b.motor.parar();b.on=false;b.auto=null;b.subir.ativo=false;b.tempo=-1;btUi()}
@@ -2311,7 +2406,7 @@ async function tomArquivo(file){const t=T.tom;if(t.estado==="analisando")return;
     t.rank=t.acc.ranking();t.afin=t.acc.afinacao();t.estado="pronto";
   }catch(e){t.estado="pronto";t.rank=null;t.acc=null;t.erro=e&&e.message==="curto"?"Não deu para ouvir notas suficientes nesse arquivo. Tente um trecho maior da música.":"Não foi possível ler esse arquivo neste aparelho. Tente um MP3 ou M4A."}
   const f=$("tfile");if(f)f.value="";tomVivo()}
-async function tomMic(){const t=T.tom;t.erro="";
+async function tomMic(){if(!isPro()){openDrawer("upsell",{why:"tom"});return}const t=T.tom;t.erro="";
   try{const ac=audioCtx();const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
     const src=ac.createMediaStreamSource(stream),an=ac.createAnalyser();an.fftSize=KD.tamanho(ac.sampleRate)>32768?32768:KD.tamanho(ac.sampleRate);an.smoothingTimeConstant=0;src.connect(an);
     const buf=new Float32Array(an.fftSize),hop=an.fftSize/ac.sampleRate*1000;t.mic={stream,src};t.acc=KD.novo();t.rank=null;t.estado="ouvindo";t.prog=0;t.t0=performance.now();let ult=0;
