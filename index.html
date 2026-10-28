@@ -530,6 +530,11 @@ details.admbox summary{cursor:pointer;font-weight:700}
 .premlock h3{margin:10px 0 4px}
 .lock.sm{font-size:10px;padding:1px 5px;margin-left:5px;vertical-align:1px}
 .premtier a.ghost,.drawer a.ghost{color:var(--ink)}
+.scrim{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dclose{position:sticky;top:8px;z-index:3;display:grid;place-items:center;width:36px;height:36px;margin:-26px 12px -10px auto;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;padding:0}
+.dclose:active{transform:scale(.94)}
+.row.ranked{grid-template-columns:auto auto minmax(0,1fr) auto auto}
+.av.rk{width:40px;height:40px;font-size:13px;border-radius:10px}
 
 </style>
 </head>
@@ -561,7 +566,7 @@ details.admbox summary{cursor:pointer;font-weight:700}
 <div class="btbar" id="btbar" hidden></div>
 <div class="ouvirbar" id="ouvirbar" hidden></div>
 <div class="scrim" id="scrim" hidden></div>
-<section class="drawer" id="drawer" hidden role="dialog" aria-modal="true"><div class="grab"></div><div class="wrap" id="dbody"></div></section>
+<section class="drawer" id="drawer" hidden role="dialog" aria-modal="true"><div class="grab"></div><button class="dclose" id="dclose" type="button" aria-label="Fechar"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="wrap" id="dbody"></div></section>
 <div class="toast" id="toast" hidden role="status"></div>
 <script src="vendor/qrcode.min.js"></script>
 <script src="vendor/supabase.js"></script>
@@ -951,8 +956,8 @@ async function loadAdmin(){
   if(st.view==="home")drawTop();if(st.view==="review")drawReview();
 }
 let TOP=[];
-async function loadPlays(){if(!sb)return;const {data,error}=await sb.from("plays").select("song_id,total").order("total",{ascending:false}).limit(15);
-  if(error)return;TOP=data.filter(x=>byId(x.song_id)&&!byId(x.song_id).pending);if(st.view==="home"&&st.tab==="inicio"&&!st.q.trim())drawTab()}
+async function loadPlays(){if(!sb)return;const [a,b]=await Promise.all([sb.rpc("em_alta",{p_dias:7,p_lim:20}),sb.from("plays").select("song_id,total").order("total",{ascending:false}).limit(20)]);
+  if(a.error&&b.error)return;const ok=x=>byId(x.song_id)&&!byId(x.song_id).pending,seen=new Set();TOP=[...(a.data||[]),...(b.data||[])].filter(x=>ok(x)&&!seen.has(x.song_id)&&seen.add(x.song_id));if(st.view==="home"&&st.tab==="inicio"&&!st.q.trim())drawTab()}
 setInterval(()=>{if(document.visibilityState==="visible"&&st.view==="home"){loadPlays();loadCatalog()}},120000);
 let _lastPlay={};
 function contarToque(s){if(!sb||s.pending)return;const k=s.id;if(_lastPlay[k]&&Date.now()-_lastPlay[k]<30*60000)return;_lastPlay[k]=Date.now();
@@ -1188,10 +1193,10 @@ function drawTab(){
       ${tile('data-nav="prontos"',"star","Repertórios prontos","o")}${tile('data-nav="ferramentas"',"tune","Ferramentas")}${tile('data-go="import"',"upload","Enviar cifra")}</div>`;
     if(recent.length) h+=`<div class="sec">Continue tocando</div><div class="rows" style="padding-bottom:0">${recent.map(s=>songRow(s)).join("")}</div>`;
     h+=`<div class="sec">Artistas</div><div class="achips">${arts.slice(0,12).map((a,i)=>`<button data-artist="${esc(a.key)}">${artistAv(a.name,"",i)}${esc(a.name)}</button>`).join("")}<button data-nav="artistas" class="more">Ver todos ›</button></div>`;
-    h+=`<div class="sec">Mais tocadas</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
+    h+=`<div class="sec">Músicas em alta</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,st.altaMais?20:5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>${TOP.length>5?`<button class="ghost" id="altaMais" style="width:100%;margin-top:6px">${st.altaMais?"Mostrar menos":"Ver o top 20"}</button>`:""}`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
     if(news.length) h+=`<div class="sec">Últimas adicionadas</div><div class="rows" style="padding-bottom:0">${news.map(s=>songRow(s)).join("")}</div>`;
     const ex=store.reps[0]; if(ex) h+=`<div class="sec">Seu repertório</div><button class="card" data-rep="${ex.id}" style="margin-top:4px"><b>${esc(ex.name)}</b><small>${ex.items.length} músicas · toque para abrir e tocar em sequência</small><span class="go">›</span></button>`;
-    tb.innerHTML=h;
+    tb.innerHTML=h;if($("altaMais"))$("altaMais").onclick=()=>{st.altaMais=!st.altaMais;drawTab()};
   } else if(st.tab==="musicas"){
     const q=st.q.trim();
     let list=q?searchSongs(q):[...PRIVATE,...SONGS];
@@ -1242,7 +1247,7 @@ function drawArtist(){
 function songRow(s,rank){
   const inn=inAnyRep(s.id);
   const tags=(s.pending?`<span class="tag ${s.status==="recusada"?"no":"pend"}">${s.status==="recusada"?"recusada":"só você · em revisão"}</span>`:"")+(s.isNew&&!s.pending?`<span class="tag new">nova</span>`:"");
-  return `<div class="row${rank?" ranked":""}">${rank?`<span class="rank">${rank}</span>`:""}<button class="open" data-open="${s.id}"><b>${esc(s.title)}${tags}</b><small>${esc(s.artist)}${s.credit&&s.isNew?` · contribuição de ${esc(s.credit)}`:""}</small></button><span class="key">${esc(s.key)}</span>
+  return `<div class="row${rank?" ranked":""}">${rank?`<span class="rank">${rank}</span>`:""}${rank?artistAv(s.artist,"rk",rank):""}<button class="open" data-open="${s.id}"><b>${esc(s.title)}${tags}</b><small>${esc(s.artist)}${s.credit&&s.isNew?` · contribuição de ${esc(s.credit)}`:""}</small></button><span class="key">${esc(s.key)}</span>
   <button class="add2 ${inn?"in":""}" data-add="${s.id}" aria-label="${inn?"Já está no seu repertório":"Adicionar ao seu repertório"}">${inn?IC.check:ICO_REP}<small>${inn?"No repertório":"Repertório"}</small></button></div>`;
 }
 /* ================= repertório ================= */
@@ -1580,6 +1585,14 @@ function openDrawer(kind,arg={}){$("toast").hidden=true;
   dr={kind,...arg};$("scrim").hidden=false;$("drawer").hidden=false;drawDrawer()}
 function closeDrawer(){$("scrim").hidden=true;$("drawer").hidden=true;dr=null}
 $("scrim").onclick=closeDrawer;
+$("scrim").addEventListener("touchend",e=>{e.preventDefault();closeDrawer()},{passive:false});
+$("dclose").onclick=closeDrawer;
+addEventListener("keydown",e=>{if(e.key==="Escape"&&dr)closeDrawer()});
+(()=>{const D=$("drawer");let y0=null,dy=0;
+  D.addEventListener("touchstart",e=>{y0=D.scrollTop<=0?e.touches[0].clientY:null;dy=0},{passive:true});
+  D.addEventListener("touchmove",e=>{if(y0==null)return;dy=e.touches[0].clientY-y0;if(dy>0&&D.scrollTop<=0){D.style.transform=`translateY(${dy}px)`;D.style.transition="none"}else if(dy<0){y0=null;D.style.transform=""}},{passive:true});
+  D.addEventListener("touchend",()=>{if(y0==null)return;D.style.transition="transform .18s ease-out";if(dy>90){D.style.transform="translateY(100%)";setTimeout(()=>{closeDrawer();D.style.transform="";D.style.transition=""},170)}else D.style.transform="";y0=null},{passive:true});
+})();
 function drawDrawer(){
   const B=$("dbody"), s=byId(st.id);
   if(dr.kind==="tom"){
