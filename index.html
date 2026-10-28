@@ -701,6 +701,13 @@ details.admcard[open] summary{margin-bottom:8px}
 .cvwrap.seis .cordas.cv button{padding:8px 0}
 .cvwrap.seis .cordas.cv b{font-size:15px}
 .cvwrap.seis .cordas.cv small{font-size:10.5px}
+/* cancelar / reembolso: discreto */
+.cancrefl{display:block;margin:14px auto 0;font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:underline}
+.canc{border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:10px;background:var(--paper)}
+.canc b{font-size:15.5px}
+.canc p{margin:6px 0 0;font-size:13.5px;line-height:1.45;color:var(--muted)}
+.canc .cpasso{color:var(--ink);font-size:12.5px}
+.canc a.ghost{display:grid;place-items:center;width:100%;margin-top:10px;text-decoration:none;min-height:42px}
 
 </style>
 </head>
@@ -1009,7 +1016,7 @@ async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edico
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="28/10 17:23";
+const APP_BUILD="28/10 17:35";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1367,10 +1374,10 @@ function drawHome(){
   if($("q")) $("q").oninput=e=>{st.q=e.target.value;drawTab()};
   drawTab();
 }
-/* últimas adicionadas: mais novas primeiro; dentro do mesmo lote, uma de cada artista (sem cair na ordem alfabética) */
+/* últimas adicionadas: mais novas primeiro; até duas por artista (sem cair na ordem alfabética) */
 function ultimasAdicionadas(n){const h=x=>{let v=0;for(const c of String(x))v=(v*31+c.charCodeAt(0))|0;return v};
-  const L=SONGS.filter(s=>s.addedAt&&!s.pending).sort((a,b)=>Math.floor(b.addedAt/36e5)-Math.floor(a.addedAt/36e5)||h(a.id)-h(b.id)),out=[],arts=new Set();
-  for(const s of L){if(out.length>=n)break;const k=artistKey(s.artist);if(arts.has(k))continue;arts.add(k);out.push(s)}return out}
+  const L=SONGS.filter(s=>s.addedAt&&!s.pending).sort((a,b)=>Math.floor(b.addedAt/36e5)-Math.floor(a.addedAt/36e5)||h(a.id)-h(b.id)),out=[],arts=new Map();
+  for(const s of L){if(out.length>=n)break;const k=artistKey(s.artist),c=arts.get(k)||0;if(c>=2)continue;arts.set(k,c+1);out.push(s)}return out}
 function drawTab(){
   const tb=$("tabbody"); if(!tb) return;
   if(["inicio","musicas","artistas"].includes(st.tab)&&st.q.trim()){tb.innerHTML=searchResults(st.q);if($("sendIt"))$("sendIt").onclick=()=>go("import",{});return}
@@ -1944,6 +1951,18 @@ function drawDrawer(){
       else{const nm=$("cpq").value.trim();if(nm){myName=nm}const {data:ok}=await sb.rpc("sugerir_compositor",{p_device:DEVICE,p_song:dr.id,p_nomes:v,p_nome:nm});closeDrawer();toast(ok?"Obrigado! O professor vai conferir.":"Não foi possível enviar agora.")}};
   } else if(dr.kind==="plano"){
     premiumDrawer(B,null);
+  } else if(dr.kind==="cancelar"){
+    const pl=String(PLANO.plano||""),anual=/anual|ano/i.test(pl),mensal=/mensal|m[eê]s/i.test(pl);
+    const prox=anual?"a renovação do próximo ano":mensal?"a cobrança do próximo mês":"as próximas cobranças";
+    B.innerHTML=`<h3>Cancelar ou pedir reembolso</h3>
+     <div class="canc"><b>Cancelar a assinatura</b>
+      <p>Pode ser feito a qualquer momento. Cancela ${prox} e não devolve o valor já pago. Você continua com o Premium até o fim do período pago.${anual?" Se você parcelou o plano anual no cartão, as parcelas que faltam do ano atual continuam na fatura.":""}</p>
+      <p class="cpasso">Na Hotmart: Minhas compras → SambaCifra Premium → Configurar pagamento → Cancelar sua assinatura.</p>
+      <a class="ghost" href="https://consumer.hotmart.com/" target="_blank" rel="noopener">Cancelar na Hotmart</a></div>
+     <div class="canc"><b>Pedir reembolso</b>
+      <p>Até 7 dias depois da compra você pode pedir o dinheiro de volta (direito de arrependimento). Use o número da transação, que começa com HP e está no e-mail de compra da Hotmart. Para não haver novas cobranças, cancele também a assinatura.</p>
+      <a class="ghost" href="https://refund.hotmart.com/" target="_blank" rel="noopener">Pedir reembolso na Hotmart</a></div>
+     <p class="help" style="text-align:center">Dúvidas? <a href="mailto:suporte@sambacifra.com.br">suporte@sambacifra.com.br</a></p>`;
   }
 }
 
@@ -1983,7 +2002,8 @@ function premiumDrawer(B,why){
     const o=PLANO.origem, canc=(PLANO.status==="cancelado"||PLANO.status==="atrasado")&&PLANO.expira_em;
     B.innerHTML=`<h3>Seu plano: ${temAulas()?"Premium + Aulas":"Premium"}</h3><p class="sub">${PROF&&!o?"Você é o professor: tudo liberado.":o==="escola"?"Incluído no seu plano de aluno.":o==="manual"?"Liberado pelo professor.":"Assinatura ativa."}${canc?` Vale até ${new Date(PLANO.expira_em).toLocaleDateString("pt-BR")}.`:""}</p>${premBen(temAulas()?[...PREM_BEN,...AULAS_BEN.slice(1)]:PREM_BEN)}
      ${aulasOn()&&!temAulas()?`<div class="premtier"><b>Premium + Aulas</b>${premBen(AULAS_BEN.slice(1))}${planBtns(CFG.checkout_aulas_mensal,CFG.checkout_aulas_anual,CFG.preco_aulas_mensal,CFG.preco_aulas_anual)}</div>`:""}
-     ${o==="hotmart"?`<a class="ghost" style="width:100%;display:grid;place-items:center;text-decoration:none;margin-top:8px" href="https://consumer.hotmart.com/" target="_blank" rel="noopener">Gerenciar assinatura na Hotmart</a>`:""}`;
+     ${o==="hotmart"?`<a class="ghost" style="width:100%;display:grid;place-items:center;text-decoration:none;margin-top:8px" href="https://consumer.hotmart.com/" target="_blank" rel="noopener">Gerenciar assinatura na Hotmart</a><button class="lnk cancrefl" id="cancRef">Cancelar a assinatura ou pedir reembolso</button>`:""}`;
+    if($("cancRef"))$("cancRef").onclick=()=>openDrawer("cancelar");
     return;
   }
   const hi=PREM_IMG[why];
