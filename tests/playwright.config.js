@@ -12,8 +12,8 @@ const todos = [
 module.exports = defineConfig({
   testDir: ".",
   timeout: 90_000,
-  retries: 1,
-  workers: 2,
+  retries: 2,
+  workers: 1,
   reporter: [["list"], ["html", { open: "never", outputFolder: "../relatorio-testes" }]],
   use: { baseURL: process.env.BASE || "https://www.sambacifra.com.br", serviceWorkers: "block", screenshot: "only-on-failure", trace: "retain-on-failure", locale: "pt-BR" },
   projects: so ? todos.filter(p => !/iPhone|iPad|Safari/.test(p.name)) : todos,

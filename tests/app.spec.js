@@ -1,10 +1,12 @@
 // O que precisa estar sempre funcionando no SambaCifra.
 const { test, expect } = require("@playwright/test");
 
-async function abrir(page) {
+// a rede dos servidores de teste às vezes derruba uma conexão: tenta de novo antes de acusar erro
+async function tenta(fn, n = 3) { let e; for (let i = 0; i < n; i++) { try { return await fn(); } catch (x) { e = x; await new Promise(r => setTimeout(r, 2000 * (i + 1))); } } throw e; }
+async function abrir(page, url = "/") {
   const erros = [];
   page.on("pageerror", e => erros.push(e.message));
-  await page.goto("/");
+  await tenta(() => page.goto(url));
   await page.waitForFunction(() => typeof SONGS !== "undefined" && SONGS.length > 1000 && typeof go === "function", null, { timeout: 30_000 });
   await page.waitForFunction(() => typeof AUTH_OK !== "undefined" && AUTH_OK, null, { timeout: 30_000 }).catch(() => {});
   return erros;
@@ -75,27 +77,29 @@ test("ferramentas funcionam para assinante", async ({ page }) => {
   expect(erros).toEqual([]);
 });
 
-test("checkout da Hotmart configurado e no ar", async ({ page, request }) => {
+test("checkout da Hotmart configurado e no ar", async ({ page, request }, info) => {
+  test.skip(info.project.name !== "Notebook Chrome", "basta conferir uma vez");
   await abrir(page);
   const cfg = await page.evaluate(() => ({ m: CFG.checkout_mensal, a: CFG.checkout_anual, pm: CFG.preco_mensal, pa: CFG.preco_anual }));
   for (const u of [cfg.m, cfg.a]) {
     expect(u).toMatch(/^https:\/\/pay\.hotmart\.com\//);
-    const r = await request.get(u);
+    const r = await tenta(() => request.get(u));
     expect(r.status(), u).toBeLessThan(400);
   }
   expect(cfg.pm).toBeTruthy();
   expect(cfg.pa).toBeTruthy();
 });
 
-test("arquivos do app existem no servidor", async ({ page, request }) => {
+test("arquivos do app existem no servidor", async ({ page, request }, info) => {
+  test.skip(info.project.name !== "Notebook Chrome", "basta conferir uma vez");
   await abrir(page);
   const arquivos = await page.evaluate(() => CHUNKS.map(c => "data/" + c).concat(["sw.js", "manifest.webmanifest", "privacidade.html", "vendor/supabase.js", "img/premium/af.webp"]));
   const faltando = [];
-  for (const a of arquivos) { const r = await request.head("/" + a); if (r.status() >= 400) faltando.push(a + " " + r.status()); }
+  for (const a of arquivos) { const r = await tenta(() => request.head("/" + a)); if (r.status() >= 400) faltando.push(a + " " + r.status()); await new Promise(r => setTimeout(r, 150)); }
   expect(faltando).toEqual([]);
 });
 
 test("link do painel pede login", async ({ page }) => {
-  await page.goto("/#painel");
+  await tenta(() => page.goto("/#painel"));
   await page.waitForFunction(() => typeof dr !== "undefined" && dr && dr.kind === "conta", null, { timeout: 30_000 });
 });
