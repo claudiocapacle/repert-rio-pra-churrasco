@@ -1,0 +1,31 @@
+name: Testes do app (iPhone, Android, tablet, notebook)
+on:
+  schedule:
+    - cron: "17 11 * * 1,4"   # segunda e quinta, 8h17 (Brasília)
+  push:
+    branches: [main]
+    paths: ["index.html", "sw.js", "data/**"]
+  workflow_dispatch: {}
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Espera a Vercel publicar (só quando veio de uma atualização)
+        if: github.event_name == 'push'
+        run: sleep 150
+      - name: Instala o Playwright
+        run: |
+          cd tests
+          npm init -y >/dev/null
+          npm i -D @playwright/test@1.63.0
+          npx playwright install --with-deps chromium webkit
+      - name: Roda os testes no site publicado
+        run: cd tests && npx playwright test -c playwright.config.js
+      - name: Guarda o relatório
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: relatorio-testes, path: relatorio-testes, retention-days: 14 }
