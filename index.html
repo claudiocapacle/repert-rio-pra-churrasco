@@ -535,6 +535,8 @@ details.admbox summary{cursor:pointer;font-weight:700}
 .dclose:active{transform:scale(.94)}
 .row.ranked{grid-template-columns:auto auto minmax(0,1fr) auto auto}
 .av.rk{width:40px;height:40px;font-size:13px;border-radius:10px}
+.compos{margin:22px 0 8px;padding-top:12px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted);opacity:.85;line-height:1.5}
+.compos .lnk{background:none;border:0;padding:0;font:inherit;color:var(--orange);text-decoration:underline;cursor:pointer}
 
 </style>
 </head>
@@ -1371,8 +1373,8 @@ function drawSong(){
     loadChunk(s.c).then(()=>{if(st.view==="song"&&st.id===s.id)drawSong()}).catch(()=>{if(st.view==="song"&&st.id===s.id)$("view").innerHTML=`<div class="homepad"><p class="status err">Sem internet. Abra esta música uma vez com internet para ela ficar guardada no aparelho.</p></div>`});return}
   const cv=curVer(s), sp=makeSpeller(cv.key||s.key,st.delta), lines=cv.lines;
   $("view").innerHTML=`<div class="shead" id="shead"></div><div class="strip" id="strip" aria-label="Acordes da música"></div>
-    <div class="sheetwrap"><pre class="sheet" id="sheet"></pre></div>`;
-  drawSongHead();
+    <div class="sheetwrap"><pre class="sheet" id="sheet"></pre><div class="compos" id="compos"></div></div>`;
+  drawSongHead();drawCompos(s);
   $("sheet").style.setProperty("--fs",(st.stage?st.fs+4:st.fs)+"px");
   const {html,used,n}=renderSheet(lines,sp,$("sheet").parentElement.clientWidth,st.stage?st.fs+4:st.fs);
   MEASURES=temTempos(lines)?n:0;if(!MEASURES&&play.speed==="bpm")play.speed=3;
@@ -1724,6 +1726,13 @@ function drawDrawer(){
   } else if(dr.kind==="novasenha"){
     B.innerHTML=`<h3>Nova senha</h3><p class="sub">Escolha uma senha nova para a sua conta.</p><form class="lgform" id="nsf"><input id="ns1" type="password" placeholder="Nova senha (mínimo 6 caracteres)" autocomplete="new-password" minlength="6" required><button class="primary">Salvar senha</button><p class="status" id="nsst" hidden></p></form>`;
     $("nsf").onsubmit=async e=>{e.preventDefault();const {error}=await sb.auth.updateUser({password:$("ns1").value});if(error){$("nsst").hidden=false;$("nsst").className="status err";$("nsst").textContent=authErr(error)}else{closeDrawer();toast("Senha alterada")}};
+  } else if(dr.kind==="compositor"){
+    const so=byId(dr.id),c=(INFO[dr.id]||{}).compositores||"";
+    B.innerHTML=`<h3>${isAdmin?"Compositores":"Sugerir compositor"}</h3><p class="sub">${esc(so?so.title+" · "+so.artist:"")}${!isAdmin?"<br>O professor confere antes de publicar.":""}</p>
+     <form class="lgform" id="cpf"><input id="cpn" value="${esc(c)}" placeholder="Ex.: Jorge Aragão e Acyr Marques" required minlength="3" maxlength="300">${!isAdmin?`<input id="cpq" value="${esc(myName||"")}" placeholder="Seu nome (opcional)" maxlength="80">`:""}<button class="primary">${isAdmin?"Salvar":"Enviar sugestão"}</button></form>`;
+    $("cpf").onsubmit=async e=>{e.preventDefault();const v=$("cpn").value.trim();
+      if(isAdmin){const {data:ok}=await sb.rpc("admin_compositor_set",{p_key:ADMIN_KEY,p_song:dr.id,p_nomes:v,p_sug:null,p_status:"aprovada"});if(!ok)return toast("Não foi possível salvar");INFO[dr.id]={...(INFO[dr.id]||{}),compositores:v||null};closeDrawer();if(so)drawCompos(so);toast("Salvo")}
+      else{const nm=$("cpq").value.trim();if(nm){myName=nm}const {data:ok}=await sb.rpc("sugerir_compositor",{p_device:DEVICE,p_song:dr.id,p_nomes:v,p_nome:nm});closeDrawer();toast(ok?"Obrigado! O professor vai conferir.":"Não foi possível enviar agora.")}};
   } else if(dr.kind==="plano"){
     premiumDrawer(B,null);
   }
@@ -1785,6 +1794,25 @@ async function admPremium(){
     for(const [k,v] of vals){if(/^checkout/.test(k)&&v&&!/^https:\/\//.test(v))return toast("O link precisa começar com https://");}
     const r=await Promise.all(vals.map(([k,v])=>sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:k,p_v:v})));
     if(r.some(x=>x.error||!x.data))return toast("Não foi possível salvar tudo");vals.forEach(([k,v])=>CFG[k]=v);FREE_REPS=CFG.free_reps;FREE_SONGS=CFG.free_musicas;toast("Salvo")};
+}
+
+/* ================= compositores ================= */
+const INFO={};
+async function loadInfo(id){if(!sb||INFO[id]!==undefined)return INFO[id];INFO[id]=null;try{const {data}=await sb.from("musica_info").select("compositores,bpm_raw").eq("song_id",id).maybeSingle();INFO[id]=data||{}}catch(e){INFO[id]=undefined}return INFO[id]}
+async function drawCompos(s){const box=$("compos");if(!box)return;const id=s.id;
+  if(INFO[id]===undefined||INFO[id]===null){box.innerHTML="";await loadInfo(id)}
+  if(st.view!=="song"||st.id!==id||!$("compos"))return;
+  const c=(INFO[id]||{}).compositores;
+  $("compos").innerHTML=c?`<span>Composição: ${esc(c)}</span>${isAdmin?` <button class="lnk" id="compSug">editar</button>`:` <button class="lnk" id="compSug">corrigir</button>`}`
+    :`<span>Composição: não informada</span> <button class="lnk" id="compSug">${isAdmin?"informar":"Sabe quem compôs? Sugira"}</button>`;
+  $("compSug").onclick=()=>openDrawer("compositor",{id})}
+async function admCompos(){const box=$("admComp");if(!box)return;
+  const {data,error}=await sb.rpc("admin_compositor_sugs",{p_key:ADMIN_KEY});if(error||!data){box.innerHTML="";return}
+  box.innerHTML=data.length?data.map(x=>{const so=byId(x.song_id);return`<div class="card admbox"><b>${esc(so?so.title:x.song_id)}</b><small>${esc(so?so.artist:"")}${x.atual?` · hoje: ${esc(x.atual)}`:" · hoje: não informada"}</small>
+     <input data-cn="${x.id}" value="${esc(x.nomes)}"><small>Sugerido por ${esc(x.nome||"aluno sem nome")} · ${new Date(x.criado_em).toLocaleDateString("pt-BR")}</small>
+     <div class="row2"><button class="primary" data-cok="${x.id}" data-song="${esc(x.song_id)}">Aprovar</button><button class="ghost" data-cno="${x.id}" data-song="${esc(x.song_id)}">Recusar</button></div></div>`}).join(""):`<div class="empty" style="padding:14px">Nenhuma sugestão esperando.</div>`;
+  box.querySelectorAll("[data-cok]").forEach(b=>b.onclick=async()=>{const v=box.querySelector(`[data-cn="${b.dataset.cok}"]`).value.trim();const {data:ok}=await sb.rpc("admin_compositor_set",{p_key:ADMIN_KEY,p_song:b.dataset.song,p_nomes:v,p_sug:b.dataset.cok,p_status:"aprovada"});if(ok){delete INFO[b.dataset.song];toast("Compositor publicado");admCompos()}else toast("Não foi possível salvar")});
+  box.querySelectorAll("[data-cno]").forEach(b=>b.onclick=async()=>{await sb.rpc("admin_compositor_set",{p_key:ADMIN_KEY,p_song:b.dataset.song,p_nomes:null,p_sug:b.dataset.cno,p_status:"recusada"});admCompos()});
 }
 
 /* ================= importar / enviar cifra ================= */
@@ -2018,7 +2046,7 @@ async function edDecide(id,action){const x=EDS_ALL.find(y=>y.id===id);if(!x)retu
   const {data,error}=await sb.rpc("admin_publicar_edicao",{p_key:ADMIN_KEY,p_song:x.song_id,p_ver:x.versao,p_texto:x.texto,p_tom:x.tom||"",p_origem:x.id});
   if(error||!data)return toast("Não foi possível publicar");EDITS[x.song_id+"|"+x.versao]={texto:x.texto,tom:x.tom};const s=byId(x.song_id);if(s)delete s.vers;x.status="aprovada";toast("Aprovada e publicada");loadAdminEdits();drawReview()}
 function edCurrent(x){const s=byId(x.song_id);if(!s||!songReady(s))return null;const v=vers(s).find(v=>v.label===x.versao)||vers(s)[0];return linesToText(v.lines)}
-function drawReviewWire(){admPremium();const cb=$("cfgCob");if(cb)cb.onchange=async()=>{const v=cb.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"cobranca",p_v:v});if(error||!data){cb.checked=!v;return toast("Não foi possível mudar agora.")}CFG.cobranca=v;toast(v?"Cobrança ligada: o Premium está valendo":"Cobrança desligada: tudo liberado")};const c=$("cfgLogin");if(!c)return;c.onchange=async()=>{const v=c.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"exigir_login",p_v:v});
+function drawReviewWire(){admPremium();admCompos();const cb=$("cfgCob");if(cb)cb.onchange=async()=>{const v=cb.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"cobranca",p_v:v});if(error||!data){cb.checked=!v;return toast("Não foi possível mudar agora.")}CFG.cobranca=v;toast(v?"Cobrança ligada: o Premium está valendo":"Cobrança desligada: tudo liberado")};const c=$("cfgLogin");if(!c)return;c.onchange=async()=>{const v=c.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"exigir_login",p_v:v});
   if(error||!data){c.checked=!v;return toast("Não foi possível mudar agora.")}CFG.exigir_login=v;toast(v?"Login obrigatório ligado":"Login obrigatório desligado")}}
 function drawReview(){
   $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">Painel do professor</span>`;
@@ -2030,6 +2058,7 @@ function drawReview(){
   if(need.length){Promise.all(need.map(loadChunk)).then(()=>{if(st.view==="review")drawReview()}).catch(()=>{})}
   let eh=`<div class="sec">Acesso ao app</div><label class="cfgsw"><input type="checkbox" id="cfgLogin" ${CFG.exigir_login?"checked":""}><span><b>Exigir login para usar o app</b><small>Ligado: quem abrir o app vê primeiro a tela de entrar ou criar conta. Desligado: as cifras ficam abertas e o login serve para salvar repertórios.</small></span></label><label class="cfgsw"><input type="checkbox" id="cfgCob" ${cobrando()?"checked":""}><span><b>Cobrança ligada (Premium valendo)</b><small>Desligado: todas as ferramentas ficam liberadas para todos, como hoje. Ligue quando os checkouts da Hotmart estiverem configurados.</small></span></label>`;
   eh+=`<div class="sec">Premium</div><div id="admPrem"><p class="help">Carregando…</p></div>`;
+  eh+=`<div class="sec">Compositores sugeridos</div><div id="admComp"><p class="help">Carregando…</p></div>`;
   eh+=`<div class="sec">Alterações sugeridas pelos alunos (${ep.length})</div>`;
   eh+=ep.map(x=>{const s=byId(x.song_id),cur=edCurrent(x);return`<div class="card edcard"><b>${esc(s?s.title:x.song_id)}</b> <small style="color:var(--muted)">${esc(s?s.artist:"")} · versão ${esc(x.versao)}${x.tom?" · tom "+esc(x.tom):""}</small>
      <p class="help" style="margin:4px 0">${esc(x.nome||"Aluno sem nome")} · ${new Date(x.criado_em).toLocaleDateString("pt-BR")}${x.nota?` · “${esc(x.nota)}”`:""}</p>
