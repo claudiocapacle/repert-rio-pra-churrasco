@@ -584,6 +584,75 @@ body.ckon{overflow:hidden}
 .chip svg{flex:none}
 .tools .wrap{grid-template-columns:repeat(auto-fit,minmax(0,1fr));grid-auto-flow:column}
 .tools .wrap>[hidden]{display:none}
+/* ===== painel do professor ===== */
+.adm{max-width:720px;margin:0 auto;padding:4px 0 110px}
+.admtabs{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;margin:6px 0 14px;background:var(--line);border-radius:14px}
+.admtabs button{border:0;background:none;border-radius:10px;padding:10px 6px;font:700 14px/1.1 var(--f-body);color:var(--muted);cursor:pointer;white-space:nowrap}
+.admtabs button[aria-selected="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.admtabs button b{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--orange);color:#fff;font-size:11px}
+.admstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.admstats div{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 10px;display:flex;flex-direction:column;gap:2px}
+.admstats b{font:900 26px/1 var(--f-body);color:var(--ink);letter-spacing:-.02em}
+.admstats span{font-size:12px;color:var(--muted);line-height:1.25}
+.admnote{margin:10px 0 0;padding:10px 12px;border-radius:12px;font-size:13.5px;line-height:1.4;background:#fff4dc;color:#6b4a00;border:1px solid #f1d58f}
+.admnote.on{background:#e7f6ec;color:#1d5c34;border-color:#b5dfc3}
+.admcard{display:block;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:12px}
+.admcard h3{margin:0 0 6px;font:800 17px/1.25 var(--f-body);color:var(--ink);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.admcard h3 small{font-size:13px;font-weight:600;color:var(--muted)}
+.admhelp{margin:0 0 10px;font-size:13.5px;line-height:1.45;color:var(--muted)}
+.admcard textarea,.admcard input:not([type=checkbox]){display:block;width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);min-width:0}
+.admcard textarea{resize:vertical;min-height:84px}
+.admcard textarea:focus,.admcard input:focus{outline:2px solid var(--orange);outline-offset:-1px;background:var(--paper)}
+.admcard label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted);min-width:0}
+.admcard label small{font-weight:500}
+.admbtns{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:10px}
+.admbtns button{width:100%;min-height:46px}
+.admseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:10px;padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px}
+.admseg button{border:0;background:none;border-radius:9px;padding:8px;font-weight:700;color:var(--muted)}
+.admseg button.on{background:var(--paper);color:var(--orange);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.admlist{display:flex;flex-direction:column;margin-top:4px}
+.admrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+.admrow:first-child{border-top:0}
+.admwho{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.admwho b{font-size:14.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admwho span{font-size:12.5px;color:var(--muted)}
+.admwho .admres{color:var(--ink);opacity:.75}
+.admbadge{flex:none;font-size:11.5px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.admbadge.ok{background:#e1f4e7;color:#1d6b3a}
+.admbadge.off{background:var(--line);color:var(--muted)}
+.admbadge.warn{background:#fff0cf;color:#8a5a00}
+.admx{flex:none;border:1px solid var(--line);background:none;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.admx.sure{border-color:#c0392b;color:#fff;background:#c0392b}
+details.admcard summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+details.admcard summary::-webkit-details-marker{display:none}
+details.admcard summary h3{margin:0}
+details.admcard summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:0 4px 4px 0;transition:transform .2s}
+details.admcard[open] summary::after{transform:rotate(-135deg);margin-bottom:-4px}
+details.admcard[open] summary{margin-bottom:8px}
+.admsw{flex-direction:row!important;align-items:center;justify-content:space-between;gap:14px!important;padding:12px 0;border-top:1px solid var(--line);cursor:pointer}
+.admcard h3+.admsw{border-top:0;padding-top:4px}
+.admsw span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.admsw span b{font-size:15px;color:var(--ink)}
+.admsw span small{font-size:12.5px;font-weight:500;color:var(--muted);line-height:1.4}
+.admsw input{position:absolute;opacity:0;pointer-events:none}
+.admsw i{flex:none;position:relative;width:48px;height:28px;border-radius:14px;background:#cfc8bb;transition:background .2s}
+.admsw i::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.admsw input:checked+i{background:#2f9e5b}
+.admsw input:checked+i::after{transform:translateX(20px)}
+.admsw input:focus-visible+i{outline:2px solid var(--orange);outline-offset:2px}
+.admplan{display:flex;flex-direction:column;gap:10px;padding:14px 0;border-top:1px solid var(--line)}
+.admcard h3+.admplan{border-top:0;padding-top:6px}
+.admplanh{display:flex;align-items:baseline;gap:8px}
+.admplanh b{font-size:15px;color:var(--ink)}
+.admplanh small{font-size:12.5px;color:var(--muted)}
+.admck{display:flex;gap:6px;align-items:stretch}
+.admck input{flex:1;font-size:14px!important;font-family:var(--f-mono)!important}
+.admck a{flex:none;display:grid;place-items:center;padding:0 12px;border:1px solid var(--line);border-radius:12px;font-size:13px;font-weight:700;color:var(--blue,#1f4fa3);text-decoration:none;background:var(--paper)}
+.admgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.admsave{position:sticky;bottom:calc(var(--tb,64px) + 10px);margin-top:14px}
+.admsave button{width:100%;min-height:50px;box-shadow:0 6px 18px rgba(226,100,15,.3)}
+@media(max-width:360px){.admstats b{font-size:22px}.admbtns{grid-template-columns:1fr}}
+.admmore{display:block;width:100%;margin-top:8px;padding:10px;border:1px dashed var(--line);border-radius:12px;background:none;font-weight:700;font-size:13.5px;color:var(--muted);cursor:pointer}
 
 </style>
 </head>
@@ -1860,50 +1929,73 @@ function premiumDrawer(B,why){
   if($("prJa"))$("prJa").onclick=async()=>{await loadPlano();if(PREMIUM){closeDrawer();draw();toast("Premium liberado! Bom som 🎶")}else toast("Ainda não chegou a confirmação. Pix e cartão costumam liberar em poucos minutos.")};
 }
 /* painel: premium */
-async function admPremium(){
+const ADM_ORIG={hotmart:"Assinatura",escola:"Aluno",manual:"Cortesia"}, ADM_ST={ativo:["Ativo","ok"],cancelado:["Cancelado","off"],atrasado:["Pagamento atrasado","warn"],reembolsado:["Reembolsado","off"]};
+const admVale=x=>x.status==="ativo"||(x.expira_em&&new Date(x.expira_em)>new Date()&&x.status!=="reembolsado");
+async function admAssin(){
   const box=$("admPrem");if(!box)return;
   const {data,error}=await sb.rpc("admin_premium_list",{p_key:ADMIN_KEY});
-  if(error||!data){box.innerHTML=`<p class="help">Não foi possível carregar.</p>`;return}
-  const po=data.por_origem||{}, pn=data.por_nivel||{}, lab={hotmart:"assinatura",escola:"aluno da escola",manual:"cortesia"};
-  box.innerHTML=`<p class="help" style="font-size:14px;color:var(--ink)"><b>${data.ativos}</b> com Premium ativo ${aulasOn()?`(${pn.aulas||0} com Aulas)`:""}${Object.keys(po).length?" · "+Object.entries(po).map(([k,v])=>`${v} ${lab[k]||k}`).join(" · "):""}</p>
-   <div class="card admbox"><b>Liberar ou retirar por e-mail</b><small>Cole um ou vários e-mails (um por linha ou separados por vírgula). Use para os alunos atuais da escola.</small>
-    <textarea id="apE" rows="4" placeholder="aluno@email.com"></textarea>
-    <div class="pills" id="apO"><button data-o="escola" class="on">Aluno da escola</button><button data-o="manual">Cortesia</button></div>${aulasOn()?`<div class="pills" id="apN"><button data-n="aulas" class="on">Premium + Aulas</button><button data-n="premium">Só Premium</button></div>`:""}
-    <div class="row2"><button class="primary" id="apOk">Liberar Premium</button><button class="ghost" id="apNo">Retirar</button></div></div>
-   <div class="card admbox"><b>Plano grátis e preços</b>
-    <div class="row2"><label>Repertórios grátis (0 = nenhum)<input id="cfR" type="number" min="0" value="${FREE_REPS}"></label><label>Músicas por repertório<input id="cfM" type="number" min="1" value="${FREE_SONGS}"></label></div>
-    <b style="font-size:14px">Premium</b><div class="row2"><label>Preço mensal<input id="cfPm" value="${esc(CFG.preco_mensal||"")}"></label><label>Preço anual<input id="cfPa" value="${esc(CFG.preco_anual||"")}"></label></div>
-    <label>Link do checkout mensal (Hotmart)<input id="cfCm" value="${esc(CFG.checkout_mensal||"")}" placeholder="https://pay.hotmart.com/..."></label>
-    <label>Link do checkout anual (Hotmart)<input id="cfCa" value="${esc(CFG.checkout_anual||"")}" placeholder="https://pay.hotmart.com/..."></label>
-    <div ${aulasOn()?"":"hidden"} style="display:${aulasOn()?"grid":"none"};gap:8px"><b style="font-size:14px">Premium + Aulas</b><div class="row2"><label>Preço mensal<input id="cfAPm" value="${esc(CFG.preco_aulas_mensal||"")}"></label><label>Preço anual<input id="cfAPa" value="${esc(CFG.preco_aulas_anual||"")}"></label></div>
-    <label>Link do checkout mensal (Hotmart)<input id="cfACm" value="${esc(CFG.checkout_aulas_mensal||"")}" placeholder="https://pay.hotmart.com/..."></label>
-    <label>Link do checkout anual (Hotmart)<input id="cfACa" value="${esc(CFG.checkout_aulas_anual||"")}" placeholder="https://pay.hotmart.com/..."></label></div>
-    <button class="primary" id="cfSave" style="width:100%">Salvar</button></div>
-   <details class="admbox"><summary>Últimos alunos Premium (${(data.lista||[]).length})</summary>${(data.lista||[]).map(x=>`<p class="help" style="margin:4px 0">${esc(x.email)} · <b>${esc(x.status)}</b> · ${esc(lab[x.origem]||x.origem)}${aulasOn()?` · ${x.nivel==="aulas"?"com Aulas":"Premium"}`:""}${x.plano?" · "+esc(x.plano):""}${x.expira_em?" · até "+new Date(x.expira_em).toLocaleDateString("pt-BR"):""}</p>`).join("")||`<p class="help">Ninguém ainda.</p>`}</details>
-   <details class="admbox"><summary>Avisos recebidos da Hotmart (${(data.eventos||[]).length})</summary>${(data.eventos||[]).map(x=>`<p class="help" style="margin:4px 0">${new Date(x.em).toLocaleString("pt-BR")} · ${esc(x.evento)} · ${esc(x.email||"")} · produto ${esc(x.produto||"")} → <b>${esc(x.aplicado||"")}</b></p>`).join("")||`<p class="help">Nenhum aviso ainda.</p>`}</details>`;
-  let org="escola",niv="aulas";box.querySelectorAll("#apN [data-n]").forEach(b=>b.onclick=()=>{niv=b.dataset.n;box.querySelectorAll("#apN [data-n]").forEach(x=>x.classList.toggle("on",x===b))});box.querySelectorAll("#apO [data-o]").forEach(b=>b.onclick=()=>{org=b.dataset.o;box.querySelectorAll("#apO [data-o]").forEach(x=>x.classList.toggle("on",x===b))});
-  const envia=async st=>{const em=$("apE").value.split(/[\s,;]+/).map(x=>x.trim()).filter(Boolean);if(!em.length)return toast("Cole pelo menos um e-mail");
-    const {data:n,error}=await sb.rpc("admin_premium_set",{p_key:ADMIN_KEY,p_emails:em,p_status:st,p_origem:org,p_nivel:niv});
-    if(error||n<0)return toast("Não foi possível salvar");toast(`${n} e-mail${n===1?"":"s"} ${st==="ativo"?"com Premium":"sem Premium"}`);admPremium()};
+  if(error||!data){box.innerHTML=`<p class="help">Não foi possível carregar. Puxe a tela para atualizar.</p>`;return}
+  const L=(data.lista||[]).slice().sort((a,b)=>admVale(b)-admVale(a)), po=data.por_origem||{};
+  const ativos=L.filter(admVale);
+  box.innerHTML=`
+   <div class="admstats"><div><b>${data.ativos||0}</b><span>Premium ativos</span></div><div><b>${po.hotmart||0}</b><span>Assinaturas</span></div><div><b>${po.manual||0}</b><span>Cortesias</span></div></div>
+   <p class="admnote ${cobrando()?"on":""}">${cobrando()?"Cobrança <b>ligada</b>: o Premium está valendo para todos.":"Cobrança <b>desligada</b>: tudo está liberado para todo mundo. Ligue em Configurações quando for lançar."}</p>
+   <section class="admcard">
+    <h3>Dar Premium de cortesia</h3>
+    <p class="admhelp">Cole um ou vários e-mails, um por linha. A pessoa precisa entrar no app com esse mesmo e-mail.</p>
+    <textarea id="apE" rows="3" placeholder="aluno@email.com" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+    ${aulasOn()?`<div class="admseg" id="apN"><button data-n="premium" class="on">Só Premium</button><button data-n="aulas">Premium + Aulas</button></div>`:""}
+    <div class="admbtns"><button class="primary" id="apOk">Liberar Premium</button><button class="ghost" id="apNo">Retirar</button></div>
+   </section>
+   <section class="admcard">
+    <h3>Quem tem Premium <small>${ativos.length} ativo${ativos.length===1?"":"s"}</small></h3>
+    <div class="admlist">${(st.admTodos?L:ativos).map(x=>{const [sl,sc]=admVale(x)&&x.status!=="ativo"?["Até "+new Date(x.expira_em).toLocaleDateString("pt-BR"),"warn"]:(ADM_ST[x.status]||[x.status,"off"]);
+      return`<div class="admrow"><div class="admwho"><b>${esc(x.email)}</b><span>${esc(ADM_ORIG[x.origem]||x.origem)}${x.plano?" · "+esc(x.plano):""}${aulasOn()&&x.nivel==="aulas"?" · com Aulas":""}</span></div><span class="admbadge ${sc}">${esc(sl)}</span>${x.origem==="manual"&&admVale(x)?`<button class="admx" data-rm="${esc(x.email)}" aria-label="Retirar Premium de ${esc(x.email)}">Retirar</button>`:""}</div>`}).join("")||`<p class="admhelp">Ninguém com Premium ativo ainda.</p>`}</div>
+    ${L.length>ativos.length?`<button class="admmore" id="apTodos">${st.admTodos?"Mostrar só os ativos":`Ver também os cancelados (${L.length-ativos.length})`}</button>`:""}
+   </section>
+   <details class="admcard"><summary><h3>Avisos da Hotmart <small>últimos ${Math.min(15,(data.eventos||[]).length)}</small></h3></summary>
+    <div class="admlist">${(data.eventos||[]).slice(0,15).map(x=>`<div class="admrow ev"><div class="admwho"><b>${esc(({PURCHASE_APPROVED:"Compra aprovada",PURCHASE_COMPLETE:"Compra concluída",PURCHASE_CANCELED:"Compra cancelada",PURCHASE_REFUNDED:"Reembolso",PURCHASE_CHARGEBACK:"Chargeback",PURCHASE_EXPIRED:"Compra expirada",PURCHASE_PROTEST:"Contestação",PURCHASE_DELAYED:"Pagamento atrasado",SUBSCRIPTION_CANCELLATION:"Assinatura cancelada",SWITCH_PLAN:"Troca de plano",UPDATE_SUBSCRIPTION_CHARGE_DATE:"Nova data de cobrança"})[x.evento]||x.evento)}</b><span>${new Date(x.em).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})}${x.email?" · "+esc(x.email):""}</span><span class="admres">${esc(x.aplicado||"")}</span></div></div>`).join("")||`<p class="admhelp">Nenhum aviso ainda.</p>`}</div>
+   </details>`;
+  let niv="premium";box.querySelectorAll("#apN [data-n]").forEach(b=>b.onclick=()=>{niv=b.dataset.n;box.querySelectorAll("#apN [data-n]").forEach(x=>x.classList.toggle("on",x===b))});
+  const envia=async(st,lista)=>{const em=(lista||$("apE").value.split(/[\s,;]+/)).map(x=>x.trim().toLowerCase()).filter(x=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x));if(!em.length)return toast("Cole pelo menos um e-mail válido");
+    const {data:n,error}=await sb.rpc("admin_premium_set",{p_key:ADMIN_KEY,p_emails:em,p_status:st,p_origem:"manual",p_nivel:niv});
+    if(error||n<0)return toast("Não foi possível salvar");toast(`${n} e-mail${n===1?"":"s"} ${st==="ativo"?"com Premium":"sem Premium"}`);admAssin()};
   $("apOk").onclick=()=>envia("ativo");$("apNo").onclick=()=>envia("cancelado");
-  $("cfSave").onclick=async()=>{const vals=[["free_reps",Math.max(0,+$("cfR").value||0)],["free_musicas",Math.max(1,+$("cfM").value||20)],["preco_mensal",$("cfPm").value.trim()],["preco_anual",$("cfPa").value.trim()],["checkout_mensal",$("cfCm").value.trim()],["checkout_anual",$("cfCa").value.trim()],["preco_aulas_mensal",$("cfAPm").value.trim()],["preco_aulas_anual",$("cfAPa").value.trim()],["checkout_aulas_mensal",$("cfACm").value.trim()],["checkout_aulas_anual",$("cfACa").value.trim()]];
-    for(const [k,v] of vals){if(/^checkout/.test(k)&&v&&!/^https:\/\//.test(v))return toast("O link precisa começar com https://");}
-    const r=await Promise.all(vals.map(([k,v])=>sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:k,p_v:v})));
-    if(r.some(x=>x.error||!x.data))return toast("Não foi possível salvar tudo");vals.forEach(([k,v])=>CFG[k]=v);FREE_REPS=CFG.free_reps;FREE_SONGS=CFG.free_musicas;toast("Salvo")};
+  if($("apTodos"))$("apTodos").onclick=()=>{st.admTodos=!st.admTodos;admAssin()};
+  box.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{if(b.dataset.ok){envia("cancelado",[b.dataset.rm])}else{b.dataset.ok=1;b.textContent="Confirmar";b.classList.add("sure");setTimeout(()=>{if(b.isConnected){delete b.dataset.ok;b.textContent="Retirar";b.classList.remove("sure")}},4000)}});
 }
-
-/* ================= compositores ================= */
-const INFO={};
-async function loadInfo(id){if(!sb||INFO[id]!==undefined)return INFO[id];INFO[id]=null;try{const {data}=await sb.from("musica_info").select("compositores,bpm_raw").eq("song_id",id).maybeSingle();INFO[id]=data||{}}catch(e){INFO[id]=undefined}return INFO[id]}
-const bpmLine=s=>{const bq=bpmSug(s),own=meta[s.id]&&+meta[s.id].bpm;return bq?`${ICM.met}Andamento ${own?"":"sugerido"}: <b>${bq} BPM</b>${own?"":` <span>· ${andamento(bq).toLowerCase()}</span>`}`:""};
-async function drawCompos(s){const box=$("compos");if(!box)return;const id=s.id;
-  if(INFO[id]===undefined||INFO[id]===null){box.innerHTML="";await loadInfo(id)}
-  if(st.view!=="song"||st.id!==id||!$("compos"))return;
-  const c=(INFO[id]||{}).compositores, bq=bpmSug(s), bOwn=meta[id]&&+meta[id].bpm;
-  if($("bpmTop"))$("bpmTop").innerHTML=bpmLine(s);
-  $("compos").innerHTML=(c?`<span>Composição: ${esc(c)}</span>${isAdmin?` <button class="lnk" id="compSug">editar</button>`:` <button class="lnk" id="compSug">corrigir</button>`}`
-    :`<span>Composição: não informada</span> <button class="lnk" id="compSug">${isAdmin?"informar":"Sabe quem compôs? Sugira"}</button>`);
-  $("compSug").onclick=()=>openDrawer("compositor",{id})}
+function admConfig(){
+  const box=$("admCfg");if(!box)return;
+  const ck=(id,v)=>`<div class="admck"><input id="${id}" value="${esc(v||"")}" placeholder="https://pay.hotmart.com/..." inputmode="url" autocapitalize="off" spellcheck="false">${v?`<a href="${esc(v)}" target="_blank" rel="noopener">Testar</a>`:""}</div>`;
+  const plano=(t,pid,pv,cid,cv,sub)=>`<div class="admplan"><div class="admplanh"><b>${t}</b><small>${sub}</small></div><label>Preço<input id="${pid}" value="${esc(pv||"")}" placeholder="R$ 0,00"></label><label>Link do checkout (Hotmart)${ck(cid,cv)}</label></div>`;
+  box.innerHTML=`
+   <section class="admcard">
+    <h3>Lançamento</h3>
+    <label class="admsw"><span><b>Cobrança ligada</b><small>Ligada: o plano grátis fica só com cifras e tom, e o resto pede o Premium. Desligada: tudo liberado para todo mundo.</small></span><input type="checkbox" id="cfgCob" ${cobrando()?"checked":""}><i></i></label>
+    <label class="admsw"><span><b>Exigir login para usar o app</b><small>Ligado: quem abrir o app precisa entrar ou criar conta antes de ver as cifras.</small></span><input type="checkbox" id="cfgLogin" ${CFG.exigir_login?"checked":""}><i></i></label>
+   </section>
+   <section class="admcard">
+    <h3>Premium: preços e checkout</h3>
+    ${plano("Mensal","cfPm",CFG.preco_mensal,"cfCm",CFG.checkout_mensal,"cobrado todo mês")}
+    ${plano("Anual","cfPa",CFG.preco_anual,"cfCa",CFG.checkout_anual,"aparece como o melhor preço")}
+    ${aulasOn()?plano("Premium + Aulas · mensal","cfAPm",CFG.preco_aulas_mensal,"cfACm",CFG.checkout_aulas_mensal,"")+plano("Premium + Aulas · anual","cfAPa",CFG.preco_aulas_anual,"cfACa",CFG.checkout_aulas_anual,""):""}
+   </section>
+   <section class="admcard">
+    <h3>Plano grátis</h3>
+    <div class="admgrid"><label>Repertórios grátis<input id="cfR" type="number" min="0" inputmode="numeric" value="${FREE_REPS}"><small>0 = nenhum</small></label><label>Músicas por repertório<input id="cfM" type="number" min="1" inputmode="numeric" value="${FREE_SONGS}"></label></div>
+   </section>
+   <div class="admsave"><button class="primary" id="cfSave">Salvar alterações</button></div>`;
+  const sw=(id,k,on,off)=>{const c=$(id);c.onchange=async()=>{const v=c.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:k,p_v:v});if(error||!data){c.checked=!v;return toast("Não foi possível mudar agora.")}CFG[k]=v;toast(v?on:off);drawTop()}};
+  sw("cfgCob","cobranca","Cobrança ligada: o Premium está valendo","Cobrança desligada: tudo liberado");
+  sw("cfgLogin","exigir_login","Login obrigatório ligado","Login obrigatório desligado");
+  const val=id=>$(id)?$(id).value.trim():(CFG[{cfAPm:"preco_aulas_mensal",cfAPa:"preco_aulas_anual",cfACm:"checkout_aulas_mensal",cfACa:"checkout_aulas_anual"}[id]]||"");
+  $("cfSave").onclick=async()=>{const vals=[["free_reps",Math.max(0,+$("cfR").value||0)],["free_musicas",Math.max(1,+$("cfM").value||20)],["preco_mensal",val("cfPm")],["preco_anual",val("cfPa")],["checkout_mensal",val("cfCm")],["checkout_anual",val("cfCa")],["preco_aulas_mensal",val("cfAPm")],["preco_aulas_anual",val("cfAPa")],["checkout_aulas_mensal",val("cfACm")],["checkout_aulas_anual",val("cfACa")]];
+    for(const [k,v] of vals){if(/^checkout/.test(k)&&v&&!/^https:\/\//.test(v))return toast("O link precisa começar com https://");}
+    const b=$("cfSave");b.disabled=true;b.textContent="Salvando…";
+    const r=await Promise.all(vals.map(([k,v])=>sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:k,p_v:v})));
+    b.disabled=false;b.textContent="Salvar alterações";
+    if(r.some(x=>x.error||!x.data))return toast("Não foi possível salvar tudo");vals.forEach(([k,v])=>CFG[k]=v);FREE_REPS=CFG.free_reps;FREE_SONGS=CFG.free_musicas;toast("Salvo");admConfig()};
+}
 async function admCompos(){const box=$("admComp");if(!box)return;
   const {data,error}=await sb.rpc("admin_compositor_sugs",{p_key:ADMIN_KEY});if(error||!data){box.innerHTML="";return}
   box.innerHTML=data.length?data.map(x=>{const so=byId(x.song_id);return`<div class="card admbox"><b>${esc(so?so.title:x.song_id)}</b><small>${esc(so?so.artist:"")}${x.atual?` · hoje: ${esc(x.atual)}`:" · hoje: não informada"}</small>
@@ -2144,8 +2236,6 @@ async function edDecide(id,action){const x=EDS_ALL.find(y=>y.id===id);if(!x)retu
   const {data,error}=await sb.rpc("admin_publicar_edicao",{p_key:ADMIN_KEY,p_song:x.song_id,p_ver:x.versao,p_texto:x.texto,p_tom:x.tom||"",p_origem:x.id});
   if(error||!data)return toast("Não foi possível publicar");EDITS[x.song_id+"|"+x.versao]={texto:x.texto,tom:x.tom};const s=byId(x.song_id);if(s)delete s.vers;x.status="aprovada";toast("Aprovada e publicada");loadAdminEdits();drawReview()}
 function edCurrent(x){const s=byId(x.song_id);if(!s||!songReady(s))return null;const v=vers(s).find(v=>v.label===x.versao)||vers(s)[0];return linesToText(v.lines)}
-function drawReviewWire(){admPremium();admCompos();const cb=$("cfgCob");if(cb)cb.onchange=async()=>{const v=cb.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"cobranca",p_v:v});if(error||!data){cb.checked=!v;return toast("Não foi possível mudar agora.")}CFG.cobranca=v;toast(v?"Cobrança ligada: o Premium está valendo":"Cobrança desligada: tudo liberado")};const c=$("cfgLogin");if(!c)return;c.onchange=async()=>{const v=c.checked;const {data,error}=await sb.rpc("admin_set_cfg",{p_key:ADMIN_KEY,p_k:"exigir_login",p_v:v});
-  if(error||!data){c.checked=!v;return toast("Não foi possível mudar agora.")}CFG.exigir_login=v;toast(v?"Login obrigatório ligado":"Login obrigatório desligado")}}
 function drawReview(){
   $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">Painel do professor</span>`;
   $("bk").onclick=()=>go("home",{});
@@ -2154,8 +2244,11 @@ function drawReview(){
   const ep=EDS_ALL.filter(x=>x.status==="pendente");
   const need=[...new Set(ep.map(x=>byId(x.song_id)).filter(s=>s&&!songReady(s)).map(s=>s.c))];
   if(need.length){Promise.all(need.map(loadChunk)).then(()=>{if(st.view==="review")drawReview()}).catch(()=>{})}
-  let eh=`<div class="sec">Acesso ao app</div><label class="cfgsw"><input type="checkbox" id="cfgLogin" ${CFG.exigir_login?"checked":""}><span><b>Exigir login para usar o app</b><small>Ligado: quem abrir o app vê primeiro a tela de entrar ou criar conta. Desligado: as cifras ficam abertas e o login serve para salvar repertórios.</small></span></label><label class="cfgsw"><input type="checkbox" id="cfgCob" ${cobrando()?"checked":""}><span><b>Cobrança ligada (Premium valendo)</b><small>Desligado: todas as ferramentas ficam liberadas para todos, como hoje. Ligue quando os checkouts da Hotmart estiverem configurados.</small></span></label>`;
-  eh+=`<div class="sec">Premium</div><div id="admPrem"><p class="help">Carregando…</p></div>`;
+  const tab=st.admTab||"assin", nRev=pend.length+ep.length;
+  const tabs=`<div class="admtabs" role="tablist">${[["assin","Assinantes"],["config","Configurações"],["rev","Revisão"+(nRev?` <b>${nRev}</b>`:"")]].map(([k,l])=>`<button role="tab" data-at="${k}" aria-selected="${tab===k}">${l}</button>`).join("")}</div>`;
+  const wireTabs=()=>document.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{st.admTab=b.dataset.at;drawReview();scrollTo(0,0)});
+  if(tab!=="rev"){$("view").innerHTML=`<div class="adm">${tabs}<div id="${tab==="assin"?"admPrem":"admCfg"}"><p class="help">Carregando…</p></div></div>`;wireTabs();return tab==="assin"?admAssin():admConfig()}
+  let eh="";
   eh+=`<div class="sec">Compositores sugeridos</div><div id="admComp"><p class="help">Carregando…</p></div>`;
   eh+=`<div class="sec">Alterações sugeridas pelos alunos (${ep.length})</div>`;
   eh+=ep.map(x=>{const s=byId(x.song_id),cur=edCurrent(x);return`<div class="card edcard"><b>${esc(s?s.title:x.song_id)}</b> <small style="color:var(--muted)">${esc(s?s.artist:"")} · versão ${esc(x.versao)}${x.tom?" · tom "+esc(x.tom):""}</small>
@@ -2165,7 +2258,7 @@ function drawReview(){
   let h=eh+`<div class="sec">Cifras novas enviadas</div>`+`<p class="help" style="font-size:14px;color:var(--ink);margin-top:8px">${pend.length} cifra${pend.length===1?"":"s"} esperando revisão. Aprovada, ela entra no app para todos com o crédito de quem enviou.</p>`;
   h+=pend.map(x=>subCard(x,true)).join("")||`<div class="empty">Nada para revisar agora.</div>`;
   if(done.length) h+=`<div class="sec">Revisadas</div>`+done.map(x=>subCard(x,false)).join("");
-  $("view").innerHTML=`<div style="padding-bottom:100px">${h}</div>`;drawReviewWire();
+  $("view").innerHTML=`<div class="adm">${tabs}<div style="padding-bottom:100px">${h}</div></div>`;wireTabs();admCompos();
   document.querySelectorAll("[data-rv]").forEach(b=>b.onclick=()=>{revOpen=revOpen===b.dataset.rv?null:b.dataset.rv;drawReview()});
   document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>decide(b.dataset.ap,"aprovada"));
   document.querySelectorAll("[data-rj]").forEach(b=>b.onclick=()=>decide(b.dataset.rj,"recusada"));
