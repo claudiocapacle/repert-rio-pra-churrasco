@@ -545,6 +545,17 @@ details.admbox summary{cursor:pointer;font-weight:700}
 .premshow .premimg{margin:0 0 6px}
 .premshow figcaption{font-size:13px;font-weight:700;color:var(--ink);text-align:center}
 .premlock .premimg{margin-bottom:10px}
+/* checkout Hotmart dentro do app */
+body.ckon{overflow:hidden}
+#ckov{position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column}
+#ckov .ckbar{display:flex;align-items:center;gap:10px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));background:#111;color:#fff;font-size:13px}
+#ckov .ckbar span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ckov .ckbar a{color:#ffd166;font-size:12px;text-decoration:underline;white-space:nowrap}
+#ckov .ckx{background:none;border:0;color:#fff;font-size:20px;line-height:1;padding:6px 8px;cursor:pointer}
+#ckov iframe{flex:1;width:100%;border:0;background:#fff}
+#ckov .ckwait{position:absolute;top:60px;left:0;right:0;text-align:center;color:#555;font-size:14px}
+#ckov.ok .ckwait{display:none}
+@media(min-width:760px){#ckov{inset:4vh auto 4vh 50%;width:640px;transform:translateX(-50%);border-radius:14px;overflow:hidden;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}}
 
 </style>
 </head>
@@ -1760,7 +1771,25 @@ const premShow=()=>`<div class="premshow">${PREM_SHOW.map(([k,t])=>`<figure>${pr
 const premBen=l=>`<ul class="premben">${l.map(t=>`<li>${t}</li>`).join("")}</ul>`;
 function checkoutUrl(u){if(!u)return"";try{const x=new URL(u);if(USER&&USER.email)x.searchParams.set("email",USER.email);return x.toString()}catch(e){return""}}
 function planBtns(m,a,pm,pa){m=checkoutUrl(m);a=checkoutUrl(a);if(!m&&!a)return`<p class="help" style="margin:6px 0 0"><b>Abre em breve.</b></p>`;
-  return`<div class="premplans">${a?`<a class="opt on" href="${esc(a)}" target="_blank" rel="noopener"><b>Anual · ${esc(pa||"")}</b><small>O melhor preço. Pode parcelar.</small></a>`:""}${m?`<a class="opt" href="${esc(m)}" target="_blank" rel="noopener"><b>Mensal · ${esc(pm||"")}</b><small>Cancele quando quiser.</small></a>`:""}</div>`}
+  return`<div class="premplans">${a?`<a class="opt on ckt" href="${esc(a)}" target="_blank" rel="noopener"><b>Anual · ${esc(pa||"")}</b><small>O melhor preço. Pode parcelar.</small></a>`:""}${m?`<a class="opt ckt" href="${esc(m)}" target="_blank" rel="noopener"><b>Mensal · ${esc(pm||"")}</b><small>Cancele quando quiser.</small></a>`:""}</div>`}
+/* Checkout da Hotmart aberto dentro do app (tela cheia), com saída para o navegador se algo não carregar. */
+let CKT=null;
+function ckOpen(url){
+  let u;try{u=new URL(url);u.searchParams.set("checkoutMode","2")}catch(e){return false}
+  ckClose(true);
+  const ov=document.createElement("div");ov.id="ckov";ov.setAttribute("role","dialog");ov.setAttribute("aria-label","Pagamento");
+  ov.innerHTML=`<div class="ckbar"><button class="ckx" aria-label="Fechar pagamento">✕</button><span>🔒 Pagamento seguro pela Hotmart</span><a href="${esc(url)}" target="_blank" rel="noopener">Abrir no navegador</a></div><div class="ckwait">Carregando o pagamento…</div><iframe src="${esc(u.toString())}" title="Pagamento Hotmart" allow="payment *; clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  document.body.appendChild(ov);document.body.classList.add("ckon");
+  const fr=ov.querySelector("iframe");fr.onload=()=>ov.classList.add("ok");
+  ov.querySelector(".ckx").onclick=()=>ckClose();
+  ov.querySelector(".ckbar a").onclick=()=>ckClose(true);
+  CKT={ov,t:setInterval(ckCheck,6000)};
+  return true;
+}
+async function ckCheck(){if(!CKT||PREMIUM)return;await loadPlano();if(PREMIUM){ckClose(true);closeDrawer();draw();toast("Premium liberado! Bom som 🎶")}}
+function ckClose(quiet){if(!CKT)return;clearInterval(CKT.t);CKT.ov.remove();CKT=null;document.body.classList.remove("ckon");if(!quiet)ckCheck()}
+document.addEventListener("click",e=>{const a=e.target.closest&&e.target.closest("a.ckt");if(!a)return;if(ckOpen(a.href))e.preventDefault()});
+addEventListener("keydown",e=>{if(e.key==="Escape"&&CKT){e.stopImmediatePropagation();ckClose()}},true);
 function premiumDrawer(B,why){
   const motivo=why==="songs"?`No plano grátis cada repertório vai até ${FREE_SONGS} músicas.`:why==="reps"&&FREE_REPS>0?`No plano grátis você tem ${FREE_REPS} repertório${FREE_REPS>1?"s":""} com até ${FREE_SONGS} músicas.`:(PREM_WHY[why]||"");
   if(isPro()&&!(why==="aulas"&&!temAulas())){
