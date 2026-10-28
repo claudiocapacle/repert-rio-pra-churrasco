@@ -971,7 +971,7 @@ async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edico
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="28/10 13:41";
+const APP_BUILD="28/10 13:47";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -2025,6 +2025,17 @@ function admConfig(){
     b.disabled=false;b.textContent="Salvar alterações";
     if(r.some(x=>x.error||!x.data))return toast("Não foi possível salvar tudo");vals.forEach(([k,v])=>CFG[k]=v);FREE_REPS=CFG.free_reps;FREE_SONGS=CFG.free_musicas;toast("Salvo");admConfig()};
 }
+const INFO={};
+async function loadInfo(id){if(!sb||INFO[id]!==undefined)return INFO[id];INFO[id]=null;try{const {data}=await sb.from("musica_info").select("compositores,bpm_raw").eq("song_id",id).maybeSingle();INFO[id]=data||{}}catch(e){INFO[id]=undefined}return INFO[id]}
+const bpmLine=s=>{const bq=bpmSug(s),own=meta[s.id]&&+meta[s.id].bpm;return bq?`${ICM.met}Andamento ${own?"":"sugerido"}: <b>${bq} BPM</b>${own?"":` <span>· ${andamento(bq).toLowerCase()}</span>`}`:""};
+async function drawCompos(s){const box=$("compos");if(!box)return;const id=s.id;
+  if(INFO[id]===undefined||INFO[id]===null){box.innerHTML="";await loadInfo(id)}
+  if(st.view!=="song"||st.id!==id||!$("compos"))return;
+  const c=(INFO[id]||{}).compositores, bq=bpmSug(s), bOwn=meta[id]&&+meta[id].bpm;
+  if($("bpmTop"))$("bpmTop").innerHTML=bpmLine(s);
+  $("compos").innerHTML=(c?`<span>Composição: ${esc(c)}</span>${isAdmin?` <button class="lnk" id="compSug">editar</button>`:` <button class="lnk" id="compSug">corrigir</button>`}`
+    :`<span>Composição: não informada</span> <button class="lnk" id="compSug">${isAdmin?"informar":"Sabe quem compôs? Sugira"}</button>`);
+  $("compSug").onclick=()=>openDrawer("compositor",{id})}
 async function admCompos(){const box=$("admComp");if(!box)return;
   const {data,error}=await sb.rpc("admin_compositor_sugs",{p_key:ADMIN_KEY});if(error||!data){box.innerHTML="";return}
   box.innerHTML=data.length?data.map(x=>{const so=byId(x.song_id);return`<div class="card admbox"><b>${esc(so?so.title:x.song_id)}</b><small>${esc(so?so.artist:"")}${x.atual?` · hoje: ${esc(x.atual)}`:" · hoje: não informada"}</small>
