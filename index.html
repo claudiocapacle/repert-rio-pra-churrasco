@@ -735,6 +735,20 @@ details.admcard[open] summary{margin-bottom:8px}
 .acetop li{display:list-item}
 .acetop li span small{color:var(--muted)}
 .acetop li b{float:right;font-variant-numeric:tabular-nums}
+/* Premium: vitrine dos recursos */
+.pfhero{margin:0 0 6px}
+.pfhero .premimg{margin:0 0 12px;box-shadow:0 10px 26px rgba(31,36,48,.14)}
+.pfkick{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--orange);background:var(--orange-soft);padding:3px 9px;border-radius:99px;margin-bottom:6px}
+.pfhero h3{margin:2px 0 4px;font-family:var(--f-display);font-size:21px;line-height:1.15;letter-spacing:-.01em}
+.pfhero .sub{font-size:15px;line-height:1.45;color:var(--ink);opacity:.86;margin:0 0 4px}
+.pflim{margin:0 0 6px;font-size:14px;font-weight:700;color:var(--blue)}
+.psec{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px}
+.premshow figure{flex:0 0 74%;max-width:280px;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:6px 6px 10px}
+.premshow .premimg{margin:0 0 8px;border-radius:12px}
+.premshow figcaption{text-align:left;padding:0 6px}
+.premshow figcaption b{display:block;font-size:14.5px;margin-bottom:2px}
+.premshow figcaption small{display:block;font-size:13px;font-weight:500;line-height:1.35;color:var(--muted)}
+.premlock .premimg{box-shadow:0 10px 26px rgba(31,36,48,.14)}
 
 </style>
 </head>
@@ -1043,7 +1057,7 @@ async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edico
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="29/10 11:00";
+const APP_BUILD="29/10 11:37";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -2005,10 +2019,18 @@ function drawDrawer(){
 const PREM_WHY={reps:"Repertórios são do Premium: monte quantos quiser, na ordem da roda, com o tom de cada música salvo.",songs:"",ready:"Os repertórios prontos são do Premium.",roda:"Abrir uma roda ao vivo é do Premium. Entrar na roda de alguém continua grátis.",aulas:"As aulas fazem parte do Premium + Aulas.",rol:"A rolagem automática no tempo da música é do Premium.",met:"O metrônomo é do Premium.",bt:"A batucada (surdo, pandeiro, rebolo, repiques e cuíca, em qualquer BPM) é do Premium.",af:"O afinador é do Premium.",tom:"O detector de tom (“Qual o tom?”) é do Premium."};
 const PREM_BEN=["Rolagem automática no tempo da música","Batucada com 6 instrumentos, em qualquer BPM","Afinador, metrônomo e detector de tom","Repertórios ilimitados, com o tom de cada música salvo","Abrir a roda ao vivo pelo QR code","Repertórios prontos para a roda"];
 const AULAS_BEN=["Tudo do Premium","Videoaulas de palhetada, levadas e teoria","Professores convidados"];
-const PREM_IMG={rol:"rol",met:"af",bt:"bt",af:"af",tom:"af",roda:"roda",reps:"reps",songs:"reps",ready:"reps"};
-const PREM_SHOW=[["rol","Rolagem no tempo da música"],["bt","Batucada em qualquer BPM"],["roda","Roda ao vivo pelo QR code"],["reps","Repertórios ilimitados"],["af","Afinador e metrônomo"]];
-const premImg=k=>`<img class="premimg" src="img/premium/${k}.webp" alt="" width="340" height="210" loading="lazy">`;
-const premShow=()=>`<div class="premshow">${PREM_SHOW.map(([k,t])=>`<figure>${premImg(k)}<figcaption>${t}</figcaption></figure>`).join("")}</div>`;
+const PREM_FEAT=[
+ {k:"roda",t:"Roda ao vivo",s:"A galera entra pelo QR code e vê, no próprio celular, cada troca de música e de tom que você faz.",d:"Abra a roda e a galera entra pelo QR code, sem cadastro. Cada um acompanha a cifra no próprio celular e vê na hora tudo o que você muda: a música, o tom e a versão. Acabou o “qual é a próxima?” e o “tá em que tom?”. Só quem abre a roda precisa do Premium: para entrar, é grátis."},
+ {k:"bt",t:"Batucada com 6 instrumentos",s:"Surdo, pandeiro, rebolo, repiques e cuíca tocando com você. Você escolhe o volume de cada um.",d:"Surdo, pandeiro, rebolo, repique de mão, repique de anel e cuíca tocando junto com você, em qualquer andamento. Suba o volume do que quiser ouvir, desligue o que atrapalha ou deixe um instrumento sozinho para estudar."},
+ {k:"rol",t:"Rolagem no tempo da música",s:"A cifra rola sozinha no BPM da música, compasso por compasso.",d:"A cifra rola sozinha no BPM da música, compasso por compasso, e mostra onde você está. Suas mãos ficam no instrumento, não na tela."},
+ {k:"af",t:"Afinador",s:"Cavaquinho, banjo e violão. Mostra a corda e toca o som dela.",d:"Para cavaquinho, banjo e violão. Mostra a nota e a corda na hora, fica verde quando está afinado e toca o som de cada corda para você afinar de ouvido."},
+ {k:"tom",t:"Qual o tom?",s:"Pelo som, cantando ou com um link do YouTube: o app descobre o tom.",d:"Coloque o celular perto do som, cante um trecho ou cole um link do YouTube: o app descobre o tom da música e já mostra o relativo menor."},
+ {k:"reps",t:"Repertórios sem limite",s:"Quantos repertórios quiser, sem limite de músicas, com o tom de cada uma salvo.",d:"Monte quantos repertórios quiser, com quantas músicas quiser e o tom de cada uma salvo. E toque os repertórios prontos para a roda."},
+ {k:"met",t:"Metrônomo",s:"Compasso 2/4 do samba, subdivisões e bater o tempo com o dedo.",d:"Compasso 2/4 do samba, colcheias e semicolcheias e bater o tempo com o dedo para achar o andamento da música."}];
+const PREM_IMG={rol:"rol",met:"met",bt:"bt",af:"af",tom:"tom",roda:"roda",reps:"reps",songs:"reps",ready:"reps"};
+const premFeat=why=>PREM_FEAT.find(f=>f.k===(PREM_IMG[why]||"roda"))||PREM_FEAT[0];
+const premImg=(k,alt="")=>`<img class="premimg" src="img/premium/${k}.webp" alt="${esc(alt)}" width="340" height="210" loading="lazy">`;
+const premShow=(menos)=>`<div class="psec">Tudo o que vem no Premium</div><div class="premshow">${PREM_FEAT.filter(f=>f.k!==menos).map(f=>`<figure>${premImg(f.k,f.t)}<figcaption><b>${f.t}</b><small>${f.s}</small></figcaption></figure>`).join("")}</div>`;
 const premBen=l=>`<ul class="premben">${l.map(t=>`<li>${t}</li>`).join("")}</ul>`;
 function checkoutUrl(u){if(!u)return"";try{const x=new URL(u);if(USER&&USER.email)x.searchParams.set("email",USER.email);return x.toString()}catch(e){return""}}
 function planBtns(m,a,pm,pa){m=checkoutUrl(m);a=checkoutUrl(a);if(!m&&!a)return`<p class="help" style="margin:6px 0 0"><b>Abre em breve.</b></p>`;
@@ -2041,9 +2063,10 @@ function premiumDrawer(B,why){
     if($("cancRef"))$("cancRef").onclick=()=>openDrawer("cancelar");
     return;
   }
-  const hi=PREM_IMG[why];
-  B.innerHTML=`<div class="prembrand">${BRAND_SVG(40)}<span class="b1">samba<span>cifra</span></span><span class="ptag pro">${ICO_COROA}Premium</span></div>${hi?premImg(hi):premShow()}<h3>${hi?"Isso é do Premium":"Assine o SambaCifra Premium"}</h3><p class="sub">${motivo||"As cifras e a troca de tom são grátis para todo mundo. As ferramentas para tocar e comandar a roda ficam no Premium."}</p>
-   <div class="premtier ${why!=="aulas"?"dest":""}"><b>Premium</b>${premBen(PREM_BEN)}${USER?planBtns(CFG.checkout_mensal,CFG.checkout_anual,CFG.preco_mensal,CFG.preco_anual):`<p class="help" style="margin:4px 0 0">${esc(CFG.preco_mensal||"")}/mês ou ${esc(CFG.preco_anual||"")}/ano</p>`}</div>
+  const F=why==="aulas"?null:premFeat(why),limite=why==="songs"||(why==="reps"&&FREE_REPS>0);
+  B.innerHTML=`<div class="prembrand">${BRAND_SVG(40)}<span class="b1">samba<span>cifra</span></span><span class="ptag pro">${ICO_COROA}Premium</span></div>
+   ${F?`<div class="pfhero">${premImg(F.k,F.t)}<span class="pfkick">${why&&PREM_IMG[why]?"Isso é do Premium":"O diferencial do SambaCifra"}</span><h3>${F.t}</h3>${limite?`<p class="pflim">${motivo}</p>`:""}<p class="sub">${F.d}</p></div>${premShow(F.k)}`:`<h3>Assine o SambaCifra Premium</h3><p class="sub">${motivo}</p>`}
+   <div class="premtier ${why!=="aulas"?"dest":""}"><b>Premium</b><p class="help" style="margin:2px 0 8px">Tudo isso liberado. As cifras e a troca de tom continuam grátis para todo mundo.</p>${USER?planBtns(CFG.checkout_mensal,CFG.checkout_anual,CFG.preco_mensal,CFG.preco_anual):`<p class="help" style="margin:4px 0 0">${esc(CFG.preco_mensal||"")}/mês ou ${esc(CFG.preco_anual||"")}/ano</p>`}</div>
    ${aulasOn()?`<div class="premtier ${why==="aulas"?"dest":""}"><b>Premium + Aulas</b>${premBen(AULAS_BEN)}${USER?planBtns(CFG.checkout_aulas_mensal,CFG.checkout_aulas_anual,CFG.preco_aulas_mensal,CFG.preco_aulas_anual):`<p class="help" style="margin:4px 0 0">${esc(CFG.preco_aulas_mensal||"")}/mês ou ${esc(CFG.preco_aulas_anual||"")}/ano</p>`}</div>`:""}
    ${!USER?`<button class="primary" id="prLogin" style="width:100%">Entrar para assinar</button><p class="help" style="text-align:center">Crie a conta com o e-mail que você vai usar no pagamento.</p>`:
     `<p class="help">Pague com o mesmo e-mail da sua conta: <b>${esc(USER.email||"")}</b>. Libera sozinho assim que o pagamento for aprovado.</p><button class="ghost" id="prJa" style="width:100%">Já paguei, liberar agora</button>`}`;
@@ -2488,7 +2511,7 @@ function drawTools(){
   $("topbar").innerHTML=`<h1>Ferramentas</h1>`;
   $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucada"],["tom","Qual o tom?"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
   document.querySelectorAll("[data-aba]").forEach(b=>b.onclick=()=>{if(b.dataset.aba!=="afinador"&&T.af.on)afOff();if(b.dataset.aba!=="tom"&&T.tom.mic)tomOff(false);T.aba=b.dataset.aba;drawTools()});
-  if(!isPro()){const w={metronomo:"met",afinador:"af",batucadas:"bt",tom:"tom"}[T.aba];if(st.plShown!==T.aba){st.plShown=T.aba;setTimeout(()=>{if(st.view==="tools"&&!isPro()&&!dr)openDrawer("upsell",{why:w})},120)}$("tbody").innerHTML=`<div class="premlock">${premImg(PREM_IMG[w])}<span class="lock">Premium</span><h3>${{met:"Metrônomo",af:"Afinador",bt:"Batucada",tom:"Qual o tom?"}[w]}</h3><p class="sub">${PREM_WHY[w]}</p><button class="primary" id="tlk" style="width:100%">Conhecer o Premium</button></div>`;$("tlk").onclick=()=>openDrawer("upsell",{why:w});return}
+  if(!isPro()){const w={metronomo:"met",afinador:"af",batucadas:"bt",tom:"tom"}[T.aba];if(st.plShown!==T.aba){st.plShown=T.aba;setTimeout(()=>{if(st.view==="tools"&&!isPro()&&!dr)openDrawer("upsell",{why:w})},120)}$("tbody").innerHTML=`<div class="premlock">${premImg(PREM_IMG[w],premFeat(w).t)}<span class="lock">Premium</span><h3>${premFeat(w).t}</h3><p class="sub">${premFeat(w).d}</p><button class="primary" id="tlk" style="width:100%">Conhecer o Premium</button></div>`;$("tlk").onclick=()=>openDrawer("upsell",{why:w});return}
   ({metronomo:drawMet,afinador:drawAf,batucadas:drawBt,tom:drawTom})[T.aba]();
 }
 
