@@ -1043,7 +1043,7 @@ async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edico
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="29/10 10:27";
+const APP_BUILD="29/10 11:00";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1075,11 +1075,8 @@ try{const s=JSON.parse(localStorage.getItem("rpc2")||"null");if(s)store=Object.a
   const p=JSON.parse(localStorage.getItem("rpc2p")||"null");if(p){st.fs=p.fs||st.fs;st.fit=p.fit!==false;st.ver=p.ver||st.ver}}catch(e){}
 for(const r of store.reps) for(const it of r.items) if(typeof it.id==="number") it.id="s"+it.id;
 store.fav=store.fav||[];store.hist=store.hist||[];
-if(!store.reps.length){
-  const pick=["Deixa Acontecer","Maneiras","Coisa de Pele","Tá Vendo Aquela Lua","Vira Casaca","Papel","Cartão Postal","Recaída"];
-  const ids=pick.map(t=>SONGS.find(s=>norm(s.title).startsWith(norm(t)))).filter(Boolean).map(s=>({id:s.id,delta:0}));
-  store.reps.push({id:"r1",name:"Roda de sábado",items:ids,example:true});
-}
+// sem repertório de exemplo: cada pessoa monta o seu. Remove o exemplo antigo de quem nunca mexeu nele
+store.reps=store.reps.filter(r=>!r.example);
 const save=()=>{try{localStorage.setItem("rpc2",JSON.stringify(store));localStorage.setItem("rpc2p",JSON.stringify({fs:st.fs,fit:st.fit,ver:st.ver}))}catch(e){};if(USER)syncPush()};
 delete store.plan;
 const cobrando=()=>CFG.cobranca===true;
@@ -1449,9 +1446,9 @@ function drawTab(){
     let h=`<h2 class="ptitle">Artistas</h2>`,L="";arts.forEach((a,i)=>{let f=a.key[0].toUpperCase();if(!/[A-Z]/.test(f))f="#";if(!nq&&f!==L){L=f;h+=`<div class="sec">${f}</div>`}h+=artistRow(a,i)});
     tb.innerHTML=h;
   } else if(st.tab==="meus"){
-    let h=`<h2 class="ptitle">Meus repertórios</h2>`+store.reps.map(r=>`<button class="card" data-rep="${r.id}"><b>${esc(r.name)}${r.example?` <span class="tag new">exemplo</span>`:""}</b><small>${r.items.length} música${r.items.length===1?"":"s"}${!isPro()?` de ${FREE_SONGS} no plano grátis`:""}</small><span class="go">›</span>${!isPro()?`<div class="meter" style="grid-column:1"><i style="width:${Math.min(100,r.items.length/FREE_SONGS*100)}%"></i></div>`:""}</button>`).join("");
+    let h=`<h2 class="ptitle">Meus repertórios</h2>`+(store.reps.length?"":`<div class="empty">Você ainda não tem repertório. Crie o seu, dê um nome e vá adicionando as músicas da roda${!isPro()?` (até ${FREE_SONGS} no plano grátis)`:""}.</div>`)+store.reps.map(r=>`<button class="card" data-rep="${r.id}"><b>${esc(r.name)}</b><small>${r.items.length} música${r.items.length===1?"":"s"}${!isPro()?` de ${FREE_SONGS} no plano grátis`:""}</small><span class="go">›</span>${!isPro()?`<div class="meter" style="grid-column:1"><i style="width:${Math.min(100,r.items.length/FREE_SONGS*100)}%"></i></div>`:""}</button>`).join("");
     h+=`<div style="margin-top:14px"><button class="primary" id="newRep">${ico("plus",16,"stroke:#fff;vertical-align:-3px")} Novo repertório</button></div>`;
-    if(!isPro()) h+=`<p class="help">Plano grátis: ${FREE_REPS} repertório com até ${FREE_SONGS} músicas. No Premium, ilimitados.</p>`;
+    if(!isPro()) h+=`<p class="help">Plano grátis: ${FREE_REPS} repertório com até ${FREE_SONGS} músicas. No Premium, repertórios e músicas ilimitados.</p>`;
     h+=`<p class="help">Os repertórios ficam neste aparelho. Para levar para outro, use <b>Compartilhar</b> dentro do repertório.</p>`;
     tb.innerHTML=h;
     $("newRep").onclick=()=>{if(repsCheios()) return openDrawer("upsell",{why:"reps"}); openDrawer("novo")};
@@ -1524,6 +1521,7 @@ function quickAdd(id){
   const target=repById(st.addTarget);
   if(target) return addTo(target,id);
   if(store.reps.length===1) return addTo(store.reps[0],id);
+  if(!store.reps.length) return openDrawer("novo",{id});
   openDrawer("addrep",{id});
 }
 
