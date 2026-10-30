@@ -770,6 +770,39 @@ details.admcard[open] summary{margin-bottom:8px}
 .isaviso b{display:block;margin-bottom:3px}.isaviso small{display:block;color:var(--muted);font-size:13px;line-height:1.35;margin-bottom:8px}
 .isbig{width:100%;display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:6px}
 .appfoot .lnk+.lnk{margin-left:10px}
+/* pedidos de cifra e sugestões */
+.pedhome{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;margin:12px 0 0;padding:12px 14px;border-radius:16px;border:1.5px dashed #e7b48d;background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.pedhome .pi{width:40px;height:40px;border-radius:12px;background:var(--orange-soft);color:var(--orange);display:grid;place-items:center}
+.pedhome .pt b{display:block;font-size:15px}.pedhome .pt small{display:block;font-size:12.5px;color:var(--muted);line-height:1.3;margin-top:2px}
+.pedhome .go{font-size:22px;color:var(--muted)}
+.pedbox{margin:14px 0 0;padding:14px;border-radius:16px;background:var(--orange-soft);border:1.5px solid #f3c39d;text-align:center}
+.pedbox b{display:block;font-size:16px}.pedbox small{display:block;color:var(--muted);font-size:13px;margin:3px 0 10px}
+.pedbox .primary{width:100%}
+.pedlink{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:center;margin:16px 0 4px;font-size:14px;color:var(--muted)}
+.pedtabs{margin:0 0 12px}
+.pedform{display:grid;gap:10px}
+.pedform label{display:block;font-weight:700;font-size:14px}
+.pedform label input,.pedform label textarea{display:block;margin-top:5px}
+.pedform label small{font-weight:500;color:var(--muted)}
+.pedform input,.pedform textarea{font:inherit;font-weight:500;font-size:16px;padding:11px 12px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--ink);width:100%;box-sizing:border-box;resize:vertical}
+.pedform input:focus,.pedform textarea:focus{outline:none;border-color:var(--orange)}
+.peditem{background:var(--card,#fbf8f1);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.peditem.feito,.peditem.descartado{opacity:.65}
+.peditem b{display:block;font-size:15.5px;margin:6px 0 2px}.peditem b small{font-weight:500;color:var(--muted)}
+.peditem p{margin:4px 0;font-size:14px;line-height:1.4;white-space:pre-wrap}
+.peditem .pedc{font-size:13px;color:var(--muted)}
+.peditem .row2{margin-top:8px}
+.pedh{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.pedh small{color:var(--muted);font-size:12px}
+.pedtag{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:99px}
+.pedtag.b{background:#dfe8f5;color:#1d4f91}.pedtag.o{background:var(--orange-soft);color:var(--orange)}.pedtag.r{background:#fbe1dd;color:#b3261e}
+.pednew{font-size:11px;font-weight:800;color:#fff;background:var(--orange);padding:2px 7px;border-radius:99px}
+.pedtop{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:14px}.pedtop:first-of-type{border-top:0}
+.pedtop small{color:var(--muted)}.pedtop b{white-space:nowrap;color:var(--orange)}
+.ispassos li>div{min-width:0}
+.ispassos b.inl{display:inline;font-size:inherit;color:var(--ink)}
+.isok{display:inline-block;margin-top:6px;font-size:12.5px;font-weight:800;color:#2e7d43;background:#dcefe0;padding:3px 9px;border-radius:99px}
+.isaddr{display:inline-block;margin-top:6px;font:700 13px var(--f-mono);color:var(--blue);background:#fff;border:1px solid var(--line);padding:3px 8px;border-radius:8px}
+.iscopy{display:block;width:100%;margin-top:8px;min-height:38px;font-size:14px}
 
 </style>
 </head>
@@ -1078,7 +1111,7 @@ async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edico
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="30/10 19:46";
+const APP_BUILD="30/10 19:51";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1230,11 +1263,13 @@ const INSICO={
  safari:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8z"/></svg>`};
 function instPassos(os){
   const P=(ic,t,d)=>`<li><span class="isico">${INSICO[ic]}</span><div><b>${t}</b>${d?`<small>${d}</small>`:""}</div></li>`;
-  if(os==="ios"){const nv=navIOS();
-    return`${nv==="inapp"?`<div class="isaviso"><b>Primeiro, abra no Safari</b><small>Dentro do Instagram, WhatsApp e outros apps não dá para instalar. Toque nos três pontinhos ou no ícone de bússola e escolha “Abrir no Safari”, ou copie o link e cole no Safari.</small><button class="ghost" id="isCopy">Copiar o link do app</button></div>`:""}
-     <ol class="ispassos">${P("share","Toque no botão Compartilhar",nv==="chrome"?"No Chrome, ele fica no alto, ao lado do endereço.":"Fica na barra de baixo do Safari (no iPad, em cima). Se não aparecer, toque em ••• primeiro.")}
+  if(os==="ios"){const nv=navIOS(),noSafari=nv==="safari";
+    return`<ol class="ispassos">
+     <li><span class="isico">${INSICO.safari}</span><div><b>Abra o SambaCifra no Safari</b><small>Tem que ser o <b class="inl">Safari</b>, o navegador da bússola azul do iPhone. No Chrome, no Instagram, no WhatsApp ou em outro navegador não funciona.</small>
+      ${noSafari?`<span class="isok">✓ Você já está no Safari</span>`:`<span class="isaddr">www.sambacifra.com.br</span><button class="ghost iscopy" id="isCopy">Copiar o link para colar no Safari</button>`}</div></li>
+     ${P("share","Toque no botão Compartilhar","É o quadradinho com a seta para cima, na barra de baixo do Safari (no iPad, em cima). Se não aparecer, toque nos três pontinhos ••• e depois em Compartilhar.")}
      ${P("addhome","Role e toque em “Adicionar à Tela de Início”","Se não estiver na lista, toque em “Editar ações” no fim e ative a opção.")}
-     ${P("ok","Toque em “Adicionar”","O ícone do SambaCifra aparece junto dos seus apps.")}</ol>`}
+     ${P("ok","Toque em “Adicionar”","Pronto: o ícone do SambaCifra aparece junto dos seus apps.")}</ol>`}
   if(os==="android") return`${BIP?`<button class="primary isbig" id="isNow">${INSICO.install} Instalar agora</button><p class="help" style="text-align:center">Um toque e pronto. Se preferir, siga os passos abaixo.</p>`:""}
      <ol class="ispassos">${P("dots","Toque nos três pontinhos ⋮","Ficam no canto de cima do Chrome, à direita do endereço.")}
      ${P("install","Toque em “Adicionar à tela inicial”","Em alguns celulares aparece como “Instalar app”.")}
@@ -1456,7 +1491,8 @@ function searchResults(q){
   let h="";
   if(arts.length) h+=`<div class="sec">Artistas</div>`+arts.slice(0,6).map(artistRow).join("");
   if(songs.length) h+=`<div class="sec">Músicas</div><div class="rows" style="padding-bottom:0">${songs.slice(0,60).map(s=>songRow(s)).join("")}</div>`;
-  if(!h) h=`<div class="empty">Nada encontrado para “${esc(q)}”. Tente só uma parte do nome, ou <button class="linkbtn" id="sendIt">envie essa cifra</button>.</div>`;
+  if(!h) h=`<div class="empty">Nada encontrado para “${esc(q)}”. Tente só uma parte do nome, ou <button class="linkbtn" id="sendIt">envie essa cifra</button>.</div><div class="pedbox"><b>Não temos essa ainda?</b><small>Peça e a gente coloca no app. As mais pedidas entram primeiro.</small><button class="primary" id="pedirIt">Pedir “${esc(q.trim().slice(0,40))}”</button></div>`;
+  else h+=`<div class="pedlink"><span>Não achou a versão que queria?</span><button class="linkbtn" id="pedirIt">Pedir uma cifra</button></div>`;
   return h;
 }
 function homeNav(){
@@ -1481,20 +1517,21 @@ function ultimasAdicionadas(n){const h=x=>{let v=0;for(const c of String(x))v=(v
   for(const s of L){if(out.length>=n)break;const k=artistKey(s.artist),c=arts.get(k)||0;if(c>=2)continue;arts.set(k,c+1);out.push(s)}return out}
 function drawTab(){
   const tb=$("tabbody"); if(!tb) return;
-  if(["inicio","musicas","artistas"].includes(st.tab)&&st.q.trim()){tb.innerHTML=searchResults(st.q);if($("sendIt"))$("sendIt").onclick=()=>go("import",{});return}
+  if(["inicio","musicas","artistas"].includes(st.tab)&&st.q.trim()){tb.innerHTML=searchResults(st.q);if($("sendIt"))$("sendIt").onclick=()=>go("import",{});if($("pedirIt"))$("pedirIt").onclick=()=>openDrawer("pedido",{tipo:"cifra",titulo:st.q.trim()});return}
   if(st.tab==="inicio"){
     const arts=artistsAll().sort((a,b)=>b.songs.length-a.songs.length);
     const recent=store.hist.map(byId).filter(Boolean).slice(0,5), news=ultimasAdicionadas(5), favN=store.fav.filter(byId).length;
     const tile=(attr,ic,l,cls="")=>`<button class="qt2 ${cls}" ${attr}><span class="qi">${ico(ic,22)}</span><span>${l}</span></button>`;
     let h=(!instalado()&&!instEsconde()?`<div class="instban"><img src="icon-192.png" alt="" width="44" height="44"><div class="ibtx"><b>Coloque o SambaCifra na tela inicial</b><small>Abre com um toque, em tela cheia, como um aplicativo.</small></div><button class="primary" id="instGo">${BIP?"Instalar":"Ver como"}</button><button class="ibx" id="instX" aria-label="Agora não">✕</button></div>`:"")+`<div class="qgrid2">${tile('data-nav="musicas"',"note","Músicas")}${tile('data-nav="artistas"',"user","Artistas")}${tile('data-nav="meus"',"addlist","Meus repertórios")}
-      ${tile('data-nav="prontos"',"star","Repertórios prontos","o")}${tile('data-nav="ferramentas"',"tune","Ferramentas")}${tile('data-go="import"',"upload","Enviar cifra")}</div>`;
+      ${tile('data-nav="prontos"',"star","Repertórios prontos","o")}${tile('data-nav="ferramentas"',"tune","Ferramentas")}${tile('data-go="import"',"upload","Enviar cifra")}</div>
+      <button class="pedhome" id="pedHome"><span class="pi">${ico("note",20)}</span><span class="pt"><b>Pedir cifra ou mandar sugestão</b><small>Faltou alguma música? Tem uma ideia para o app? Fala com a gente.</small></span><span class="go">›</span></button>`;
     if(recent.length) h+=`<div class="sec">Continue tocando</div><div class="rows" style="padding-bottom:0">${recent.map(s=>songRow(s)).join("")}</div>`;
     h+=`<div class="sec">Artistas</div><div class="achips">${arts.slice(0,12).map((a,i)=>`<button data-artist="${esc(a.key)}">${artistAv(a.name,"",i)}${esc(a.name)}</button>`).join("")}<button data-nav="artistas" class="more">Ver todos ›</button></div>`;
     h+=`<div class="sec">Músicas em alta</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,st.altaMais?20:5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>${TOP.length>5?`<button class="ghost" id="altaMais" style="width:100%;margin-top:6px">${st.altaMais?"Mostrar menos":"Ver o top 20"}</button>`:""}`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
     if(news.length) h+=`<div class="sec">Últimas adicionadas</div><div class="rows" style="padding-bottom:0">${news.map(s=>songRow(s)).join("")}</div>`;
     const ex=store.reps[0]; if(ex) h+=`<div class="sec">Seu repertório</div><button class="card" data-rep="${ex.id}" style="margin-top:4px"><b>${esc(ex.name)}</b><small>${ex.items.length} músicas · toque para abrir e tocar em sequência</small><span class="go">›</span></button>`;
     h+=`<div class="appfoot"><span>SambaCifra · versão ${esc(APP_BUILD)}</span>${!instalado()?`<button class="lnk" id="instFoot">📲 Instalar na tela inicial</button>`:""}<button class="lnk" id="updHome">↻ Atualizar o app</button></div>`;
-    tb.innerHTML=h;$("updHome").onclick=()=>appAtualizar();if($("instGo"))$("instGo").onclick=()=>BIP?instalarAgora():openDrawer("instalar");if($("instFoot"))$("instFoot").onclick=()=>openDrawer("instalar");if($("instX"))$("instX").onclick=()=>{try{localStorage.setItem("sc-inst-hide",Date.now()+7*864e5)}catch(e){}drawTab()};if($("altaMais"))$("altaMais").onclick=()=>{st.altaMais=!st.altaMais;drawTab()};
+    tb.innerHTML=h;$("updHome").onclick=()=>appAtualizar();$("pedHome").onclick=()=>openDrawer("pedido",{});if($("instGo"))$("instGo").onclick=()=>BIP?instalarAgora():openDrawer("instalar");if($("instFoot"))$("instFoot").onclick=()=>openDrawer("instalar");if($("instX"))$("instX").onclick=()=>{try{localStorage.setItem("sc-inst-hide",Date.now()+7*864e5)}catch(e){}drawTab()};if($("altaMais"))$("altaMais").onclick=()=>{st.altaMais=!st.altaMais;drawTab()};
   } else if(st.tab==="musicas"){
     const q=st.q.trim();
     let list=q?searchSongs(q):[...PRIVATE,...SONGS];
@@ -2002,6 +2039,25 @@ function drawDrawer(){
     setTimeout(()=>$("nn")&&$("nn").focus(),50);
     $("nf").onsubmit=e=>{e.preventDefault();const r={id:"r"+Date.now(),name:$("nn").value.trim()||"Novo repertório",items:[]};store.reps.push(r);save();
       if(dr.id){addTo(r,dr.id);closeDrawer()} else go("rep",{rep:r.id})};
+  } else if(dr.kind==="pedido"){
+    const tp=dr.tipo||"cifra";
+    const TP=[["cifra","Pedir cifra"],["ideia","Sugestão"],["problema","Algo deu errado"]];
+    B.innerHTML=`<h3>Fale com a gente</h3><p class="sub">${tp==="cifra"?"Diga qual música você quer no app. As mais pedidas entram primeiro.":tp==="ideia"?"Uma ideia, um recurso que faltou, um artista que você quer ver aqui. Toda sugestão é lida.":"Conte o que aconteceu e em qual música ou tela. A gente corrige."}</p>
+     <div class="pills pedtabs">${TP.map(([k,l])=>`<button data-pt="${k}" class="${tp===k?"on":""}">${l}</button>`).join("")}</div>
+     <form class="pedform" id="pedF">
+      ${tp==="cifra"?`<label>Nome da música<input id="pdT" required maxlength="160" value="${esc(dr.titulo||"")}" placeholder="Ex.: Deixa a vida me levar"></label>
+       <label>Artista ou grupo <small>(se souber)</small><input id="pdA" maxlength="120" value="${esc(dr.artista||"")}" placeholder="Ex.: Zeca Pagodinho"></label>
+       <label>Observação <small>(opcional)</small><textarea id="pdX" rows="2" maxlength="2000" placeholder="Versão ao vivo, tom, link do YouTube…">${esc(dr.texto||"")}</textarea></label>`
+      :`<label>${tp==="ideia"?"Sua sugestão":"O que aconteceu?"}<textarea id="pdX" rows="4" required minlength="3" maxlength="2000" placeholder="${tp==="ideia"?"Escreva aqui…":"Ex.: a cifra de tal música está com o acorde errado no refrão"}">${esc(dr.texto||"")}</textarea></label>`}
+      ${!USER?`<label>Seu e-mail ou WhatsApp <small>(opcional, se quiser resposta)</small><input id="pdC" maxlength="160" value="${esc(dr.contato||"")}" autocomplete="email" placeholder="seu@email.com ou (35) 9…"></label>`:""}
+      <button class="primary" id="pdOk" style="width:100%">${tp==="cifra"?"Enviar pedido":"Enviar"}</button>
+     </form>`;
+    const keep=()=>{const v=id=>$(id)?$(id).value:undefined;if(v("pdT")!==undefined)dr.titulo=v("pdT");if(v("pdA")!==undefined)dr.artista=v("pdA");if(v("pdX")!==undefined)dr.texto=v("pdX");if(v("pdC")!==undefined)dr.contato=v("pdC")};
+    B.querySelectorAll("[data-pt]").forEach(b=>b.onclick=()=>{keep();dr.tipo=b.dataset.pt;drawDrawer()});
+    $("pedF").onsubmit=async e=>{e.preventDefault();keep();const bt=$("pdOk");bt.disabled=true;bt.textContent="Enviando…";
+      let ok=false;try{const {data,error}=await sb.rpc("enviar_pedido",{p_tipo:tp,p_titulo:tp==="cifra"?dr.titulo||"":"",p_artista:tp==="cifra"?dr.artista||"":"",p_texto:dr.texto||"",p_contato:dr.contato||"",p_device:DEVICE,p_plat:plataforma()});ok=!error&&data===true}catch(x){}
+      if(ok){closeDrawer();toast(tp==="cifra"?"Pedido enviado! Obrigado 🎶":"Recebido! Obrigado por ajudar 🙌")}
+      else{bt.disabled=false;bt.textContent="Tentar de novo";toast(navigator.onLine===false?"Sem internet agora. Tente de novo.":"Não deu para enviar agora. Tente de novo em instantes.")}};
   } else if(dr.kind==="instalar"){
     const os=dr.os||plataformaInst();
     B.innerHTML=`<div class="ishead"><img src="icon-192.png" alt="" width="56" height="56"><div><h3>SambaCifra na tela inicial</h3><p class="sub">Fica com o ícone junto dos seus apps, abre em tela cheia e mais rápido. Não ocupa espaço como um app da loja.</p></div></div>
@@ -2009,7 +2065,7 @@ function drawDrawer(){
      ${instPassos(os)}`;
     B.querySelectorAll("[data-os]").forEach(b=>b.onclick=()=>{dr.os=b.dataset.os;drawDrawer()});
     if($("isNow"))$("isNow").onclick=instalarAgora;
-    if($("isCopy"))$("isCopy").onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+location.pathname);toast("Link copiado. Cole no Safari.")}catch(e){toast(location.origin)}};
+    if($("isCopy"))$("isCopy").onclick=async()=>{try{await navigator.clipboard.writeText("https://www.sambacifra.com.br");toast("Link copiado. Abra o Safari e cole na barra de endereço.")}catch(e){toast(location.origin)}};
   } else if(dr.kind==="upsell"){
     premiumDrawer(B,dr.why);
   } else if(dr.kind==="metronomo"){
@@ -2137,6 +2193,29 @@ function premiumDrawer(B,why){
 /* painel: premium */
 const ADM_ORIG={hotmart:"Assinatura",escola:"Aluno",manual:"Cortesia"}, ADM_ST={ativo:["Ativo","ok"],cancelado:["Cancelado","off"],atrasado:["Pagamento atrasado","warn"],reembolsado:["Reembolsado","off"]};
 const admVale=x=>x.status==="ativo"||(x.expira_em&&new Date(x.expira_em)>new Date()&&x.status!=="reembolsado");
+/* aba Pedidos: cifras pedidas, sugestões e problemas enviados pelo app */
+let PED_NOVOS=0;
+const PED_TP={cifra:["Cifra","b"],ideia:["Sugestão","o"],problema:["Problema","r"]},PED_ST={novo:"Novo",visto:"Visto",feito:"Feito",descartado:"Descartado"};
+async function admPedidos(){
+  const box=$("admPed");if(!box)return;
+  const {data,error}=await sb.rpc("admin_pedidos",{p_key:ADMIN_KEY});if(!$("admPed"))return;
+  if(error){box.innerHTML=`<p class="help">Não foi possível carregar.</p>`;return}
+  const L=data||[],f=st.pedF||"abertos";PED_NOVOS=L.filter(x=>x.status==="novo").length;
+  const vis=L.filter(x=>f==="abertos"?["novo","visto"].includes(x.status):f==="cifra"?x.tipo==="cifra"&&["novo","visto"].includes(x.status):f==="ideia"?x.tipo!=="cifra"&&["novo","visto"].includes(x.status):!["novo","visto"].includes(x.status));
+  const quando=t=>{const d=new Date(t);return d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+" "+d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})};
+  const top=L.filter(x=>x.tipo==="cifra"&&["novo","visto"].includes(x.status)).sort((a,b)=>b.votos-a.votos).slice(0,5);
+  box.innerHTML=`<div class="admstats"><div><b>${PED_NOVOS}</b><span>Novos</span></div><div><b>${L.filter(x=>x.tipo==="cifra"&&["novo","visto"].includes(x.status)).length}</b><span>Cifras pedidas</span></div><div><b>${L.filter(x=>x.tipo!=="cifra"&&["novo","visto"].includes(x.status)).length}</b><span>Sugestões e problemas</span></div></div>
+   ${top.length?`<section class="admcard"><h3>Mais pedidas</h3>${top.map(x=>`<div class="pedtop"><span>${esc(x.titulo||"")}${x.artista?` <small>${esc(x.artista)}</small>`:""}</span><b>${x.votos} ${x.votos===1?"pedido":"pedidos"}</b></div>`).join("")}</section>`:""}
+   <div class="pills" style="margin:4px 0 10px">${[["abertos","Em aberto"],["cifra","Cifras"],["ideia","Sugestões"],["fechados","Resolvidos"]].map(([k,l])=>`<button data-pf="${k}" class="${f===k?"on":""}">${l}</button>`).join("")}</div>
+   ${vis.length?vis.map(x=>`<div class="peditem ${x.status}"><div class="pedh"><span class="pedtag ${PED_TP[x.tipo][1]}">${PED_TP[x.tipo][0]}</span>${x.status==="novo"?`<span class="pednew">novo</span>`:""}<small>${quando(x.criado_em)}${x.votos>1?` · ${x.votos} pedidos`:""}${x.plat?` · ${esc(x.plat)}`:""}</small></div>
+     ${x.titulo?`<b>${esc(x.titulo)}${x.artista?` <small>· ${esc(x.artista)}</small>`:""}</b>`:""}${x.texto?`<p>${esc(x.texto)}</p>`:""}
+     ${x.email||x.contato?`<p class="pedc">${x.email?`Conta: <a href="mailto:${esc(x.email)}">${esc(x.email)}</a>`:""}${x.email&&x.contato?" · ":""}${x.contato?`Contato: ${esc(x.contato)}`:""}</p>`:""}
+     <div class="row2">${["novo","visto"].includes(x.status)?`<button class="primary" data-ps="feito" data-pid="${x.id}">${x.tipo==="cifra"?"Adicionada":"Resolvido"}</button><button class="ghost" data-ps="descartado" data-pid="${x.id}">Descartar</button>`:`<button class="ghost" data-ps="novo" data-pid="${x.id}">Reabrir</button>`}</div></div>`).join(""):`<p class="help">Nada por aqui.</p>`}`;
+  box.querySelectorAll("[data-pf]").forEach(b=>b.onclick=()=>{st.pedF=b.dataset.pf;admPedidos()});
+  box.querySelectorAll("[data-ps]").forEach(b=>b.onclick=async()=>{b.disabled=true;const {error}=await sb.rpc("admin_pedido_status",{p_key:ADMIN_KEY,p_id:+b.dataset.pid,p_status:b.dataset.ps});if(error)toast("Não foi possível salvar");admPedidos()});
+  // abriu a lista: os novos passam a "visto"
+  const novos=L.filter(x=>x.status==="novo");if(novos.length&&f==="abertos")setTimeout(()=>novos.forEach(x=>sb.rpc("admin_pedido_status",{p_key:ADMIN_KEY,p_id:x.id,p_status:"visto"})),4000);
+}
 /* aba Acessos: visitas anônimas por aparelho, cifras abertas, contas e assinantes */
 let _aceT=null;
 async function admAcessos(){
@@ -2487,9 +2566,9 @@ function drawReview(){
   const need=[...new Set(ep.map(x=>byId(x.song_id)).filter(s=>s&&!songReady(s)).map(s=>s.c))];
   if(need.length){Promise.all(need.map(loadChunk)).then(()=>{if(st.view==="review")drawReview()}).catch(()=>{})}
   const tab=st.admTab||"acessos", nRev=pend.length+ep.length;
-  const tabs=`<div class="admtabs" role="tablist">${[["acessos","Acessos"],["assin","Assinantes"],["config","Ajustes"],["rev","Revisão"+(nRev?` <b>${nRev}</b>`:"")]].map(([k,l])=>`<button role="tab" data-at="${k}" aria-selected="${tab===k}">${l}</button>`).join("")}</div>`;
+  const tabs=`<div class="admtabs" role="tablist">${[["acessos","Acessos"],["pedidos","Pedidos"+(PED_NOVOS?` <b>${PED_NOVOS}</b>`:"")],["assin","Assinantes"],["config","Ajustes"],["rev","Revisão"+(nRev?` <b>${nRev}</b>`:"")]].map(([k,l])=>`<button role="tab" data-at="${k}" aria-selected="${tab===k}">${l}</button>`).join("")}</div>`;
   const wireTabs=()=>document.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{st.admTab=b.dataset.at;drawReview();scrollTo(0,0)});
-  if(tab!=="rev"){$("view").innerHTML=`<div class="adm">${tabs}<div id="${({assin:"admPrem",config:"admCfg",acessos:"admAce"})[tab]}"><p class="help">Carregando…</p></div></div>`;wireTabs();return tab==="assin"?admAssin():tab==="acessos"?admAcessos():admConfig()}
+  if(tab!=="rev"){$("view").innerHTML=`<div class="adm">${tabs}<div id="${({assin:"admPrem",config:"admCfg",acessos:"admAce",pedidos:"admPed"})[tab]}"><p class="help">Carregando…</p></div></div>`;wireTabs();return tab==="assin"?admAssin():tab==="acessos"?admAcessos():tab==="pedidos"?admPedidos():admConfig()}
   let eh="";
   eh+=`<div class="sec">Compositores sugeridos</div><div id="admComp"><p class="help">Carregando…</p></div>`;
   eh+=`<div class="sec">Alterações sugeridas pelos alunos (${ep.length})</div>`;
