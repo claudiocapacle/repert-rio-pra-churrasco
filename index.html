@@ -749,6 +749,27 @@ details.admcard[open] summary{margin-bottom:8px}
 .premshow figcaption b{display:block;font-size:14.5px;margin-bottom:2px}
 .premshow figcaption small{display:block;font-size:13px;font-weight:500;line-height:1.35;color:var(--muted)}
 .premlock .premimg{box-shadow:0 10px 26px rgba(31,36,48,.14)}
+/* instalar na tela inicial */
+.instban{display:grid;grid-template-columns:44px 1fr auto auto;gap:10px;align-items:center;background:linear-gradient(135deg,var(--orange-soft),#fbf3e8);border:1.5px solid #f3c39d;border-radius:16px;padding:10px 8px 10px 12px;margin:2px 0 14px}
+.instban img{border-radius:11px;box-shadow:0 3px 8px rgba(31,36,48,.15)}
+.instban .ibtx b{display:block;font-size:14.5px;line-height:1.2}
+.instban .ibtx small{display:block;font-size:12.5px;color:var(--muted);line-height:1.3;margin-top:2px}
+.instban .primary{min-height:38px;padding:6px 12px;font-size:14px;white-space:nowrap}
+.instban .ibx{border:0;background:none;color:var(--muted);font-size:15px;width:28px;height:32px;cursor:pointer}
+.ishead{display:grid;grid-template-columns:56px 1fr;gap:12px;align-items:start;margin-bottom:12px}
+.ishead img{border-radius:14px;box-shadow:0 4px 12px rgba(31,36,48,.18)}
+.ishead h3{margin:2px 0 4px}.ishead .sub{margin:0}
+.istabs{margin:0 0 14px}
+.ispassos{list-style:none;counter-reset:is;margin:0 0 12px;padding:0;display:grid;gap:10px}
+.ispassos li{counter-increment:is;display:grid;grid-template-columns:30px 46px 1fr;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.ispassos li::before{content:counter(is);width:26px;height:26px;border-radius:50%;background:var(--orange);color:#fff;font-weight:800;font-size:14px;display:grid;place-items:center}
+.ispassos .isico{width:46px;height:46px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--ink);box-shadow:0 2px 6px rgba(31,36,48,.08)}
+.ispassos b{display:block;font-size:15px;line-height:1.25}
+.ispassos small{display:block;font-size:13px;color:var(--muted);line-height:1.35;margin-top:2px}
+.isaviso{background:#fff4e5;border:1.5px solid #f3c39d;border-radius:14px;padding:12px;margin-bottom:12px}
+.isaviso b{display:block;margin-bottom:3px}.isaviso small{display:block;color:var(--muted);font-size:13px;line-height:1.35;margin-bottom:8px}
+.isbig{width:100%;display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:6px}
+.appfoot .lnk+.lnk{margin-left:10px}
 
 </style>
 </head>
@@ -1057,7 +1078,7 @@ async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edico
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="29/10 11:57";
+const APP_BUILD="30/10 19:46";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1191,6 +1212,38 @@ let _lastPlay={};
 const naoConta=()=>!sb||navigator.webdriver||PROF||isAdmin;
 const plataforma=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)?"ios":/Android/i.test(navigator.userAgent)?"android":"desktop";
 const instalado=()=>{try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}};
+/* ----- instalar na tela inicial ----- */
+let BIP=null;
+addEventListener("beforeinstallprompt",e=>{e.preventDefault();BIP=e;if(st.view==="home"&&st.tab==="inicio")drawTab();if(dr&&dr.kind==="instalar")drawDrawer()});
+addEventListener("appinstalled",()=>{BIP=null;if(dr&&dr.kind==="instalar")closeDrawer();toast("SambaCifra instalado na tela inicial 🎶");if(st.view==="home")drawTab()});
+const plataformaInst=()=>{const u=navigator.userAgent||"";if(/iPhone|iPad|iPod/.test(u)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))return"ios";if(/Android/.test(u))return"android";return"pc"};
+const navIOS=()=>{const u=navigator.userAgent||"";if(/FBAN|FBAV|Instagram|Line\/|WhatsApp|GSA\/|TikTok|musical_ly/i.test(u))return"inapp";if(/CriOS/.test(u))return"chrome";if(/FxiOS|EdgiOS|OPiOS/.test(u))return"outro";return"safari"};
+const instEsconde=()=>{try{return +(localStorage.getItem("sc-inst-hide")||0)>Date.now()}catch(e){return false}};
+async function instalarAgora(){if(!BIP)return openDrawer("instalar");const e=BIP;BIP=null;try{e.prompt();const r=await e.userChoice;if(r&&r.outcome!=="accepted"){BIP=e}}catch(x){openDrawer("instalar")}}
+const INSICO={
+ share:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1d7cf2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>`,
+ addhome:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 8v8M8 12h8"/></svg>`,
+ dots:`<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>`,
+ more:`<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>`,
+ install:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>`,
+ ok:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`,
+ safari:`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2.2 4.8-4.8 2.2 2.2-4.8z"/></svg>`};
+function instPassos(os){
+  const P=(ic,t,d)=>`<li><span class="isico">${INSICO[ic]}</span><div><b>${t}</b>${d?`<small>${d}</small>`:""}</div></li>`;
+  if(os==="ios"){const nv=navIOS();
+    return`${nv==="inapp"?`<div class="isaviso"><b>Primeiro, abra no Safari</b><small>Dentro do Instagram, WhatsApp e outros apps não dá para instalar. Toque nos três pontinhos ou no ícone de bússola e escolha “Abrir no Safari”, ou copie o link e cole no Safari.</small><button class="ghost" id="isCopy">Copiar o link do app</button></div>`:""}
+     <ol class="ispassos">${P("share","Toque no botão Compartilhar",nv==="chrome"?"No Chrome, ele fica no alto, ao lado do endereço.":"Fica na barra de baixo do Safari (no iPad, em cima). Se não aparecer, toque em ••• primeiro.")}
+     ${P("addhome","Role e toque em “Adicionar à Tela de Início”","Se não estiver na lista, toque em “Editar ações” no fim e ative a opção.")}
+     ${P("ok","Toque em “Adicionar”","O ícone do SambaCifra aparece junto dos seus apps.")}</ol>`}
+  if(os==="android") return`${BIP?`<button class="primary isbig" id="isNow">${INSICO.install} Instalar agora</button><p class="help" style="text-align:center">Um toque e pronto. Se preferir, siga os passos abaixo.</p>`:""}
+     <ol class="ispassos">${P("dots","Toque nos três pontinhos ⋮","Ficam no canto de cima do Chrome, à direita do endereço.")}
+     ${P("install","Toque em “Adicionar à tela inicial”","Em alguns celulares aparece como “Instalar app”.")}
+     ${P("ok","Confirme em “Instalar” ou “Adicionar”","O ícone do SambaCifra aparece junto dos seus apps.")}</ol>
+     <p class="help">Usa o navegador da Samsung? Toque em ☰ embaixo e depois em “Adicionar página a” → “Tela de início”.</p>`;
+  return`${BIP?`<button class="primary isbig" id="isNow">${INSICO.install} Instalar agora</button>`:""}
+     <ol class="ispassos">${P("install","No Chrome ou no Edge, clique no ícone de instalar","Fica no fim da barra de endereço, perto da estrela.")}${P("ok","Clique em “Instalar”","O SambaCifra abre numa janela própria, como um programa.")}</ol>`;
+}
+
 let _visT=0;
 function registrarVisita(abertura){if(naoConta())return;const t=Date.now();if(!abertura&&t-_visT<100000)return;_visT=t;
   sb.rpc("registrar_visita",{p_device:DEVICE,p_plat:plataforma(),p_inst:instalado(),p_abertura:!!abertura}).then(()=>{}).catch(()=>{})}
@@ -1433,15 +1486,15 @@ function drawTab(){
     const arts=artistsAll().sort((a,b)=>b.songs.length-a.songs.length);
     const recent=store.hist.map(byId).filter(Boolean).slice(0,5), news=ultimasAdicionadas(5), favN=store.fav.filter(byId).length;
     const tile=(attr,ic,l,cls="")=>`<button class="qt2 ${cls}" ${attr}><span class="qi">${ico(ic,22)}</span><span>${l}</span></button>`;
-    let h=`<div class="qgrid2">${tile('data-nav="musicas"',"note","Músicas")}${tile('data-nav="artistas"',"user","Artistas")}${tile('data-nav="meus"',"addlist","Meus repertórios")}
+    let h=(!instalado()&&!instEsconde()?`<div class="instban"><img src="icon-192.png" alt="" width="44" height="44"><div class="ibtx"><b>Coloque o SambaCifra na tela inicial</b><small>Abre com um toque, em tela cheia, como um aplicativo.</small></div><button class="primary" id="instGo">${BIP?"Instalar":"Ver como"}</button><button class="ibx" id="instX" aria-label="Agora não">✕</button></div>`:"")+`<div class="qgrid2">${tile('data-nav="musicas"',"note","Músicas")}${tile('data-nav="artistas"',"user","Artistas")}${tile('data-nav="meus"',"addlist","Meus repertórios")}
       ${tile('data-nav="prontos"',"star","Repertórios prontos","o")}${tile('data-nav="ferramentas"',"tune","Ferramentas")}${tile('data-go="import"',"upload","Enviar cifra")}</div>`;
     if(recent.length) h+=`<div class="sec">Continue tocando</div><div class="rows" style="padding-bottom:0">${recent.map(s=>songRow(s)).join("")}</div>`;
     h+=`<div class="sec">Artistas</div><div class="achips">${arts.slice(0,12).map((a,i)=>`<button data-artist="${esc(a.key)}">${artistAv(a.name,"",i)}${esc(a.name)}</button>`).join("")}<button data-nav="artistas" class="more">Ver todos ›</button></div>`;
     h+=`<div class="sec">Músicas em alta</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,st.altaMais?20:5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>${TOP.length>5?`<button class="ghost" id="altaMais" style="width:100%;margin-top:6px">${st.altaMais?"Mostrar menos":"Ver o top 20"}</button>`:""}`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
     if(news.length) h+=`<div class="sec">Últimas adicionadas</div><div class="rows" style="padding-bottom:0">${news.map(s=>songRow(s)).join("")}</div>`;
     const ex=store.reps[0]; if(ex) h+=`<div class="sec">Seu repertório</div><button class="card" data-rep="${ex.id}" style="margin-top:4px"><b>${esc(ex.name)}</b><small>${ex.items.length} músicas · toque para abrir e tocar em sequência</small><span class="go">›</span></button>`;
-    h+=`<div class="appfoot"><span>SambaCifra · versão ${esc(APP_BUILD)}</span><button class="lnk" id="updHome">↻ Atualizar o app</button></div>`;
-    tb.innerHTML=h;$("updHome").onclick=()=>appAtualizar();if($("altaMais"))$("altaMais").onclick=()=>{st.altaMais=!st.altaMais;drawTab()};
+    h+=`<div class="appfoot"><span>SambaCifra · versão ${esc(APP_BUILD)}</span>${!instalado()?`<button class="lnk" id="instFoot">📲 Instalar na tela inicial</button>`:""}<button class="lnk" id="updHome">↻ Atualizar o app</button></div>`;
+    tb.innerHTML=h;$("updHome").onclick=()=>appAtualizar();if($("instGo"))$("instGo").onclick=()=>BIP?instalarAgora():openDrawer("instalar");if($("instFoot"))$("instFoot").onclick=()=>openDrawer("instalar");if($("instX"))$("instX").onclick=()=>{try{localStorage.setItem("sc-inst-hide",Date.now()+7*864e5)}catch(e){}drawTab()};if($("altaMais"))$("altaMais").onclick=()=>{st.altaMais=!st.altaMais;drawTab()};
   } else if(st.tab==="musicas"){
     const q=st.q.trim();
     let list=q?searchSongs(q):[...PRIVATE,...SONGS];
@@ -1949,6 +2002,14 @@ function drawDrawer(){
     setTimeout(()=>$("nn")&&$("nn").focus(),50);
     $("nf").onsubmit=e=>{e.preventDefault();const r={id:"r"+Date.now(),name:$("nn").value.trim()||"Novo repertório",items:[]};store.reps.push(r);save();
       if(dr.id){addTo(r,dr.id);closeDrawer()} else go("rep",{rep:r.id})};
+  } else if(dr.kind==="instalar"){
+    const os=dr.os||plataformaInst();
+    B.innerHTML=`<div class="ishead"><img src="icon-192.png" alt="" width="56" height="56"><div><h3>SambaCifra na tela inicial</h3><p class="sub">Fica com o ícone junto dos seus apps, abre em tela cheia e mais rápido. Não ocupa espaço como um app da loja.</p></div></div>
+     <div class="pills istabs">${[["ios","iPhone / iPad"],["android","Android"],["pc","Computador"]].map(([k,l])=>`<button data-os="${k}" class="${os===k?"on":""}">${l}</button>`).join("")}</div>
+     ${instPassos(os)}`;
+    B.querySelectorAll("[data-os]").forEach(b=>b.onclick=()=>{dr.os=b.dataset.os;drawDrawer()});
+    if($("isNow"))$("isNow").onclick=instalarAgora;
+    if($("isCopy"))$("isCopy").onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+location.pathname);toast("Link copiado. Cole no Safari.")}catch(e){toast(location.origin)}};
   } else if(dr.kind==="upsell"){
     premiumDrawer(B,dr.why);
   } else if(dr.kind==="metronomo"){
