@@ -1107,11 +1107,13 @@ let EDITS={},EDS_ALL=[];
 function chordRow(ch){let s="",prev="";for(const[c,t] of ch){const sp=/^[|>%]$/.test(t)||/^[|>%]$/.test(prev);if(s.length&&c<s.length+(sp?0:1))s+=sp?"":" ";else s=s.padEnd(c);s+=t;prev=t}return s}
 function linesToText(lines){const o=[];for(const l of lines){if(l.t==="gap")o.push("");else if(l.t==="pair"){o.push(chordRow(l.ch));o.push(l.text.replace(/\s+$/,"")+(l.bold?" [b]":""))}else if(l.t==="chords")o.push(chordRow(l.ch));else o.push((l.text||"").replace(/\s+$/,"")+(l.bold?" [b]":""))}return o.join("\n")}
 async function loadEdits(){if(!sb)return;const {data,error}=await sb.from("edicoes").select("song_id,versao,texto,tom,criado_em").eq("status","publicada").order("criado_em").limit(5000);if(error||!data)return;
-  const m={};for(const e of data)m[e.song_id+"|"+e.versao]=e;EDITS=m;for(const e of data){const s=byId(e.song_id);if(s)delete s.vers}if(st.view==="song")drawSong()}
+  const m={};for(const e of data)m[e.song_id+"|"+e.versao]=e;EDITS=m;for(const e of data){const s=byId(e.song_id);if(s)delete s.vers}applyNomes();if(st.view==="song")drawSong();else if(st.view==="home")drawTab()}
+/* nome da música e do artista corrigidos pelo professor (guardados como edição "__nome") */
+function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;let o;try{o=JSON.parse(EDITS[k].texto)}catch(_){continue}const s=byId(k.slice(0,-7));if(!s||!o||!o.title)continue;if(s._t0==null){s._t0=s.title;s._a0=s.artist}s.title=o.title;s.artist=o.artist||""}}
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="04/11 23:10";
+const APP_BUILD="04/11 23:28";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1221,7 +1223,7 @@ myName=lsGet("rpc-name")||"";
 async function loadCatalog(){
   const {data,error}=await sb.from("catalog").select("*").order("created_at");if(error)return;
   SONGS.splice(BASE_COUNT);data.forEach(v=>SONGS.push(fromSubmission(v,true)));
-  if(st.view==="home")drawTab();
+  applyNomes();if(st.view==="home")drawTab();
 }
 async function loadMeta(){const {data}=await sb.from("meta").select("*");(data||[]).forEach(m=>meta[m.song_id]={bpm:m.bpm,aula:m.aula});if(st.view==="song")drawSongHead()}
 async function loadMine(){
@@ -2521,6 +2523,7 @@ function drawEdit(){
   $("bk").onclick=()=>go("song",{id:s.id});
   $("view").innerHTML=`<div class="homepad edwrap">
     <h2 class="ptitle" style="margin-bottom:2px">${esc(s.title)}</h2><p class="help" style="margin-top:0">${esc(s.artist)} · versão <b>${esc(e.ver)}</b>${e.origem?" · sugestão de "+esc(e.nome||"aluno"):""}</p>
+    ${isAdmin?`<div class="field"><label for="edti">Nome da música</label><input id="edti" value="${esc(s.title)}" maxlength="150"></div><div class="field"><label for="edar">Artista</label><input id="edar" value="${esc(s.artist)}" maxlength="150"></div>`:""}
     <div class="edrow"><label>Tom <input id="edtom" value="${esc(e.tom||"")}" maxlength="6"></label></div>
     <p class="help">Acordes na linha de cima e a letra logo embaixo. Use espaços para colocar o acorde sobre a sílaba certa. Linha em branco separa as partes. ${"[b]"} no fim da linha deixa a letra em destaque.</p>
     <textarea id="edtx" class="edtx" spellcheck="false" wrap="off">${esc(e.texto)}</textarea>
@@ -2534,11 +2537,18 @@ function drawEdit(){
   $("edcan").onclick=()=>go("song",{id:s.id});
   $("edok").onclick=async()=>{const B=$("edok"),S=$("edst");e.texto=$("edtx").value;e.tom=$("edtom").value.trim();
     if(parseChordText(e.texto).length<2){S.hidden=false;S.className="status err";S.textContent="A cifra ficou vazia.";return}
-    if(e.orig!=null&&e.texto===e.orig&&e.tom===e.otom){S.hidden=false;S.className="status err";S.textContent="Você ainda não mudou nada na cifra.";return}
+    const nti=isAdmin&&$("edti")?$("edti").value.trim():s.title,nar=isAdmin&&$("edar")?$("edar").value.trim():s.artist,mudouNome=nti!==s.title||nar!==s.artist,mudouCifra=!(e.orig!=null&&e.texto===e.orig&&e.tom===e.otom)||!!e.origem;
+    if(isAdmin&&!nti){S.hidden=false;S.className="status err";S.textContent="O nome da música não pode ficar vazio.";return}
+    if(!mudouCifra&&!mudouNome){S.hidden=false;S.className="status err";S.textContent="Você ainda não mudou nada.";return}
     B.disabled=true;S.hidden=false;S.className="status";S.textContent="Enviando…";
-    if(isAdmin){const {data,error}=await sb.rpc("admin_publicar_edicao",{p_key:ADMIN_KEY,p_song:s.id,p_ver:e.ver,p_texto:e.texto,p_tom:e.tom,p_origem:e.origem||null});
-      if(error||!data){B.disabled=false;S.className="status err";S.textContent="Não foi possível publicar. Tente de novo.";return}
-      EDITS[s.id+"|"+e.ver]={texto:e.texto,tom:e.tom};delete s.vers;loadAdminEdits();toast("Publicado para todos");go(e.origem?"review":"song",{id:s.id})}
+    if(isAdmin){
+      if(mudouCifra){const {data,error}=await sb.rpc("admin_publicar_edicao",{p_key:ADMIN_KEY,p_song:s.id,p_ver:e.ver,p_texto:e.texto,p_tom:e.tom,p_origem:e.origem||null});
+        if(error||!data){B.disabled=false;S.className="status err";S.textContent="Não foi possível publicar. Tente de novo.";return}
+        EDITS[s.id+"|"+e.ver]={texto:e.texto,tom:e.tom};delete s.vers}
+      if(mudouNome){const tx=JSON.stringify({title:nti,artist:nar});const {data,error}=await sb.rpc("admin_publicar_edicao",{p_key:ADMIN_KEY,p_song:s.id,p_ver:"__nome",p_texto:tx,p_tom:"",p_origem:null});
+        if(error||!data){B.disabled=false;S.className="status err";S.textContent="A cifra foi salva, mas não deu para mudar o nome. Tente de novo.";return}
+        EDITS[s.id+"|__nome"]={texto:tx,tom:""};applyNomes()}
+      loadAdminEdits();toast("Publicado para todos");go(e.origem?"review":"song",{id:s.id})}
     else{const nm=($("ednm")||{}).value||"",nt=($("ednt")||{}).value||"";if(nm){myName=nm;lsSet("rpc-name",nm)}
       const {data,error}=await sb.rpc("sugerir_edicao",{p_device:DEVICE,p_song:s.id,p_ver:e.ver,p_texto:e.texto,p_tom:e.tom,p_nome:nm,p_nota:nt});
       if(error||!data){B.disabled=false;S.className="status err";S.textContent="Não foi possível enviar agora. Tente de novo em instantes.";return}
