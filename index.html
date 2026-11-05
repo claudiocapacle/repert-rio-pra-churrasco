@@ -1328,7 +1328,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="05/11 10:27";
+const APP_BUILD="05/11 10:35";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -2355,7 +2355,7 @@ function drawDrawer(){
      <div class="canc"><b>Pedir reembolso</b>
       <p>Até 7 dias depois da compra você pode pedir o dinheiro de volta (direito de arrependimento). Use o número da transação, que começa com HP e está no e-mail de compra da Hotmart. Para não haver novas cobranças, cancele também a assinatura.</p>
       <a class="ghost" href="https://refund.hotmart.com/" target="_blank" rel="noopener">Pedir reembolso na Hotmart</a></div>
-     <p class="help" style="text-align:center">Dúvidas? <a href="mailto:suporte@sambacifra.com.br">suporte@sambacifra.com.br</a></p>`;
+     <p class="help" style="text-align:center">Dúvidas? <a href="mailto:contato@sambacifra.com.br">contato@sambacifra.com.br</a></p>`;
   }
 }
 
