@@ -1328,7 +1328,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="05/11 10:35";
+const APP_BUILD="05/11 10:40";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -2328,10 +2328,22 @@ function drawDrawer(){
      <button class="opt ${isPro()?"on":""}" id="cPlano" style="width:100%;margin-bottom:10px"><b>Plano: ${isPro()?"Premium":"Grátis"}</b><small>${isPro()?"Tudo liberado.":"Conheça o Premium: repertórios ilimitados, roda ao vivo e aulas."}</small></button>
      ${PROF?`<p class="help"><b style="color:var(--orange)">Você é professor.</b> O painel e a edição das cifras aparecem para você em qualquer aparelho.</p><button class="ghost" id="goPainel" style="width:100%;margin-bottom:8px">Abrir o painel do professor</button>`:""}
      <button class="ghost" id="updC" style="width:100%;margin-bottom:8px">↻ Atualizar o app</button>
-     <button class="ghost" id="sairC" style="width:100%">Sair da conta</button><p class="help" style="text-align:center;margin-top:12px"><a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a></p>`;
+     <button class="ghost" id="sairC" style="width:100%">Sair da conta</button><p class="help" style="text-align:center;margin-top:12px"><a href="/privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a> · <a href="/termos.html" target="_blank" rel="noopener">Termos de Uso</a></p>${PROF?"":`<p style="text-align:center;margin:4px 0 0"><button class="lnk" id="exclC" style="color:var(--muted)">Excluir minha conta</button></p>`}`;
     if($("goPainel"))$("goPainel").onclick=()=>{closeDrawer();go("review",{})};
     $("sairC").onclick=sairConta;$("updC").onclick=()=>appAtualizar();
-    $("cPlano").onclick=()=>openDrawer("plano");
+    $("cPlano").onclick=()=>openDrawer("plano");if($("exclC"))$("exclC").onclick=()=>openDrawer("excluir");
+  } else if(dr.kind==="excluir"){
+    B.innerHTML=`<h3>Excluir minha conta</h3><p class="sub">${esc(USER&&USER.email||"")}</p>
+     <p class="help" style="color:var(--ink)">Isso apaga para sempre a sua conta e os repertórios, favoritas e últimas tocadas salvos nela. Não dá para desfazer.</p>
+     ${isPro()&&!PROF?`<p class="help"><b>Assinatura Premium:</b> excluir a conta não cancela a cobrança. Cancele antes na Hotmart, pelo e-mail da compra, em <a href="https://consumer.hotmart.com" target="_blank" rel="noopener">consumer.hotmart.com</a>.</p>`:""}
+     <div class="field"><label for="exq">Para confirmar, digite EXCLUIR</label><input id="exq" autocomplete="off" autocapitalize="characters"></div>
+     <div class="row2" style="margin-top:12px"><button class="ghost" id="exNo">Cancelar</button><button class="primary" id="exOk" style="background:#c0392b;border-color:#c0392b">Excluir conta</button></div><p class="status" id="exSt" hidden></p>`;
+    $("exNo").onclick=()=>openDrawer("conta");
+    $("exOk").onclick=async()=>{const S=$("exSt");if($("exq").value.trim().toUpperCase()!=="EXCLUIR"){S.hidden=false;S.className="status err";S.textContent="Digite EXCLUIR para confirmar.";return}
+      $("exOk").disabled=true;S.hidden=false;S.className="status";S.textContent="Excluindo…";
+      const {data,error}=await sb.rpc("excluir_minha_conta");
+      if(error||!data){$("exOk").disabled=false;S.className="status err";S.textContent="Não foi possível excluir agora. Tente de novo ou escreva para contato@sambacifra.com.br.";return}
+      try{await sb.auth.signOut()}catch(e){}try{localStorage.removeItem("sc-plano")}catch(e){}USER=null;PROF=false;PREMIUM=false;PLANO={};closeDrawer();draw();toast("Sua conta foi excluída.")};
   } else if(dr.kind==="novasenha"){
     B.innerHTML=`<h3>Nova senha</h3><p class="sub">Escolha uma senha nova para a sua conta.</p><form class="lgform" id="nsf"><input id="ns1" type="password" placeholder="Nova senha (mínimo 6 caracteres)" autocomplete="new-password" minlength="6" required><button class="primary">Salvar senha</button><p class="status" id="nsst" hidden></p></form>`;
     $("nsf").onsubmit=async e=>{e.preventDefault();const {error}=await sb.auth.updateUser({password:$("ns1").value});if(error){$("nsst").hidden=false;$("nsst").className="status err";$("nsst").textContent=authErr(error)}else{closeDrawer();toast("Senha alterada")}};
