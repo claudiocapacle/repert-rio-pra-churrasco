@@ -826,6 +826,7 @@ details.admcard[open] summary{margin-bottom:8px}
 .accard svg .dgl{fill:var(--muted);font-size:11px;font-weight:700;font-family:var(--f-mono,monospace)}
 .accard svg .ft{fill:var(--muted);font-size:12px;font-weight:700}
 .accard.prof{border-color:var(--orange);background:var(--orange-soft)}.accard.prof span{color:var(--orange)}
+.acalt{margin:0 0 10px;font-size:13.5px;color:var(--muted)}.acalt b{font-family:var(--f-mono,monospace);color:var(--ink);font-weight:700}
 
 </style>
 </head>
@@ -1069,7 +1070,8 @@ const KD=(()=>{
    fundamental ou a 5ª justa. 3ª (ou 4ª no sus), 7ª e tensões ficam sempre. Corda solta só em
    desenhos até a 3ª casa. Abertura máxima de 4 casas. Afinação Ré Sol Si Ré. */
 const AC_OPEN=[2,7,11,2], AC_MIDI=[62,67,71,74];      // corda 4 (Ré grave) -> corda 1
-const AC_ROOTS=["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
+const AC_ROOTS=["C","C#","Db","D","D#","Eb","E","F","F#","Gb","G","G#","Ab","A","A#","Bb","B"];
+const AC_PC12=["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
 const AC_PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 // grau: [semitons, rótulo, número da nota (para escrever o nome certo)]
 const G={"1":[0,"1","1"],"b9":[1,"b9","2"],"9":[2,"9","2"],"#9":[3,"#9","2"],"b3":[3,"b3","3"],"3":[4,"3","3"],"4":[5,"4","4"],"11":[5,"11","4"],"#11":[6,"#11","4"],
@@ -1126,7 +1128,7 @@ function acParse(txt){ // "Bbm7/9" -> {root:"Bb", tipo}
   const root=m[1].toUpperCase()+m[2],suf=m[3].trim().replace(/\s+/g,"");
   const t=AC_TIPOS.find(t=>t.s===suf||(t.a||[]).includes(suf));if(!t)return null;
   const pc=(AC_PC[root[0]]+(m[2]==="#"?1:m[2]==="b"?-1:0)+12)%12;
-  return {root:AC_ROOTS.includes(root)?root:AC_ROOTS[pc],tipo:t};
+  return {root:AC_ROOTS.includes(root)?root:AC_PC12[pc],tipo:t};
 }
 function acSvg(v,w=120){
   const h=Math.round(w*1.32),x0=16,gap=(w-48)/3,y0=20,fh=(h-y0-34)/5,base=v.fr.includes(0)||v.hi<=4?1:v.lo;
@@ -1140,6 +1142,13 @@ function acSvg(v,w=120){
     s+=`<text class="dgl" x="${x}" y="${h-6}" text-anchor="middle">${dg}</text>`});
   return s+"</svg>";
 }
+function acSimples(n){ // E#, B#, Cb, Fb, F##, Bbb… mostra também o nome usual
+  if(!/^(E#|B#|Cb|Fb)$|##|bb/.test(n))return "";const pc=((AC_PC[n[0]]+(n.split("#").length-1)-(n.slice(1).split("b").length-1))%12+12)%12;
+  return ` <small style="font-size:12px;color:var(--muted)">(= ${AC_PC12[pc]})</small>`}
+function acOutros(root,tipo){ // outras formas de escrever o mesmo acorde (enarmonia e nomenclatura)
+  const en={"C#":"Db","Db":"C#","D#":"Eb","Eb":"D#","F#":"Gb","Gb":"F#","G#":"Ab","Ab":"G#","A#":"Bb","Bb":"A#"}[root];
+  const ns=[...new Set([...(tipo.a||[]).filter(a=>!/^\(/.test(a)||true).map(a=>root+a),...(en?[en+tipo.s,...(tipo.a||[]).map(a=>en+a)]:[])])];
+  return ns.length?`<p class="acalt">Também aparece como: ${ns.map(n=>`<b>${esc(n)}</b>`).join(", ")}</p>`:""}
 function acTocar(v){try{const C=audioCtx(),t0=C.currentTime+0.02;v.fr.forEach((f,i)=>{const t=t0+i*0.045,fq=440*Math.pow(2,(AC_MIDI[i]+f-69)/12);
   for(const [mul,amp] of [[1,0.22],[2,0.08],[3,0.04]]){const o=C.createOscillator(),g=C.createGain();o.type="triangle";o.frequency.value=fq*mul;
     g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(amp,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+1.6);o.connect(g).connect(C.destination);o.start(t);o.stop(t+1.7)}})}catch(e){}}
@@ -1155,8 +1164,8 @@ function drawAcordes(){
   $("tbody").innerHTML=`<div class="acbusca"><input id="acq" placeholder="Digite um acorde, ex.: Bbm7/9" value="${esc(ACD.q)}" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
    <p class="lbl2">Nota</p><div class="pills acroots">${AC_ROOTS.map(r=>`<button data-acr="${r}" class="${r===ACD.root?"on":""}">${r}</button>`).join("")}</div>
    <p class="lbl2" style="margin-top:12px">Tipo</p><div class="pills actipos">${AC_TIPOS.map(t=>`<button data-act="${esc(t.s)}" class="${t.s===ACD.suf?"on":""}">${esc(ACD.root+t.s)}</button>`).join("")}</div>
-   <div class="achead"><h3>${esc(nome)}</h3><small>${esc(tipo.n)}</small></div>
-   <div class="acnotas">${tipo.g.map(d=>`<span><b>${esc(acSpell(ACD.root,d))}</b><small>${G[d][1]==="1"?"1ª (fundamental)":G[d][1]}</small></span>`).join("")}</div>
+   <div class="achead"><h3>${esc(nome)}</h3><small>${esc(tipo.n)}</small></div>${acOutros(ACD.root,tipo)}
+   <div class="acnotas">${tipo.g.map(d=>`<span><b>${esc(acSpell(ACD.root,d))}${acSimples(acSpell(ACD.root,d))}</b><small>${G[d][1]==="1"?"1ª (fundamental)":G[d][1]}</small></span>`).join("")}</div>
    <p class="help">${tipo.g.length>=4?"No cavaquinho a fundamental ou a 5ª podem ficar de fora do desenho. ":""}${vs.length} desenho${vs.length===1?"":"s"} pelo braço. Toque para ouvir. Corda 4 (Ré grave) à esquerda.</p>
    <div class="acgrid">${vs.map((v,i)=>`<button class="accard${v.prof?" prof":""}" data-acv="${i}">${acSvg(v)}<span>${v.prof?"Dicionário do professor":v.fr.includes(0)?"Com corda solta":v.lo+"ª casa"}</span></button>`).join("")||`<p class="sub">Nenhum desenho encontrado.</p>`}</div>`;
   document.querySelectorAll("[data-acr]").forEach(b=>b.onclick=()=>{ACD.root=b.dataset.acr;ACD.q="";drawAcordes()});
@@ -1236,7 +1245,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="04/11 23:44";
+const APP_BUILD="04/11 23:46";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
