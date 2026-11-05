@@ -1,7 +1,7 @@
 // Offline: guarda o app e as bibliotecas; a página principal busca primeiro na rede para pegar atualizações.
 // Três caches: o núcleo do app (muda a cada publicação), as cifras (arquivos com hash, nunca mudam)
 // e a mídia (batucada, imagens, fontes). Uma publicação nova só troca o núcleo: o offline do aluno continua.
-const CACHE = "sambacifra-v99";
+const CACHE = "sambacifra-v100";
 const DADOS = "sambacifra-dados", MIDIA = "sambacifra-midia";
 const CORE = ["./", "index.html", "manifest.webmanifest", "vendor/supabase.js", "vendor/591.supabase.js", "vendor/qrcode.min.js", "icon-192.png", "icon-512.png", "favicon.png", "apple-touch-icon.png", "icon.svg"];
 const qual = url => url.pathname.startsWith("/data/") ? DADOS : (url.pathname.startsWith("/batucada/") || url.pathname.startsWith("/img/") || /fonts\.(gstatic|googleapis)\.com$/.test(url.hostname)) ? MIDIA : CACHE;
@@ -28,8 +28,11 @@ self.addEventListener("fetch", e => {
       .catch(() => caches.match("index.html")));
     return;
   }
+  // só guarda no cache o que é do próprio site ou das origens conhecidas (fontes e bibliotecas); nada de respostas opacas
+  const conhecida = url.origin === location.origin || url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com" || url.hostname === "cdnjs.cloudflare.com";
+  if (!conhecida) return;
   e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
-    if (r.ok || r.type === "opaque") { const cp = r.clone(); caches.open(qual(url)).then(c => c.put(req, cp)); }
+    if (r.ok && (r.type === "basic" || r.type === "cors")) { const cp = r.clone(); caches.open(qual(url)).then(c => c.put(req, cp)); }
     return r;
   })));
 });

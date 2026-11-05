@@ -1328,7 +1328,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="05/11 00:17";
+const APP_BUILD="05/11 00:27";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1357,7 +1357,7 @@ function curVer(s){const vs=vers(s);return vs.find(v=>v.k===st.ver)||(st.ver==="
 function songKey(s){return curVer(s).key||s.key}
 let FREE_REPS=1, FREE_SONGS=20, PREMIUM=false, PLANO={};
 const $=id=>document.getElementById(id);
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm=s=>String(s).toLowerCase().normalize("NFD").replace(/\p{Mn}/gu,"");
 let PRIVATE=[]; // cifras enviadas pelo próprio usuário (pendentes)
 const byId=id=>SONGS.find(s=>s.id===id)||PRIVATE.find(s=>s.id===id);
@@ -1694,14 +1694,15 @@ async function loadFotos(){if(!sb)return;const {data,error}=await sb.from("artis
   AFOTO={};for(const x of data)if(x.url)AFOTO[x.akey]=x;if(["home","artist","song"].includes(st.view))draw()}
 function fotoDe(name){const f=AFOTO[artistKey(name)];if(f)return f;const p=String(name||"").replace(/\(.*?\)/g,"").split(/\s+(?:e|part\.?|feat\.?|com|&)\s+|\s*[\/,]\s*/i)[0];return p&&p!==name?AFOTO[artistKey(p)]:null}
 function artistAv(name,cls="",i=0){const f=fotoDe(name),ini=esc(initials(name||"?"));
-  return `<span class="av ${cls} ${i%2?"b":""}">${f?`<img src="${esc(f.url)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${ini}'">`:ini}</span>`}
+  return `<span class="av ${cls} ${i%2?"b":""}">${f?`<img src="${esc(f.url)}" alt="" loading="lazy" data-ini="${ini}">`:ini}</span>`}
 async function fotoSet(a,acao,img){const S=$("fstat");if(S){S.hidden=false;S.textContent=acao==="enviar"?"Enviando a foto…":"Removendo…"}
   try{const r=await fetch(SB_URL+"/functions/v1/artista-foto",{method:"POST",headers:{"Content-Type":"application/json",apikey:SB_KEY,...(await authHdr())},body:JSON.stringify({key:ADMIN_KEY,acao,akey:a.key,nome:a.name,img})});const d=await r.json();
     if(!r.ok||d.error)throw 0;if(acao==="enviar")AFOTO[a.key]={akey:a.key,url:d.url,fonte:"prof"};else delete AFOTO[a.key];toast(acao==="enviar"?"Foto salva para todos":"Foto removida");drawArtist()}
   catch(e){if(S)S.textContent="Não deu certo. Tente outra imagem.";}}
 function fotoArquivo(file,cb){const im=new Image();im.onload=()=>{const c=document.createElement("canvas"),z=320;c.width=c.height=z;const g=c.getContext("2d"),m=Math.min(im.width,im.height);
   g.drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,z,z);URL.revokeObjectURL(im.src);cb(c.toDataURL("image/jpeg",.85))};im.onerror=()=>toast("Não consegui abrir essa imagem.");im.src=URL.createObjectURL(file)}
-const initials=n=>n.split(/\s+/).filter(w=>w.length>2||/^[A-Z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join("").toUpperCase()||n[0].toUpperCase();
+const initials=n=>{n=String(n||"").replace(/[^\p{L}\p{N}\s]/gu,"").trim()||"?";return n.split(/\s+/).filter(w=>w.length>2||/^[A-Z0-9]/.test(w)).slice(0,2).map(w=>w[0]).join("").toUpperCase()||n[0].toUpperCase()};
+document.addEventListener("error",e=>{const t=e.target;if(t&&t.tagName==="IMG"&&t.dataset&&t.dataset.ini!=null&&t.parentNode)t.parentNode.textContent=t.dataset.ini},true);
 function artistRow(a,i){return `<button class="arow" data-artist="${esc(a.key)}">${artistAv(a.name,"",i)}<span class="t"><b>${esc(a.name)}</b><small>${esc(a.songs.slice(0,2).map(x=>x.title).join(", "))}${a.songs.length>2?"…":""}</small></span><span class="go">›</span></button>`}
 function searchSongs(q){
   const words=norm(q).split(/\s+/).filter(Boolean);if(!words.length)return[];
@@ -1754,7 +1755,7 @@ function drawTab(){
     h+=`<div class="sec">Artistas</div><div class="achips">${arts.slice(0,12).map((a,i)=>`<button data-artist="${esc(a.key)}">${artistAv(a.name,"",i)}${esc(a.name)}</button>`).join("")}<button data-nav="artistas" class="more">Ver todos ›</button></div>`;
     h+=`<div class="sec">Músicas em alta</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,st.altaMais?20:5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>${TOP.length>5?`<button class="ghost" id="altaMais" style="width:100%;margin-top:6px">${st.altaMais?"Mostrar menos":"Ver o top 20"}</button>`:""}`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
     if(news.length) h+=`<div class="sec">Últimas adicionadas</div><div class="rows" style="padding-bottom:0">${news.map(s=>songRow(s)).join("")}</div>`;
-    const ex=store.reps[0]; if(ex) h+=`<div class="sec">Seu repertório</div><button class="card" data-rep="${ex.id}" style="margin-top:4px"><b>${esc(ex.name)}</b><small>${ex.items.length} músicas · toque para abrir e tocar em sequência</small><span class="go">›</span></button>`;
+    const ex=store.reps[0]; if(ex) h+=`<div class="sec">Seu repertório</div><button class="card" data-rep="${esc(ex.id)}" style="margin-top:4px"><b>${esc(ex.name)}</b><small>${ex.items.length} músicas · toque para abrir e tocar em sequência</small><span class="go">›</span></button>`;
     h+=`<div class="appfoot"><span>SambaCifra · versão ${esc(APP_BUILD)}</span>${!instalado()?`<button class="lnk" id="instFoot">📲 Instalar na tela inicial</button>`:""}<button class="lnk" id="updHome">↻ Atualizar o app</button></div>`;
     tb.innerHTML=h;$("updHome").onclick=()=>appAtualizar();$("pedHome").onclick=()=>openDrawer("pedido",{});if($("instGo"))$("instGo").onclick=()=>BIP?instalarAgora():openDrawer("instalar");if($("instFoot"))$("instFoot").onclick=()=>openDrawer("instalar");if($("instX"))$("instX").onclick=()=>{try{localStorage.setItem("sc-inst-hide",Date.now()+7*864e5)}catch(e){}drawTab()};if($("altaMais"))$("altaMais").onclick=()=>{st.altaMais=!st.altaMais;drawTab()};
   } else if(st.tab==="musicas"){
@@ -1775,7 +1776,7 @@ function drawTab(){
     let h=`<h2 class="ptitle">Artistas</h2>`,L="";arts.forEach((a,i)=>{let f=a.key[0].toUpperCase();if(!/[A-Z]/.test(f))f="#";if(!nq&&f!==L){L=f;h+=`<div class="sec">${f}</div>`}h+=artistRow(a,i)});
     tb.innerHTML=h;
   } else if(st.tab==="meus"){
-    let h=`<h2 class="ptitle">Meus repertórios</h2>`+(store.reps.length?"":`<div class="empty">Você ainda não tem repertório. Crie o seu, dê um nome e vá adicionando as músicas da roda${!isPro()?` (até ${FREE_SONGS} no plano grátis)`:""}.</div>`)+store.reps.map(r=>`<button class="card" data-rep="${r.id}"><b>${esc(r.name)}</b><small>${r.items.length} música${r.items.length===1?"":"s"}${!isPro()?` de ${FREE_SONGS} no plano grátis`:""}</small><span class="go">›</span>${!isPro()?`<div class="meter" style="grid-column:1"><i style="width:${Math.min(100,r.items.length/FREE_SONGS*100)}%"></i></div>`:""}</button>`).join("");
+    let h=`<h2 class="ptitle">Meus repertórios</h2>`+(store.reps.length?"":`<div class="empty">Você ainda não tem repertório. Crie o seu, dê um nome e vá adicionando as músicas da roda${!isPro()?` (até ${FREE_SONGS} no plano grátis)`:""}.</div>`)+store.reps.map(r=>`<button class="card" data-rep="${esc(r.id)}"><b>${esc(r.name)}</b><small>${r.items.length} música${r.items.length===1?"":"s"}${!isPro()?` de ${FREE_SONGS} no plano grátis`:""}</small><span class="go">›</span>${!isPro()?`<div class="meter" style="grid-column:1"><i style="width:${Math.min(100,r.items.length/FREE_SONGS*100)}%"></i></div>`:""}</button>`).join("");
     h+=`<div style="margin-top:14px"><button class="primary" id="newRep">${ico("plus",16,"stroke:#fff;vertical-align:-3px")} Novo repertório</button></div>`;
     if(!isPro()) h+=`<p class="help">Plano grátis: ${FREE_REPS} repertório com até ${FREE_SONGS} músicas. No Premium, repertórios e músicas ilimitados.</p>`;
     h+=`<p class="help">Os repertórios ficam neste aparelho. Para levar para outro, use <b>Compartilhar</b> dentro do repertório.</p>`;
@@ -2255,7 +2256,7 @@ function drawDrawer(){
   } else if(dr.kind==="addrep"){
     const so=byId(dr.id);
     B.innerHTML=`<h3>Adicionar ao repertório</h3><p class="sub">${esc(so.title)}${st.view==="song"?` · no tom <b style="font-family:var(--f-mono);color:var(--blue)">${esc(keyOf(so,st.delta))}</b>`:""}</p>
-     <div class="replist">${store.reps.map(r=>{const has=r.items.some(i=>i.id===dr.id);return`<button class="opt ${has?"on":""}" data-to="${r.id}"><span><b>${esc(r.name)}</b><br><small>${r.items.length}${!isPro()?"/"+FREE_SONGS:""} músicas</small></span>${has?ico("check",22,"stroke:var(--orange);stroke-width:2.6"):""}</button>`}).join("")}</div>
+     <div class="replist">${store.reps.map(r=>{const has=r.items.some(i=>i.id===dr.id);return`<button class="opt ${has?"on":""}" data-to="${esc(r.id)}"><span><b>${esc(r.name)}</b><br><small>${r.items.length}${!isPro()?"/"+FREE_SONGS:""} músicas</small></span>${has?ico("check",22,"stroke:var(--orange);stroke-width:2.6"):""}</button>`}).join("")}</div>
      <button class="ghost" id="nr" style="width:100%">${ico("plus",16,"vertical-align:-3px")} Novo repertório</button>`;
     B.querySelectorAll("[data-to]").forEach(b=>b.onclick=()=>{const r=repById(b.dataset.to);if(r.items.some(i=>i.id===dr.id)){r.items=r.items.filter(i=>i.id!==dr.id);save();toast("Removida de “"+r.name+"”");if(st.view==="song")drawSongTop();else if(st.view==="home")drawTab();drawDrawer()}else{addTo(r,dr.id);if(dr)drawDrawer()}});
     $("nr").onclick=()=>{if(repsCheios()) return openDrawer("upsell",{why:"reps"});openDrawer("novo",{id:dr.id})};
@@ -2376,7 +2377,7 @@ const premFeat=why=>PREM_FEAT.find(f=>f.k===(PREM_IMG[why]||"roda"))||PREM_FEAT[
 const premImg=(k,alt="")=>`<img class="premimg" src="img/premium/${k}.webp" alt="${esc(alt)}" width="340" height="210" loading="lazy">`;
 const premShow=(menos)=>`<div class="psec">Tudo o que vem no Premium</div><div class="premshow">${PREM_FEAT.filter(f=>f.k!==menos).map(f=>`<figure>${premImg(f.k,f.t)}<figcaption><b>${f.t}</b><small>${f.s}</small></figcaption></figure>`).join("")}</div>`;
 const premBen=l=>`<ul class="premben">${l.map(t=>`<li>${t}</li>`).join("")}</ul>`;
-function checkoutUrl(u){if(!u)return"";try{const x=new URL(u);if(USER&&USER.email)x.searchParams.set("email",USER.email);return x.toString()}catch(e){return""}}
+function checkoutUrl(u){if(!u)return"";try{const x=new URL(u);if(x.protocol!=="https:"||!/(^|\.)hotmart\.com$/.test(x.hostname))return"";if(USER&&USER.email)x.searchParams.set("email",USER.email);return x.toString()}catch(e){return""}}
 function planBtns(m,a,pm,pa){m=checkoutUrl(m);a=checkoutUrl(a);if(!m&&!a)return`<p class="help" style="margin:6px 0 0"><b>Abre em breve.</b></p>`;
   return`<div class="premplans">${a?`<a class="opt on ckt" href="${esc(a)}" target="_blank" rel="noopener"><b>Anual · ${esc(pa||"")}</b><small>O melhor preço. Pode parcelar.</small></a>`:""}${m?`<a class="opt ckt" href="${esc(m)}" target="_blank" rel="noopener"><b>Mensal · ${esc(pm||"")}</b><small>Cancele quando quiser.</small></a>`:""}</div>`}
 /* Checkout da Hotmart aberto dentro do app (tela cheia), com saída para o navegador se algo não carregar. */
@@ -2556,7 +2557,10 @@ async function admCompos(){const box=$("admComp");if(!box)return;
 /* ================= importar / enviar cifra ================= */
 const imp={busy:false,msg:"",err:false,title:"",artist:"",key:"",credit:"",versions:[{label:"completa",text:""}],vi:0,pdelta:0};
 const libs={};
-function loadScript(src){return libs[src]||(libs[src]=new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=()=>no(new Error("load"));document.head.appendChild(s)}))}
+const SRI={"https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js":"sha512-sG5Q7boJL+ft/weuz6Mmi9XBD+bEzE9AI2FMP4YMFxp3FpTFUQSQQm5K5cSgJCyed6bWs3W8f8h0lp36lHXhQA==",
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js":"sha512-q+4liFwdPC/bNdhUpZx6aXDx/h77yEQtn4I1slHydcbZK34nLaR3cAeYSJshoxIOq3mjEf7xJE8YWIUHMn+oCQ==",
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js":"sha512-BbrZ76UNZq5BhH7LL7pn9A4TKQpQeNCHOo65/akfelcIBbcVvYWOFQKPXIrykE3qZxYjmDX573oa4Ywsc7rpTw=="};
+function loadScript(src){return libs[src]||(libs[src]=new Promise((ok,no)=>{const s=document.createElement("script");if(SRI[src]){s.integrity=SRI[src];s.crossOrigin="anonymous"}s.src=src;s.onload=ok;s.onerror=()=>no(new Error("load"));document.head.appendChild(s)}))}
 function drawImport(){
   $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">Enviar cifra</span>`;
   $("bk").onclick=()=>go("home",{});
