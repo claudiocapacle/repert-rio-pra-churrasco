@@ -825,6 +825,7 @@ details.admcard[open] summary{margin-bottom:8px}
 .accard svg .fdt{fill:#fff;font-weight:700;font-family:var(--f-mono,monospace)}
 .accard svg .dgl{fill:var(--muted);font-size:11px;font-weight:700;font-family:var(--f-mono,monospace)}
 .accard svg .ft{fill:var(--muted);font-size:12px;font-weight:700}
+.accard.prof{border-color:var(--orange);background:var(--orange-soft)}.accard.prof span{color:var(--orange)}
 
 </style>
 </head>
@@ -1145,13 +1146,19 @@ function acTocar(v){try{const C=audioCtx(),t0=C.currentTime+0.02;v.fr.forEach((f
 const ACD={root:"C",suf:"7",q:""};
 function drawAcordes(){
   const tipo=AC_TIPOS.find(t=>t.s===ACD.suf)||AC_TIPOS[0],nome=ACD.root+tipo.s,vs=acVoicings(ACD.root,tipo);
+  // desenho do dicionário do professor (PDF "Acordes Cavaquinho") vem primeiro
+  let dsh=null;if(typeof dicShape==="function")for(const n of [tipo.s,...(tipo.a||[])]){try{dsh=dicShape(ACD.root+n)}catch(_){}if(dsh)break}
+  if(dsh){const k=dsh.fr.join(),i=vs.findIndex(v=>v.fr.join()===k);let v;if(i>=0)v=vs.splice(i,1)[0];
+    else{const acc=ACD.root.slice(1)==="#"?1:ACD.root.slice(1)==="b"?-1:0,rpc=(AC_PC[ACD.root[0]]+acc+12)%12,m=new Map(tipo.g.map(d=>[(rpc+G[d][0])%12,d]));
+      const degs=dsh.fr.map((f,j)=>m.get((AC_OPEN[j]+f)%12));const pr=dsh.fr.filter(f=>f>0);if(degs.every(Boolean))v={fr:dsh.fr,degs,lo:Math.min(...pr),hi:Math.max(...pr)}}
+    if(v){v.prof=true;vs.unshift(v)}}
   $("tbody").innerHTML=`<div class="acbusca"><input id="acq" placeholder="Digite um acorde, ex.: Bbm7/9" value="${esc(ACD.q)}" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
    <p class="lbl2">Nota</p><div class="pills acroots">${AC_ROOTS.map(r=>`<button data-acr="${r}" class="${r===ACD.root?"on":""}">${r}</button>`).join("")}</div>
    <p class="lbl2" style="margin-top:12px">Tipo</p><div class="pills actipos">${AC_TIPOS.map(t=>`<button data-act="${esc(t.s)}" class="${t.s===ACD.suf?"on":""}">${esc(ACD.root+t.s)}</button>`).join("")}</div>
    <div class="achead"><h3>${esc(nome)}</h3><small>${esc(tipo.n)}</small></div>
    <div class="acnotas">${tipo.g.map(d=>`<span><b>${esc(acSpell(ACD.root,d))}</b><small>${G[d][1]==="1"?"1ª (fundamental)":G[d][1]}</small></span>`).join("")}</div>
    <p class="help">${tipo.g.length>=4?"No cavaquinho a fundamental ou a 5ª podem ficar de fora do desenho. ":""}${vs.length} desenho${vs.length===1?"":"s"} pelo braço. Toque para ouvir. Corda 4 (Ré grave) à esquerda.</p>
-   <div class="acgrid">${vs.map((v,i)=>`<button class="accard" data-acv="${i}">${acSvg(v)}<span>${v.fr.includes(0)?"Com corda solta":v.lo+"ª casa"}</span></button>`).join("")||`<p class="sub">Nenhum desenho encontrado.</p>`}</div>`;
+   <div class="acgrid">${vs.map((v,i)=>`<button class="accard${v.prof?" prof":""}" data-acv="${i}">${acSvg(v)}<span>${v.prof?"Dicionário do professor":v.fr.includes(0)?"Com corda solta":v.lo+"ª casa"}</span></button>`).join("")||`<p class="sub">Nenhum desenho encontrado.</p>`}</div>`;
   document.querySelectorAll("[data-acr]").forEach(b=>b.onclick=()=>{ACD.root=b.dataset.acr;ACD.q="";drawAcordes()});
   document.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{ACD.suf=b.dataset.act;ACD.q="";drawAcordes()});
   document.querySelectorAll("[data-acv]").forEach(b=>b.onclick=()=>acTocar(vs[+b.dataset.acv]));
@@ -1229,7 +1236,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="04/11 23:41";
+const APP_BUILD="04/11 23:44";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
