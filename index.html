@@ -1328,7 +1328,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="05/11 00:27";
+const APP_BUILD="05/11 10:27";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -2568,8 +2568,8 @@ function drawImport(){
   const mine=PRIVATE;
   $("view").innerHTML=`<div style="padding:8px 0 120px">
    <p class="help" style="font-size:14px;color:var(--ink)">Mande a cifra do jeito que você tem. Ela aparece só para você até o professor revisar. Aprovada, entra no app para todos com o seu nome.</p>
-   <label class="drop" id="drop" for="file"><b>Escolher arquivo</b> ou arrastar aqui<div class="types"><span>Foto ou print</span><span>PDF</span><span>Word (.docx)</span><span>Texto</span></div></label>
-   <input type="file" id="file" accept="image/*,.pdf,.docx,.txt" hidden>
+   <label class="drop" id="drop" for="file"><b>Escolher arquivo</b> ou arrastar aqui<div class="types">${isAdmin?"<span>Foto ou print</span>":""}<span>PDF</span><span>Word (.docx)</span><span>Texto</span></div></label>
+   <input type="file" id="file" accept="${isAdmin?"image/*,":""}.pdf,.docx,.txt" hidden>
    <p class="help" style="text-align:center">ou cole o texto da cifra direto no campo abaixo</p>
    ${imp.msg?`<div class="status ${imp.err?"err":""}" role="status">${esc(imp.msg)}</div>`:""}
    <div class="row2"><div class="field"><label for="ft">Música</label><input id="ft" value="${esc(imp.title)}"></div><div class="field"><label for="fa">Artista</label><input id="fa" value="${esc(imp.artist)}"></div></div>
@@ -2611,14 +2611,14 @@ async function handleFile(f){
   imp.busy=true;setStatus("Lendo "+f.name+"…");
   try{
     let res=null;
-    if(/^image\//.test(f.type)) res=await fromImages([f]);
+    if(/^image\//.test(f.type)){if(!isAdmin)throw {userMsg:"Por enquanto não aceitamos foto ou print. Envie PDF, Word ou cole o texto da cifra."};res=await fromImages([f])}
     else if(/\.pdf$/i.test(f.name)||f.type==="application/pdf") res=await fromPdf(f);
     else if(/\.docx$/i.test(f.name)) res=await fromDocx(f);
     else res={versions:[{label:"completa",text:await f.text()}]};
     if(res.title) imp.title=res.title; if(res.artist) imp.artist=res.artist; if(res.key) imp.key=res.key;
     imp.versions=res.versions.length?res.versions:[{label:"completa",text:""}];imp.vi=0;
     imp.busy=false;imp.msg=`Pronto: ${res.versions.length>1?res.versions.length+" versões encontradas. ":""}confira a prévia e ajuste o que precisar.`;imp.err=false;drawImport();
-  }catch(e){imp.busy=false;setStatus(e.userMsg||"Não consegui ler esse arquivo. Tente uma foto mais nítida ou cole o texto.",true)}
+  }catch(e){imp.busy=false;setStatus(e.userMsg||(isAdmin?"Não consegui ler esse arquivo. Tente uma foto mais nítida ou cole o texto.":"Não consegui ler esse arquivo. Tente outro PDF ou Word, ou cole o texto."),true)}
 }
 const OCR_PROMPT=`Você vai transcrever a(s) cifra(s) desta imagem para texto, para um app de cifras de cavaquinho.
 
@@ -2685,6 +2685,7 @@ async function fromPdf(f){
     totalChars+=chars.filter(c=>c.ch.trim()).length;
     pages.push(pdfCharsToText(chars));
   }
+  if(totalChars<20&&!isAdmin) throw {userMsg:"Esse PDF parece ser uma imagem escaneada, e não dá para ler o texto dele. Envie um PDF com texto, um Word ou cole a cifra."};
   if(totalChars<20){ // PDF escaneado: vira imagem e vai para a IA
     const imgs=[];
     for(let p=1;p<=Math.min(pdf.numPages,3);p++){const page=await pdf.getPage(p),vp=page.getViewport({scale:2});const c=document.createElement("canvas");c.width=vp.width;c.height=vp.height;
