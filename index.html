@@ -834,6 +834,13 @@ details.admcard[open] summary{margin-bottom:8px}
 .acrow .pills button{font-size:13px;padding:6px 10px}
 .acatalhos{margin-top:12px}.acatalhos summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--ink);padding:6px 0}
 .acvazio{grid-column:1/-1;font-size:14px;color:var(--muted);background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:12px}
+/* topo não pode passar da largura da tela */
+.top .wrap{min-width:0;max-width:100%;overflow:hidden}
+.top .tools-r{flex:none;min-width:0}
+.top h1.brand{min-width:0}
+@media(max-width:400px){.top h1.brand{font-size:19px}.top h1.brand svg{width:26px;height:26px}.ptag{padding:5px 8px;margin-left:4px}.top .tools-r .icon{width:38px;height:38px}}
+@media(max-width:375px){.ptag .ptx{display:none}}
+@media(max-width:340px){.top h1.brand .b1{font-size:17px}}
 
 </style>
 </head>
@@ -880,7 +887,7 @@ const MIN=["C","C#","D","Eb","E","F","F#","G","G#","A","Bb","B"];
 const SHARP=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"], FLAT=["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 const mod=(n,m)=>((n%m)+m)%m;
 function pn(s){const m=/^([A-G])(#|b)?/.exec(s);if(!m)return null;const a=m[2]==="#"?1:m[2]==="b"?-1:0;return{L:m[1],a,pc:mod(NAT[m[1]]+a,12),len:m[0].length}}
-function parseKey(k){const n=pn(k);return{...n,minor:/m$/.test(k.slice(n.len))}}
+function parseKey(k){k=String(k||"").trim();const n=pn(k);if(!n)return parseKey("C");return{...n,minor:/^m/.test(k.slice(n.len))&&!/^maj/.test(k.slice(n.len))}}
 function keyName(pc,minor){return(minor?MIN:MAJ)[pc]+(minor?"m":"")}
 function makeSpeller(orig,delta){ // devolve f(nota) -> nota escrita no tom de destino
   const o=parseKey(orig), tpc=mod(o.pc+delta,12), tname=(o.minor?MIN:MAJ)[tpc], t=pn(tname);
@@ -1321,7 +1328,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="04/11 23:57";
+const APP_BUILD="05/11 00:17";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1335,9 +1342,16 @@ if("serviceWorker" in navigator){
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{})});
 }
 if(/[?&]v=\d/.test(location.search))history.replaceState(null,"",location.pathname+location.hash);
-function loadChunk(n){if(!_chunkP[n])_chunkP[n]=fetch("data/"+CHUNKS[n]).then(r=>{if(!r.ok){const e=new Error("http");e.status=r.status;if(r.status===404)appAtualizar(true);throw e}return r.json()}).then(o=>{for(const id in o){const s=byId("s"+id);if(s){Object.assign(s,o[id]);delete s.vers}}}).catch(e=>{delete _chunkP[n];throw e});return _chunkP[n]}
+/* acordes grudados em > % | (ex.: "Dm>G7", "E7%%") vêm num token só nos pacotes: separa para transpor certo */
+function fixChLines(L){if(!Array.isArray(L))return;for(const l of L){if(!l||!Array.isArray(l.ch))continue;let mud=false;const out=[];
+  for(const [c,t0] of l.ch){const t=String(t0).replace(/&gt;/g,">");if(t.length<2||!/[|>%]/.test(t)||!/[A-G]/.test(t)){out.push([c,t]);continue}
+    mud=true;let buf="",bc=c;for(let i=0;i<t.length;i++){const k=t[i];if("|>%".includes(k)){if(buf){out.push([bc,buf]);buf=""}out.push([c+i,k])}else{if(!buf)bc=c+i;buf+=k}}if(buf)out.push([bc,buf])}
+  if(mud)l.ch=out}}
+function loadChunk(n){if(!_chunkP[n])_chunkP[n]=fetch("data/"+CHUNKS[n]).then(r=>{if(!r.ok){const e=new Error("http");e.status=r.status;if(r.status===404)appAtualizar(true);throw e}return r.json()}).then(o=>{for(const id in o){const s=byId("s"+id);if(s){const x=o[id];fixChLines(x.completa);fixChLines(x.simplificada);(x.extra||[]).forEach(e=>fixChLines(e.lines));Object.assign(s,x);delete s.vers}}}).catch(e=>{delete _chunkP[n];throw e});return _chunkP[n]}
 function prefetchChunks(){let i=0;const nx=()=>{if(i>=CHUNKS.length)return;const n=i++;loadChunk(n).catch(()=>{}).finally(()=>setTimeout(nx,400))};nx()}
 setTimeout(()=>{if(!(navigator.connection&&navigator.connection.saveData))prefetchChunks()},5000);
+/* limpa do cache offline os pacotes de cifra que não fazem mais parte do app (o resto continua guardado entre publicações) */
+setTimeout(async()=>{try{if(!window.caches)return;const c=await caches.open("sambacifra-dados"),vivos=new Set(CHUNKS.map(f=>"/data/"+f));for(const r of await c.keys()){if(!vivos.has(new URL(r.url).pathname))await c.delete(r)}}catch(e){}},20000);
 function vers(s){if(!songReady(s))return[{k:"completa",label:"Completa",lines:[]}];if(!s.vers){const v=[];if(s.completa)v.push({k:"completa",label:s.rot||"Completa",lines:s.completa});if(s.simplificada)v.push({k:"simplificada",label:"Simplificada",lines:s.simplificada});(s.extra||[]).forEach((x,i)=>v.push({k:"v"+(i+2),label:x.rot||("Versão "+(v.length+1)),lines:x.lines,key:x.key}));if(!v.length)v.push({k:"completa",label:"Completa",lines:[]});for(const x of v){const e=EDITS[s.id+"|"+x.label];if(e){x.lines=parseChordText(e.texto);if(e.tom)x.key=e.tom;x.edited=true}}s.vers=v}return s.vers}
 function curVer(s){const vs=vers(s);return vs.find(v=>v.k===st.ver)||(st.ver==="simplificada"&&vs.find(v=>/simplif/i.test(v.label)))||vs[0]}
 function songKey(s){return curVer(s).key||s.key}
@@ -1357,7 +1371,7 @@ store.fav=store.fav||[];store.hist=store.hist||[];
 store.reps=store.reps.filter(r=>!r.example);
 const save=()=>{try{localStorage.setItem("rpc2",JSON.stringify(store));localStorage.setItem("rpc2p",JSON.stringify({fs:st.fs,fit:st.fit,ver:st.ver}))}catch(e){};if(USER)syncPush()};
 delete store.plan;
-const cobrando=()=>CFG.cobranca===true;
+const cobrando=()=>CFG.cobranca===true||(CFG.cobranca==null&&!CFG._lido);
 const isPro=()=>PREMIUM||PROF||!cobrando();
 const aulasOn=()=>CFG.aulas_ativo===true;
 const temAulas=()=>aulasOn()&&(PROF||!cobrando()||(PREMIUM&&PLANO.nivel==="aulas"));
@@ -1517,8 +1531,9 @@ const ICO_G='<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true">
 const ICO_APPLE='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8s2 .8 3.4.8c1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9-.1 0-2.7-1-2.7-4.1zM13.9 5c.7-.9 1.2-2 1.1-3.2-1 0-2.3.7-3 1.6-.7.8-1.2 2-1.1 3.1 1.1.1 2.3-.6 3-1.5z"/></svg>';
 const gateOn=()=>!!(AUTH_OK&&CFG.exigir_login&&!USER);
 async function authHdr(){if(!sb||!USER)return{};const {data}=await sb.auth.getSession();const t=data&&data.session&&data.session.access_token;return t?{Authorization:"Bearer "+t}:{}}
-async function loadCfg(){const {data}=await sb.from("app_cfg").select("k,v");(data||[]).forEach(x=>CFG[x.k]=x.v);if(CFG.free_reps!=null&&+CFG.free_reps>=0)FREE_REPS=+CFG.free_reps;if(+CFG.free_musicas>0)FREE_SONGS=+CFG.free_musicas}
-async function loadPlano(){if(!USER||!sb){PREMIUM=false;PLANO={};return}try{const {data}=await sb.rpc("meu_plano");PLANO=data||{};PREMIUM=!!PLANO.premium}catch(e){}}
+try{const c=JSON.parse(localStorage.getItem("sc-cfg")||"null");if(c&&typeof c==="object")for(const k in c)if(!(k in CFG))CFG[k]=c[k];const pl=JSON.parse(localStorage.getItem("sc-plano")||"null");if(pl&&pl.ate>Date.now()&&pl.premium){PREMIUM=true}}catch(e){}
+async function loadCfg(){const {data,error}=await sb.from("app_cfg").select("k,v");if(!error&&data){CFG._lido=true;const c={};data.forEach(x=>{CFG[x.k]=x.v;c[x.k]=x.v});try{localStorage.setItem("sc-cfg",JSON.stringify(c))}catch(e){}}if(CFG.free_reps!=null&&+CFG.free_reps>=0)FREE_REPS=+CFG.free_reps;if(+CFG.free_musicas>0)FREE_SONGS=+CFG.free_musicas}
+async function loadPlano(){if(!USER||!sb){PREMIUM=false;PLANO={};return}try{const {data,error}=await sb.rpc("meu_plano");if(error)return;PLANO=data||{};PREMIUM=!!PLANO.premium;try{localStorage.setItem("sc-plano",JSON.stringify({premium:PREMIUM,ate:Date.now()+7*864e5}))}catch(e){}}catch(e){}}
 document.addEventListener("visibilitychange",async()=>{if(document.visibilityState!=="visible"||!USER||PREMIUM)return;await loadPlano();if(PREMIUM){toast("Premium liberado! Bom som 🎶");closeDrawer();draw()}});
 async function loadAuthCfg(){try{const r=await fetch(SB_URL+"/auth/v1/settings",{headers:{apikey:SB_KEY}});AUTHCFG=await r.json()}catch(e){AUTHCFG=null}}
 async function authInit(){
@@ -1630,7 +1645,7 @@ function draw(){
 /* ================= início ================= */
 const BRAND_SVG=n=>`<svg width="${n}" height="${n}" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#e2640f"/><g transform="translate(118 90) scale(2.76)"><g stroke="#fbf8f1" stroke-width="7" stroke-linecap="round"><line x1="20" y1="22" x2="20" y2="112"/><line x1="40" y1="22" x2="40" y2="112"/><line x1="60" y1="22" x2="60" y2="112"/><line x1="80" y1="22" x2="80" y2="112"/><line x1="20" y1="45" x2="80" y2="45"/><line x1="20" y1="68" x2="80" y2="68"/><line x1="20" y1="91" x2="80" y2="91"/></g><rect x="15" y="14" width="70" height="11" rx="3" fill="#fbf8f1"/><circle cx="20" cy="79.5" r="12" fill="#1f2430"/><circle cx="40" cy="56.5" r="12" fill="#1f2430"/><circle cx="60" cy="33.5" r="12" fill="#1f2430"/><circle cx="80" cy="79.5" r="12" fill="#1f2430"/></g></svg>`;
 const ICO_COROA=`<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5L3 7z"/></svg>`;
-const premTag=()=>!(cobrando()||isAdmin)?"":isPro()?`<button class="ptag pro" id="pTag" aria-label="Seu plano: Premium">${ICO_COROA}Premium</button>`:`<button class="ptag" id="pTag" aria-label="Seja Premium">${ICO_COROA}Seja Premium</button>`;
+const premTag=()=>!(cobrando()||isAdmin)?"":isPro()?`<button class="ptag pro" id="pTag" aria-label="Seu plano: Premium">${ICO_COROA}<span class="ptx">Premium</span></button>`:`<button class="ptag" id="pTag" aria-label="Seja Premium">${ICO_COROA}<span class="ptx">Seja Premium</span></button>`;
 function drawTop(){
   if(st.view!=="home") return;
   const pend=SUBS_ALL.filter(x=>x.status==="pendente").length;
@@ -1818,7 +1833,8 @@ function drawRep(){
   if($("copy")) $("copy").onclick=()=>{
     if(st.rep==="ready"&&!isPro()) return openDrawer("upsell",{why:"ready"});
     if(repsCheios()) return openDrawer("upsell",{why:"reps"});
-    const nr={id:"r"+Date.now(),name:r.name,items:r.items.filter(x=>byId(x.id)).map(x=>({...x}))};store.reps.push(nr);save();toast("Salvo em Repertórios");go("rep",{rep:nr.id})};
+    let its=r.items.filter(x=>byId(x.id)).map(x=>({...x}));const corta=!isPro()&&its.length>FREE_SONGS;if(corta)its=its.slice(0,FREE_SONGS);
+    const nr={id:"r"+Date.now(),name:r.name,items:its};store.reps.push(nr);save();toast(corta?`No plano grátis salvamos as ${FREE_SONGS} primeiras músicas`:"Salvo em Repertórios");go("rep",{rep:nr.id});if(corta)setTimeout(()=>openDrawer("upsell",{why:"songs"}),600)};
 }
 function openRepSong(i){const r=curRep();const it=r.items[i];if(!it)return;go("song",{id:it.id,delta:it.delta,idx:i,rep:st.rep})}
 
@@ -2726,6 +2742,9 @@ async function sendSubmission(){
 /* ================= revisão (professor) ================= */
 let revOpen=null;
 const ICO_LAPIS='<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+function normTom(t){t=String(t||"").trim();if(!t)return"";const PT={"dó":"C","do":"C","ré":"D","re":"D","mi":"E","fá":"F","fa":"F","sol":"G","lá":"A","la":"A","si":"B"};
+  let m=/^([a-gA-G])(#|b)?\s*(m|min|menor)?$/i.exec(t);if(m)return m[1].toUpperCase()+(m[2]||"")+(m[3]?"m":"");
+  m=/^(dó|do|ré|re|mi|fá|fa|sol|lá|la|si)\s*(#|b|sustenido|bemol)?\s*(m|menor)?$/i.exec(t);if(m)return PT[m[1].toLowerCase()]+(m[2]?(/^(#|sus)/i.test(m[2])?"#":"b"):"")+(m[3]?"m":"");return null}
 function drawEdit(){
   const e=st.ed,s=e&&byId(e.song);if(!s)return go("home",{});
   $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">${isAdmin?"Editar cifra":"Sugerir correção"}</span>`;
@@ -2749,6 +2768,7 @@ function drawEdit(){
     const nti=isAdmin&&$("edti")?$("edti").value.trim():s.title,nar=isAdmin&&$("edar")?$("edar").value.trim():s.artist,mudouNome=nti!==s.title||nar!==s.artist,mudouCifra=!(e.orig!=null&&e.texto===e.orig&&e.tom===e.otom)||!!e.origem;
     if(isAdmin&&!nti){S.hidden=false;S.className="status err";S.textContent="O nome da música não pode ficar vazio.";return}
     if(!mudouCifra&&!mudouNome){S.hidden=false;S.className="status err";S.textContent="Você ainda não mudou nada.";return}
+    {const tn=normTom(e.tom);if(e.tom&&!tn){S.hidden=false;S.className="status err";S.textContent="Tom inválido. Use a cifra do tom, por exemplo G, Bb, F#m ou Am.";return}e.tom=tn||"";if($("edtom"))$("edtom").value=e.tom}
     B.disabled=true;S.hidden=false;S.className="status";S.textContent="Enviando…";
     if(isAdmin){
       if(mudouCifra){const {data,error}=await sb.rpc("admin_publicar_edicao",{p_key:ADMIN_KEY,p_song:s.id,p_ver:e.ver,p_texto:e.texto,p_tom:e.tom,p_origem:e.origem||null});

@@ -1,8 +1,23 @@
 // Offline: guarda o app e as bibliotecas; a página principal busca primeiro na rede para pegar atualizações.
-const CACHE = "sambacifra-v98";
+// Três caches: o núcleo do app (muda a cada publicação), as cifras (arquivos com hash, nunca mudam)
+// e a mídia (batucada, imagens, fontes). Uma publicação nova só troca o núcleo: o offline do aluno continua.
+const CACHE = "sambacifra-v99";
+const DADOS = "sambacifra-dados", MIDIA = "sambacifra-midia";
 const CORE = ["./", "index.html", "manifest.webmanifest", "vendor/supabase.js", "vendor/591.supabase.js", "vendor/qrcode.min.js", "icon-192.png", "icon-512.png", "favicon.png", "apple-touch-icon.png", "icon.svg"];
+const qual = url => url.pathname.startsWith("/data/") ? DADOS : (url.pathname.startsWith("/batucada/") || url.pathname.startsWith("/img/") || /fonts\.(gstatic|googleapis)\.com$/.test(url.hostname)) ? MIDIA : CACHE;
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
-self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
+self.addEventListener("activate", e => { e.waitUntil((async () => {
+  const ks = await caches.keys();
+  for (const k of ks) {
+    if (k === CACHE || k === DADOS || k === MIDIA) continue;
+    if (k.startsWith("sambacifra-v")) { // caches antigos: aproveita cifras e mídia antes de apagar
+      try { const old = await caches.open(k), reqs = await old.keys();
+        for (const r of reqs) { const u = new URL(r.url), alvo = qual(u); if (alvo === CACHE) continue; const res = await old.match(r); if (res) await (await caches.open(alvo)).put(r, res); } } catch (_) {}
+    }
+    await caches.delete(k);
+  }
+  await self.clients.claim();
+})()); });
 self.addEventListener("fetch", e => {
   const req = e.request; if (req.method !== "GET") return;
   const url = new URL(req.url);
@@ -14,7 +29,7 @@ self.addEventListener("fetch", e => {
     return;
   }
   e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
-    if (r.ok || r.type === "opaque") { const cp = r.clone(); caches.open(CACHE).then(c => c.put(req, cp)); }
+    if (r.ok || r.type === "opaque") { const cp = r.clone(); caches.open(qual(url)).then(c => c.put(req, cp)); }
     return r;
   })));
 });
