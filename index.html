@@ -286,7 +286,7 @@ body.stage main{padding-top:64px}
 .ptitle{font-family:var(--f-display);font-weight:800;font-size:22px;margin:16px 0 4px}
 .linkbtn{border:0;background:none;color:var(--orange);font-weight:700;padding:0;text-decoration:underline}
 /* ferramentas */
-.ttabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px;margin:12px 0}
+.ttabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:4px;margin:12px 0}
 .ttabs button{border:0;background:none;border-radius:10px;padding:10px 4px;font-weight:600;color:var(--muted)}
 .ttabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .tcard{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px}
@@ -803,6 +803,28 @@ details.admcard[open] summary{margin-bottom:8px}
 .isok{display:inline-block;margin-top:6px;font-size:12.5px;font-weight:800;color:#2e7d43;background:#dcefe0;padding:3px 9px;border-radius:99px}
 .isaddr{display:inline-block;margin-top:6px;font:700 13px var(--f-mono);color:var(--blue);background:#fff;border:1px solid var(--line);padding:3px 8px;border-radius:8px}
 .iscopy{display:block;width:100%;margin-top:8px;min-height:38px;font-size:14px}
+/* dicionário de acordes */
+@media (max-width:420px){.ttabs button{font-size:12px;padding:10px 2px}}
+.acbusca input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:600 16px var(--f-mono,monospace);background:var(--bg);color:var(--ink);margin-bottom:12px}
+.acroots button{min-width:44px;font-family:var(--f-mono,monospace)}
+.actipos{max-height:148px;overflow:auto;padding:2px}
+.actipos button{font-family:var(--f-mono,monospace);font-size:13px}
+.achead{display:flex;align-items:baseline;gap:10px;margin:18px 0 6px;flex-wrap:wrap}
+.achead h3{margin:0;font:700 28px var(--f-mono,monospace);color:var(--ink)}
+.achead small{color:var(--muted);font-size:14px}
+.acnotas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.acnotas span{display:flex;flex-direction:column;align-items:center;border:1px solid var(--line);border-radius:10px;padding:5px 10px;min-width:52px;background:var(--bg)}
+.acnotas b{font:700 17px var(--f-mono,monospace);color:var(--ink)}
+.acnotas small{font-size:11px;color:var(--muted)}
+.acgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;margin-top:10px}
+.accard{display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid var(--line);border-radius:14px;background:var(--bg);padding:10px 4px 8px;color:var(--ink)}
+.accard:active{transform:scale(.98)}
+.accard span{font-size:12.5px;color:var(--muted);font-weight:600}
+.accard svg .fr{stroke:var(--line2,#cfc6b8)}.accard svg .nut{stroke:var(--ink)}.accard svg .str{stroke:var(--muted);stroke-width:1.2}
+.accard svg .fd{fill:var(--blue,#2b5fd9)}.accard svg .fd.rt{fill:var(--orange)}.accard svg .op{fill:none;stroke:var(--ink);stroke-width:1.6}
+.accard svg .fdt{fill:#fff;font-weight:700;font-family:var(--f-mono,monospace)}
+.accard svg .dgl{fill:var(--muted);font-size:11px;font-weight:700;font-family:var(--f-mono,monospace)}
+.accard svg .ft{fill:var(--muted);font-size:12px;font-weight:700}
 
 </style>
 </head>
@@ -1041,6 +1063,100 @@ const KD=(()=>{
   function relativo(k){return k.minor?{pc:(k.pc+3)%12,minor:false}:{pc:(k.pc+9)%12,minor:true}}
   return{OPT,setPerfil(a,b){PMAJ=a;PMIN=b},novo,rank,confianca,relativo,tamanho};
 })();
+/* ================= Dicionário de acordes (aba Acordes · Premium) =================
+   Regras (Prof. Claudio): no cavaquinho a fundamental não é obrigatória; o que pode sair é a
+   fundamental ou a 5ª justa. 3ª (ou 4ª no sus), 7ª e tensões ficam sempre. Corda solta só em
+   desenhos até a 3ª casa. Abertura máxima de 4 casas. Afinação Ré Sol Si Ré. */
+const AC_OPEN=[2,7,11,2], AC_MIDI=[62,67,71,74];      // corda 4 (Ré grave) -> corda 1
+const AC_ROOTS=["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
+const AC_PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+// grau: [semitons, rótulo, número da nota (para escrever o nome certo)]
+const G={"1":[0,"1","1"],"b9":[1,"b9","2"],"9":[2,"9","2"],"#9":[3,"#9","2"],"b3":[3,"b3","3"],"3":[4,"3","3"],"4":[5,"4","4"],"11":[5,"11","4"],"#11":[6,"#11","4"],
+  "b5":[6,"b5","5"],"5":[7,"5","5"],"#5":[8,"#5","5"],"b13":[8,"b13","6"],"6":[9,"6","6"],"13":[9,"13","6"],"º7":[9,"7º","7"],"b7":[10,"7","7"],"7M":[11,"7M","7"]};
+const AC_TIPOS=[
+ {s:"",n:"Maior",g:["1","3","5"]},{s:"m",n:"Menor",g:["1","b3","5"]},
+ {s:"7",n:"Sétima",g:["1","3","5","b7"]},{s:"m7",n:"Menor com sétima",g:["1","b3","5","b7"]},
+ {s:"7+",n:"Sétima maior",g:["1","3","5","7M"],a:["7M","maj7"]},{s:"m7+",n:"Menor com sétima maior",g:["1","b3","5","7M"],a:["m7M","m(7+)"]},
+ {s:"6",n:"Sexta",g:["1","3","5","6"]},{s:"m6",n:"Menor com sexta",g:["1","b3","5","6"]},
+ {s:"9",n:"Nona (add9)",g:["1","3","5","9"],a:["add9"]},{s:"m9",n:"Menor com nona",g:["1","b3","5","9"],a:["madd9"]},
+ {s:"6/9",n:"Sexta e nona",g:["1","3","5","6","9"]},{s:"m6/9",n:"Menor com sexta e nona",g:["1","b3","5","6","9"]},
+ {s:"7/9",n:"Sétima e nona",g:["1","3","5","b7","9"],a:["7(9)"]},{s:"7/9b",n:"Sétima e nona menor",g:["1","3","5","b7","b9"],a:["7(b9)","7/b9"]},
+ {s:"7/9#",n:"Sétima e nona aumentada",g:["1","3","5","b7","#9"],a:["7(#9)","7/#9"]},{s:"m7/9",n:"Menor com sétima e nona",g:["1","b3","5","b7","9"],a:["m7(9)"]},
+ {s:"7+/9",n:"Sétima maior e nona",g:["1","3","5","7M","9"],a:["7M/9","7M(9)"]},{s:"7/4",n:"Sétima com quarta (sus)",g:["1","4","5","b7"],a:["7sus4","7sus"]},
+ {s:"4",n:"Quarta (sus4)",g:["1","4","5"],a:["sus4","sus"]},{s:"7/4/9",n:"Sétima, quarta e nona",g:["1","4","5","b7","9"]},
+ {s:"7/11",n:"Sétima e décima primeira",g:["1","3","5","b7","11"]},{s:"m7/11",n:"Menor com sétima e 11ª",g:["1","b3","5","b7","11"],a:["m11"]},
+ {s:"7/11#",n:"Sétima e 11ª aumentada",g:["1","3","5","b7","#11"],a:["7(#11)"]},{s:"7+/11#",n:"Sétima maior e 11ª aumentada",g:["1","3","5","7M","#11"],a:["7M(#11)"]},
+ {s:"7/13",n:"Sétima e décima terceira",g:["1","3","5","b7","13"],a:["7(13)","7/6"]},{s:"7/13b",n:"Sétima e 13ª menor",g:["1","3","5","b7","b13"],a:["7(b13)","7/b13"]},
+ {s:"7/9/13",n:"Sétima, nona e 13ª",g:["1","3","5","b7","9","13"]},{s:"m7/9/11",n:"Menor com 7ª, 9ª e 11ª",g:["1","b3","5","b7","9","11"]},
+ {s:"ø",n:"Meio diminuto (m7/5b)",g:["1","b3","b5","b7"],a:["m7/5b","m7(b5)","m7/5-"]},{s:"º",n:"Diminuto",g:["1","b3","b5","º7"],a:["°","dim","º7","°7"]},
+ {s:"5+",n:"Aumentado",g:["1","3","#5"],a:["(#5)","aum"]},{s:"7/5+",n:"Sétima com quinta aumentada",g:["1","3","#5","b7"],a:["7(#5)"]},
+ {s:"7/5b",n:"Sétima com quinta diminuta",g:["1","3","b5","b7"],a:["7(b5)"]},{s:"7+/5+",n:"Sétima maior com quinta aumentada",g:["1","3","#5","7M"]},
+];
+function acSpell(rootName,deg){ // nome da nota pelo grau (ex.: Eb + b7 = Db)
+  const L="CDEFGAB",li=L.indexOf(rootName[0]),acc=rootName.slice(1)==="#"?1:rootName.slice(1)==="b"?-1:0;
+  const rpc=(AC_PC[rootName[0]]+acc+12)%12,[st,,num]=G[deg],L2=L[(li+ +num-1)%7],want=(rpc+st)%12;
+  let d=((want-AC_PC[L2])%12+12)%12;if(d>6)d-=12;return L2+(d===0?"":d>0?"#".repeat(d):"b".repeat(-d))}
+function acVoicings(rootName,tipo){
+  const acc=rootName.slice(1)==="#"?1:rootName.slice(1)==="b"?-1:0,rpc=(AC_PC[rootName[0]]+acc+12)%12;
+  const byPc=new Map();for(const d of tipo.g)byPc.set((rpc+G[d][0])%12,d);
+  const n=tipo.g.length,opt=new Set(n>=4?["1","5"]:[]);
+  const need=tipo.g.filter(d=>!opt.has(d)),minDistinct=n<=3?n:Math.min(4,n-(n>=6?2:1));
+  const opts=AC_OPEN.map(o=>{const a=[];for(let f=0;f<=15;f++)if(byPc.has((o+f)%12))a.push(f);return a});
+  const out=[];
+  for(const a of opts[0])for(const b of opts[1])for(const c of opts[2])for(const d of opts[3]){
+    const fr=[a,b,c,d],pr=fr.filter(f=>f>0);if(!pr.length)continue;
+    const lo=Math.min(...pr),hi=Math.max(...pr);if(hi-lo>3)continue;
+    if(fr.includes(0)&&hi>3)continue;                       // corda solta só nos desenhos baixos
+    const degs=fr.map((f,i)=>byPc.get((AC_OPEN[i]+f)%12)),got=new Set(degs);
+    if(!need.every(x=>got.has(x)))continue;
+    if(got.size<minDistinct)continue;
+    if(n>=4&&!got.has("1")&&!got.has("5"))if(n<6)continue;  // tira só um (fundamental OU 5ª), exceto acordes de 6 notas
+    const dedos=new Set(pr).size+(pr.length-new Set(pr).size>0?0:0);
+    let sc=lo+(hi-lo)*0.7+(got.has("1")?0:0.4)+(degs[0]==="1"?-0.3:0)+(fr.filter(f=>f===0).length?-0.2:0)+(dedos>3?0.5:0);
+    out.push({fr,lo:fr.includes(0)&&!pr.length?0:lo,hi,degs,sc});
+  }
+  out.sort((x,y)=>(x.fr.includes(0)?0:x.lo)-(y.fr.includes(0)?0:y.lo)||x.sc-y.sc);
+  // evita repetir desenhos quase iguais na mesma região: guarda até 3 por casa inicial
+  const per=new Map(),res=[];for(const v of out){const k=v.fr.includes(0)?0:v.lo,c=per.get(k)||0;if(c>=3)continue;per.set(k,c+1);res.push(v)}
+  return res;
+}
+function acParse(txt){ // "Bbm7/9" -> {root:"Bb", tipo}
+  const m=/^\s*([A-Ga-g])([#b]?)(.*)$/.exec(txt||"");if(!m)return null;
+  const root=m[1].toUpperCase()+m[2],suf=m[3].trim().replace(/\s+/g,"");
+  const t=AC_TIPOS.find(t=>t.s===suf||(t.a||[]).includes(suf));if(!t)return null;
+  const pc=(AC_PC[root[0]]+(m[2]==="#"?1:m[2]==="b"?-1:0)+12)%12;
+  return {root:AC_ROOTS.includes(root)?root:AC_ROOTS[pc],tipo:t};
+}
+function acSvg(v,w=120){
+  const h=Math.round(w*1.32),x0=16,gap=(w-48)/3,y0=20,fh=(h-y0-34)/5,base=v.fr.includes(0)||v.hi<=4?1:v.lo;
+  let s=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Desenho: ${v.fr.join(" ")}">`;
+  for(let i=0;i<=5;i++)s+=`<line class="${i===0&&base===1?"nut":"fr"}" stroke-width="${i===0&&base===1?3.5:1}" x1="${x0}" x2="${x0+3*gap}" y1="${y0+i*fh}" y2="${y0+i*fh}"/>`;
+  for(let i=0;i<4;i++)s+=`<line class="str" x1="${x0+i*gap}" x2="${x0+i*gap}" y1="${y0}" y2="${y0+5*fh}"/>`;
+  if(base>1)s+=`<text class="ft" x="${x0+3*gap+13}" y="${y0+fh*0.68}">${base}</text>`;
+  v.fr.forEach((f,i)=>{const x=x0+i*gap,dg=G[v.degs[i]][1],r=Math.min(gap,fh)*0.4;
+    if(f===0)s+=`<circle class="op" cx="${x}" cy="${y0-9}" r="4"/>`;
+    else s+=`<circle class="fd${v.degs[i]==="1"?" rt":""}" cx="${x}" cy="${y0+(f-base+0.5)*fh}" r="${r}"/><text class="fdt" x="${x}" y="${y0+(f-base+0.5)*fh+r*0.36}" text-anchor="middle" font-size="${r*0.95}">${dg}</text>`;
+    s+=`<text class="dgl" x="${x}" y="${h-6}" text-anchor="middle">${dg}</text>`});
+  return s+"</svg>";
+}
+function acTocar(v){try{const C=audioCtx(),t0=C.currentTime+0.02;v.fr.forEach((f,i)=>{const t=t0+i*0.045,fq=440*Math.pow(2,(AC_MIDI[i]+f-69)/12);
+  for(const [mul,amp] of [[1,0.22],[2,0.08],[3,0.04]]){const o=C.createOscillator(),g=C.createGain();o.type="triangle";o.frequency.value=fq*mul;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(amp,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+1.6);o.connect(g).connect(C.destination);o.start(t);o.stop(t+1.7)}})}catch(e){}}
+const ACD={root:"C",suf:"7",q:""};
+function drawAcordes(){
+  const tipo=AC_TIPOS.find(t=>t.s===ACD.suf)||AC_TIPOS[0],nome=ACD.root+tipo.s,vs=acVoicings(ACD.root,tipo);
+  $("tbody").innerHTML=`<div class="acbusca"><input id="acq" placeholder="Digite um acorde, ex.: Bbm7/9" value="${esc(ACD.q)}" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+   <p class="lbl2">Nota</p><div class="pills acroots">${AC_ROOTS.map(r=>`<button data-acr="${r}" class="${r===ACD.root?"on":""}">${r}</button>`).join("")}</div>
+   <p class="lbl2" style="margin-top:12px">Tipo</p><div class="pills actipos">${AC_TIPOS.map(t=>`<button data-act="${esc(t.s)}" class="${t.s===ACD.suf?"on":""}">${esc(ACD.root+t.s)}</button>`).join("")}</div>
+   <div class="achead"><h3>${esc(nome)}</h3><small>${esc(tipo.n)}</small></div>
+   <div class="acnotas">${tipo.g.map(d=>`<span><b>${esc(acSpell(ACD.root,d))}</b><small>${G[d][1]==="1"?"1ª (fundamental)":G[d][1]}</small></span>`).join("")}</div>
+   <p class="help">${tipo.g.length>=4?"No cavaquinho a fundamental ou a 5ª podem ficar de fora do desenho. ":""}${vs.length} desenho${vs.length===1?"":"s"} pelo braço. Toque para ouvir. Corda 4 (Ré grave) à esquerda.</p>
+   <div class="acgrid">${vs.map((v,i)=>`<button class="accard" data-acv="${i}">${acSvg(v)}<span>${v.fr.includes(0)?"Com corda solta":v.lo+"ª casa"}</span></button>`).join("")||`<p class="sub">Nenhum desenho encontrado.</p>`}</div>`;
+  document.querySelectorAll("[data-acr]").forEach(b=>b.onclick=()=>{ACD.root=b.dataset.acr;ACD.q="";drawAcordes()});
+  document.querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>{ACD.suf=b.dataset.act;ACD.q="";drawAcordes()});
+  document.querySelectorAll("[data-acv]").forEach(b=>b.onclick=()=>acTocar(vs[+b.dataset.acv]));
+  const q=$("acq");q.oninput=()=>{ACD.q=q.value;const p=acParse(q.value);if(p){ACD.root=p.root;ACD.suf=p.tipo.s;const pos=q.selectionStart;drawAcordes();const q2=$("acq");q2.focus();q2.setSelectionRange(pos,pos)}};
+}
 
 
 /* ================= parser de texto (acorde sobre a letra) ================= */
@@ -1113,7 +1229,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="04/11 23:28";
+const APP_BUILD="04/11 23:41";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -2140,13 +2256,14 @@ const PREM_BEN=["Rolagem automática no tempo da música","Batucada com 6 instru
 const AULAS_BEN=["Tudo do Premium","Videoaulas de palhetada, levadas e teoria","Professores convidados"];
 const PREM_FEAT=[
  {k:"roda",t:"Roda ao vivo",s:"A galera entra pelo QR code e vê, no próprio celular, cada troca de música e de tom que você faz.",d:"Abra a roda e a galera entra pelo QR code, sem cadastro. Cada um acompanha a cifra no próprio celular e vê na hora tudo o que você muda: a música, o tom e a versão. Acabou o “qual é a próxima?” e o “tá em que tom?”. Só quem abre a roda precisa do Premium: para entrar, é grátis."},
+ {k:"ac",t:"Dicionário de acordes",s:"Todos os acordes que aparecem nas cifras, com vários desenhos pelo braço do cavaquinho e os graus de cada nota.",d:"Escolha a nota e o tipo (m7, 7/9, ø, 6/9…) e veja vários desenhos espalhados pelo braço do cavaquinho, com o grau de cada nota marcado: fundamental, 3ª, 7ª, 9ª. Toque no desenho para ouvir. Ideal para sair do mesmo desenho de sempre e enriquecer a harmonia."},
  {k:"bt",t:"Batucada com 6 instrumentos",s:"Surdo, pandeiro, rebolo, repiques e cuíca tocando com você. Você escolhe o volume de cada um.",d:"Surdo, pandeiro, rebolo, repique de mão, repique de anel e cuíca tocando junto com você, em qualquer andamento. Suba o volume do que quiser ouvir, desligue o que atrapalha ou deixe um instrumento sozinho para estudar."},
  {k:"rol",t:"Rolagem no tempo da música",s:"A cifra rola sozinha no BPM da música, compasso por compasso.",d:"A cifra rola sozinha no BPM da música, compasso por compasso, e mostra onde você está. Suas mãos ficam no instrumento, não na tela."},
  {k:"af",t:"Afinador",s:"Cavaquinho, banjo e violão. Mostra a corda e toca o som dela.",d:"Para cavaquinho, banjo e violão. Mostra a nota e a corda na hora, fica verde quando está afinado e toca o som de cada corda para você afinar de ouvido."},
  {k:"tom",t:"Qual o tom?",s:"Pelo som, cantando ou com um link do YouTube: o app descobre o tom.",d:"Coloque o celular perto do som, cante um trecho ou cole um link do YouTube: o app descobre o tom da música e já mostra o relativo menor."},
  {k:"reps",t:"Repertórios sem limite",s:"Quantos repertórios quiser, sem limite de músicas, com o tom de cada uma salvo.",d:"Monte quantos repertórios quiser, com quantas músicas quiser e o tom de cada uma salvo. E toque os repertórios prontos para a roda."},
  {k:"met",t:"Metrônomo",s:"Compasso 2/4 do samba, subdivisões e bater o tempo com o dedo.",d:"Compasso 2/4 do samba, colcheias e semicolcheias e bater o tempo com o dedo para achar o andamento da música."}];
-const PREM_IMG={rol:"rol",met:"met",bt:"bt",af:"af",tom:"tom",roda:"roda",reps:"reps",songs:"reps",ready:"reps"};
+const PREM_IMG={ac:"ac",rol:"rol",met:"met",bt:"bt",af:"af",tom:"tom",roda:"roda",reps:"reps",songs:"reps",ready:"reps"};
 const premFeat=why=>PREM_FEAT.find(f=>f.k===(PREM_IMG[why]||"roda"))||PREM_FEAT[0];
 const premImg=(k,alt="")=>`<img class="premimg" src="img/premium/${k}.webp" alt="${esc(alt)}" width="340" height="210" loading="lazy">`;
 const premShow=(menos)=>`<div class="psec">Tudo o que vem no Premium</div><div class="premshow">${PREM_FEAT.filter(f=>f.k!==menos).map(f=>`<figure>${premImg(f.k,f.t)}<figcaption><b>${f.t}</b><small>${f.s}</small></figcaption></figure>`).join("")}</div>`;
@@ -2659,10 +2776,10 @@ const andamento=b=>b<60?"Bem lento":b<80?"Lento":b<100?"Moderado":b<125?"Andante
 function drawTools(){
   homeNav();
   $("topbar").innerHTML=`<h1>Ferramentas</h1>`;
-  $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucada"],["tom","Qual o tom?"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
+  $("view").innerHTML=`<div class="homepad"><div class="ttabs">${[["acordes","Acordes"],["metronomo","Metrônomo"],["afinador","Afinador"],["batucadas","Batucada"],["tom","Qual o tom?"]].map(([k,l])=>`<button data-aba="${k}" aria-pressed="${T.aba===k}">${l}</button>`).join("")}</div><div class="tcard" id="tbody"></div></div>`;
   document.querySelectorAll("[data-aba]").forEach(b=>b.onclick=()=>{if(b.dataset.aba!=="afinador"&&T.af.on)afOff();if(b.dataset.aba!=="tom"&&T.tom.mic)tomOff(false);T.aba=b.dataset.aba;drawTools()});
-  if(!isPro()){const w={metronomo:"met",afinador:"af",batucadas:"bt",tom:"tom"}[T.aba];if(st.plShown!==T.aba){st.plShown=T.aba;setTimeout(()=>{if(st.view==="tools"&&!isPro()&&!dr)openDrawer("upsell",{why:w})},120)}$("tbody").innerHTML=`<div class="premlock">${premImg(PREM_IMG[w],premFeat(w).t)}<span class="lock">Premium</span><h3>${premFeat(w).t}</h3><p class="sub">${premFeat(w).d}</p><button class="primary" id="tlk" style="width:100%">Conhecer o Premium</button></div>`;$("tlk").onclick=()=>openDrawer("upsell",{why:w});return}
-  ({metronomo:drawMet,afinador:drawAf,batucadas:drawBt,tom:drawTom})[T.aba]();
+  if(!isPro()){const w={metronomo:"met",afinador:"af",batucadas:"bt",tom:"tom",acordes:"ac"}[T.aba];if(st.plShown!==T.aba){st.plShown=T.aba;setTimeout(()=>{if(st.view==="tools"&&!isPro()&&!dr)openDrawer("upsell",{why:w})},120)}$("tbody").innerHTML=`<div class="premlock">${premImg(PREM_IMG[w],premFeat(w).t)}<span class="lock">Premium</span><h3>${premFeat(w).t}</h3><p class="sub">${premFeat(w).d}</p><button class="primary" id="tlk" style="width:100%">Conhecer o Premium</button></div>`;$("tlk").onclick=()=>openDrawer("upsell",{why:w});return}
+  ({metronomo:drawMet,afinador:drawAf,batucadas:drawBt,tom:drawTom,acordes:drawAcordes})[T.aba]();
 }
 
 /* ----- metrônomo ----- */
