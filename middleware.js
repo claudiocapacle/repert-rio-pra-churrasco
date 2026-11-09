@@ -5,6 +5,14 @@ export const config = { matcher: "/musica/:path*" };
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const unjson = s => { try { return JSON.parse('"' + s + '"'); } catch (_) { return s; } };
 
+// "A" -> "Lá maior", "F#m" -> "Fá sustenido menor", "Bb" -> "Si bemol maior"
+const NOTA = { C: "Dó", D: "Ré", E: "Mi", F: "Fá", G: "Sol", A: "Lá", B: "Si" };
+function tomPt(k) {
+  const m = String(k).match(/^([A-Ga-g])(#|b)?(m)?/);
+  if (!m) return k;
+  return NOTA[m[1].toUpperCase()] + (m[2] === "#" ? " sustenido" : m[2] === "b" ? " bemol" : "") + (m[3] ? " menor" : " maior");
+}
+
 export default async function middleware(req) {
   const url = new URL(req.url);
   const m = url.pathname.match(/^\/musica\/(\d+)/);
@@ -17,7 +25,7 @@ export default async function middleware(req) {
       const tomQ = (url.searchParams.get("tom") || "").replace(/[^A-Ga-g#bm]/g, "").slice(0, 4);
       const tom = tomQ || s[3];
       const t = `${titulo} – ${artista}`;
-      const d = `Cifra para cavaquinho${tom ? ` no tom de ${tom}` : ""}, com desenho dos acordes, troca de tom e batucada. Toque no SambaCifra.`;
+      const d = `Cifra${tom ? ` no tom de ${tomPt(tom)}` : ""}, com desenho dos acordes, troca de tom e batucada. Toque no SambaCifra.`;
       const set = (re, val) => { h = h.replace(re, val); };
       set(/<title>[^<]*<\/title>/, `<title>${esc(t)} · cifra | SambaCifra</title>`);
       set(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(d)}">`);
