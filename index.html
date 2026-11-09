@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <base href="/">
+<meta name="google-site-verification" content="jPdVvCn7so7-qRegYvv5IzTCFZjvxU12sQxB2AhpbzE">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SambaCifra · Cifras de samba e pagode</title>
 <meta name="description" content="Cifras de samba e pagode para cavaco, violão, banjo, teclado e outros instrumentos, com troca de tom, desenho dos acordes, batucada e roda ao vivo.">
@@ -1329,7 +1330,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="09/11 12:11";
+const APP_BUILD="09/11 12:28";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
