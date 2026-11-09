@@ -75,6 +75,10 @@
     {
       "source": "/musica/:path*",
       "destination": "/index.html"
+    },
+    {
+      "source": "/artista/:path*",
+      "destination": "/index.html"
     }
   ]
 }
