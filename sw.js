@@ -1,7 +1,7 @@
 // Offline: guarda o app e as bibliotecas; a página principal busca primeiro na rede para pegar atualizações.
 // Três caches: o núcleo do app (muda a cada publicação), as cifras (arquivos com hash, nunca mudam)
 // e a mídia (batucada, imagens, fontes). Uma publicação nova só troca o núcleo: o offline do aluno continua.
-const CACHE = "sambacifra-v109";
+const CACHE = "sambacifra-v110";
 const DADOS = "sambacifra-dados", MIDIA = "sambacifra-midia";
 const CORE = ["./", "index.html", "manifest.webmanifest", "vendor/supabase.js", "vendor/591.supabase.js", "vendor/qrcode.min.js", "icon-192.png", "icon-512.png", "favicon.png", "apple-touch-icon.png", "icon.svg"];
 const qual = url => url.pathname.startsWith("/data/") ? DADOS : (url.pathname.startsWith("/batucada/") || url.pathname.startsWith("/img/") || /fonts\.(gstatic|googleapis)\.com$/.test(url.hostname)) ? MIDIA : CACHE;

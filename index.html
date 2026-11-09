@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<base href="/">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>SambaCifra · Cifras de samba e pagode</title>
 <meta name="description" content="Cifras de samba e pagode para cavaquinho, com troca de tom, desenho dos acordes, batucada e roda ao vivo.">
@@ -1328,7 +1329,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="06/11 12:51";
+const APP_BUILD="09/11 11:59";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1613,14 +1614,14 @@ function loginWire(id){const W=document.querySelector(`[data-lg="${id}"]`);if(!W
   const msg=(t,err)=>{S.hidden=false;S.className="status"+(err?" err":"");S.textContent=t};
   const redo=m=>{const box=W.parentElement;W.outerHTML=loginForm(id,m);loginWire(id)};
   W.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>redo(b.dataset.m));
-  W.querySelectorAll("[data-prov]").forEach(b=>b.onclick=async()=>{const {error}=await sb.auth.signInWithOAuth({provider:b.dataset.prov,options:{redirectTo:location.origin+location.pathname}});if(error)msg(authErr(error),true)});
+  W.querySelectorAll("[data-prov]").forEach(b=>b.onclick=async()=>{const {error}=await sb.auth.signInWithOAuth({provider:(guardaRota(),b.dataset.prov),options:{redirectTo:location.origin+"/"}});if(error)msg(authErr(error),true)});
   const esq=W.querySelector("[data-esq]");if(esq)esq.onclick=async()=>{const em=F.email.value.trim();if(!em)return msg("Digite seu e-mail acima e toque de novo em Esqueci minha senha.",true);
-    const {error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});msg(error?authErr(error):"Enviamos um link para "+em+" para você criar uma senha nova.",!!error)};
+    const {error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+"/"});msg(error?authErr(error):"Enviamos um link para "+em+" para você criar uma senha nova.",!!error)};
   F.onsubmit=async e=>{e.preventDefault();const em=F.email.value.trim(),pw=F.senha.value,modo=W.dataset.modo,B=F.querySelector(".primary");
     if(!/^\S+@\S+\.\S+$/.test(em))return msg("Confira o e-mail digitado.",true);if(pw.length<6)return msg("A senha precisa ter pelo menos 6 caracteres.",true);
     B.disabled=true;msg(modo==="criar"?"Criando sua conta…":"Entrando…");
     if(modo==="criar"){const nome=(F.nome&&F.nome.value.trim())||"";
-      const {data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:nome},emailRedirectTo:location.origin+location.pathname}});B.disabled=false;
+      const {data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:nome},emailRedirectTo:location.origin+"/"}});B.disabled=false;
       if(error)return msg(authErr(error),true);
       if(data&&data.session){USER=data.session.user;await aoEntrar(true)}else msg("Conta criada! Enviamos um link de confirmação para "+em+". Abra o e-mail e depois entre aqui.")}
     else{const {data,error}=await sb.auth.signInWithPassword({email:em,password:pw});B.disabled=false;
@@ -1633,7 +1634,7 @@ function drawLogin(){
 }
 
 /* ================= navegação ================= */
-function go(view,opts={}){if(view!=="tools")st.plShown=null;if(view!=="tools"){if(T.af.on)afOff();if(T.tom&&T.tom.mic)tomOff(false)}if(view==="song"&&st.view!=="song")st.from=st.view;$("toast").hidden=true;Object.assign(st,{view},opts);stopPlay();closeDrawer();draw();window.scrollTo(0,0)}
+function go(view,opts={}){if(view!=="song"&&/^\/musica\//.test(location.pathname))try{history.replaceState(null,"","/"+location.hash)}catch(e){}if(view!=="tools")st.plShown=null;if(view!=="tools"){if(T.af.on)afOff();if(T.tom&&T.tom.mic)tomOff(false)}if(view==="song"&&st.view!=="song")st.from=st.view;$("toast").hidden=true;Object.assign(st,{view},opts);stopPlay();closeDrawer();draw();window.scrollTo(0,0)}
 function draw(){
   document.body.classList.toggle("stage",st.view==="song"&&!!st.stage);
   $("stagebar").hidden=!(st.view==="song"&&st.stage);
@@ -1910,8 +1911,8 @@ function drawSongHead(){
     ${vers(s).length>1?`<button class="chip" data-tool="versao">${esc(curVer(s).label)}${IC.caret}</button>`:""}
     <button class="chip ${T.met.on?"live":""}" data-tool="metronomo">${ICM.met}Metrônomo${!isPro()?`<span class="lock sm">PRO</span>`:""}${T.met.on?` <span class="v">${T.met.bpm}</span>`:""}</button>
     <button class="chip ${T.bt.on?"live":""}" data-tool="batucada">${ICM.drum}Batucada${!isPro()?`<span class="lock sm">PRO</span>`:""}${T.bt.on||T.bt.loading?` <span class="v">${T.bt.bpm}</span>`:""}</button>
-    </div><div class="chips" style="margin-top:8px"><button class="learn" data-tool="ouvir">${ICO_FONE}Ouvir a música</button><button class="learn alt" data-tool="editar">${ICO_LAPIS}${isAdmin?"Editar cifra":"Sugerir correção"}</button></div><div class="bpmtop" id="bpmTop">${bpmLine(s)}</div>`;
-  $("tbKey").textContent=cur;
+    </div><div class="chips" style="margin-top:8px"><button class="learn" data-tool="ouvir">${ICO_FONE}Ouvir a música</button><button class="learn alt" data-tool="editar">${ICO_LAPIS}${isAdmin?"Editar cifra":"Sugerir correção"}</button><button class="learn alt" data-tool="compartilhar">${ICO_SHARE}Compartilhar</button></div><div class="bpmtop" id="bpmTop">${bpmLine(s)}</div>`;
+  $("tbKey").textContent=cur;syncUrl(s);
   const mb=document.querySelector('#tools [data-tool="mais"]');if(mb)mb.hidden=!isAdmin;
 }
 /* tamanho da letra da cifra: a fonte é monoespaçada e a cifra é remontada a cada mudança, então o acorde continua em cima da sílaba certa */
@@ -1955,6 +1956,7 @@ function drawSong(){
     loadChunk(s.c).then(()=>{if(st.view==="song"&&st.id===s.id)drawSong()}).catch(e=>{if(st.view!=="song"||st.id!==s.id)return;const off=navigator.onLine===false;
       $("view").innerHTML=`<div class="homepad"><div class="errbox"><b>${off?"Sem internet":"Não deu para abrir esta cifra"}</b><p>${off?"Conecte à internet e tente de novo. A música que você abrir uma vez com internet fica guardada no aparelho.":"Pode ser que o app esteja numa versão antiga. Toque em Atualizar o app: seus repertórios e favoritos continuam salvos."}</p><div class="row2"><button class="ghost" id="errTry">Tentar de novo</button><button class="primary" id="errUpd">Atualizar o app</button></div></div></div>`;
       $("errTry").onclick=()=>drawSong();$("errUpd").onclick=()=>appAtualizar()});return}
+  if(st.tomAlvo){const t=st.tomAlvo;st.tomAlvo=null;if(st.id===t.id){const a=parseKey(songKey(s)),b=parseKey(t.tom);let d=mod(b.pc-a.pc,12);if(d>6)d-=12;st.delta=d}}
   const cv=curVer(s), sp=makeSpeller(cv.key||s.key,st.delta), lines=cv.lines;
   $("view").innerHTML=`<div class="shead" id="shead"></div><div class="strip" id="strip" aria-label="Acordes da música"></div>
     <div class="sheetwrap"><pre class="sheet" id="sheet"></pre><div class="compos" id="compos"></div></div>`;
@@ -2153,6 +2155,33 @@ async function openShared(id){
 }
 /* link fixo do painel: sambacifra.com.br/#painel */
 function abrirPainel(){if(isAdmin){st.wantPanel=false;return go("review",{})}if(!USER){openDrawer("conta");setTimeout(()=>toast("Entre com a sua conta de professor para abrir o painel."),300);return}if(AUTH_OK)toast("Esta conta não é de professor.")}
+/* ===== link próprio de cada música: sambacifra.com.br/musica/8515-saudade-louca?tom=F =====
+   O número é o que vale (nunca muda, mesmo com nomes repetidos); o nome é só para ler. */
+const ICO_SHARE='<svg viewBox="0 0 24 24" width="16" height="16" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>';
+const SITE=/sambacifra\.com\.br$/.test(location.hostname)?location.origin:"https://www.sambacifra.com.br";
+function slugify(t){return String(t||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60)}
+function songPath(s){return "/musica/"+String(s.id).replace(/^s/,"")+"-"+slugify(s.title)}
+function songQuery(s){const q=new URLSearchParams();if(st.delta)q.set("tom",keyOf(s,st.delta));const k=curVer(s).k;if(k&&k!=="completa"&&vers(s).length>1)q.set("versao",k);const x=q.toString();return x?"?"+x:""}
+function songLink(s){return SITE+songPath(s)+songQuery(s)}
+function syncUrl(s){if(!s||s.pending||st.view!=="song")return;const u=songPath(s)+songQuery(s);if(location.pathname+location.search!==u)try{history.replaceState(null,"",u)}catch(e){}}
+function guardaRota(){try{if(/^\/musica\//.test(location.pathname))sessionStorage.setItem("sc-rota",JSON.stringify({u:location.pathname+location.search,t:Date.now()}))}catch(e){}}
+function rotaMusica(){
+  let path=location.pathname,search=location.search;
+  if(!/^\/musica\//.test(path)){try{const r=JSON.parse(sessionStorage.getItem("sc-rota")||"null");sessionStorage.removeItem("sc-rota");if(r&&Date.now()-r.t<15*60000){const u=new URL(r.u,location.origin);path=u.pathname;search=u.search}}catch(e){}}
+  const m=path.match(/^\/musica\/(\d+)(?:-([a-z0-9-]*))?/);if(!m)return false;
+  let s=byId("s"+m[1]);
+  if(!s&&m[2])s=SONGS.find(x=>slugify(x.title)===m[2]);
+  if(!s){try{history.replaceState(null,"","/")}catch(e){}setTimeout(()=>toast("Essa música não está mais no app."),600);return false}
+  const q=new URLSearchParams(search);let delta=0;
+  const v=q.get("versao");if(v)st.ver=v;
+  const t=normTom(q.get("tom"));st.tomAlvo=t?{id:s.id,tom:t}:null;
+  Object.assign(st,{view:"song",id:s.id,delta,rep:null,from:"home"});
+  return true}
+async function compartilharMusica(s){
+  if(!s)return;if(s.pending)return toast("Essa cifra ainda está em revisão. Compartilhe depois de aprovada.");
+  const url=songLink(s),txt=`${s.title} – ${s.artist} (tom ${keyOf(s,st.delta)})`;
+  if(navigator.share&&matchMedia("(pointer:coarse)").matches){try{await navigator.share({title:txt,text:txt,url});}catch(e){}return}
+  try{await navigator.clipboard.writeText(url);toast("Link copiado: "+url.replace(/^https?:\/\//,""))}catch(e){prompt("Copie o link:",url)}}
 function handleHash(){
   const h=(location.hash||"").slice(1);
   if(h==="professor"){history.replaceState(null,"",location.pathname);return openDrawer("professor")}
@@ -2887,11 +2916,13 @@ document.addEventListener("click",e=>{
   else if(d.tool){
     if(d.tool==="palco") return setStage(!st.stage);
     if(d.tool==="ouvir") return ouvir(byId(st.id));
+    if(d.tool==="compartilhar") return compartilharMusica(byId(st.id));
     if(d.tool==="editar"){const s=byId(st.id),v=curVer(s);return go("edit",{ed:{song:s.id,ver:v.label,texto:linesToText(v.lines),orig:linesToText(v.lines),otom:songKey(s),tom:songKey(s),origem:null,nome:myName||"",nota:""}})}
     if(d.tool==="roda"&&!roda.code) return openDrawer("roda");
     openDrawer(d.tool)}
 });
 let _rw=innerWidth;addEventListener("resize",()=>{if(Math.abs(innerWidth-_rw)>20){_rw=innerWidth;if(st.view==="song")drawSong()}});
+rotaMusica();
 draw();
 
 /* ================= ferramentas: metrônomo, afinador, batucadas (mesmas do Minha Evolução) ================= */

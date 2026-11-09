@@ -70,5 +70,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/musica/:path*",
+      "destination": "/index.html"
+    }
   ]
 }
