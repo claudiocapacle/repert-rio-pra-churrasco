@@ -969,16 +969,18 @@ function genShapes(name){
   }
   shapeCache.set(name,res); return res;
 }
+function shapeBase(sh){if(!sh)return 1;const pressed=sh.fr.filter(f=>f>0);if(!pressed.length)return 1;return Math.max(...sh.fr)<=5?1:Math.min(...pressed)}
 function svgShape(sh,w=72){
-  const h=Math.round(w*1.2), x0=12, gap=(w-24)/3, y0=16, fh=(h-y0-8)/5;
-  if(!sh) return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><text x="${w/2}" y="${h/2}" text-anchor="middle" class="xx">?</text></svg>`;
-  const pressed=sh.fr.filter(f=>f>0), lo=Math.min(...pressed), base=Math.max(...sh.fr)<=5?1:lo;
-  let s=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">`;
+  // margem à direita para o número da casa não ficar escondido atrás das bolinhas (em qualquer tamanho)
+  const h=Math.round(w*1.2), x0=12, gap=(w-24)/3, y0=16, fh=(h-y0-8)/5, mr=w>=90?Math.round(w*0.2):4, W=w+mr;
+  if(!sh) return `<svg width="${W}" height="${h}" viewBox="0 0 ${W} ${h}" aria-hidden="true"><text x="${w/2}" y="${h/2}" text-anchor="middle" class="xx">?</text></svg>`;
+  const base=shapeBase(sh), r=Math.min(gap,fh)*0.36;
+  let s=`<svg width="${W}" height="${h}" viewBox="0 0 ${W} ${h}" aria-hidden="true">`;
   for(let i=0;i<=5;i++) s+=`<line class="${i===0&&base===1?"nut":"fr"}" stroke-width="${i===0&&base===1?3:1}" x1="${x0}" x2="${x0+3*gap}" y1="${y0+i*fh}" y2="${y0+i*fh}"/>`;
   for(let i=0;i<4;i++) s+=`<line class="str" x1="${x0+i*gap}" x2="${x0+i*gap}" y1="${y0}" y2="${y0+5*fh}"/>`;
-  if(base>1) s+=`<text class="ft" x="${x0+3*gap+4}" y="${y0+fh*0.7}">${base}</text>`;
   sh.fr.forEach((f,i)=>{const x=x0+i*gap; if(f===0) s+=`<circle class="op" cx="${x}" cy="${y0-7}" r="3.2"/>`;
-    else s+=`<circle class="fd" cx="${x}" cy="${y0+(f-base+0.5)*fh}" r="${Math.min(gap,fh)*0.36}"/>`;});
+    else s+=`<circle class="fd" cx="${x}" cy="${y0+(f-base+0.5)*fh}" r="${r}"/>`;});
+  if(base>1) s+=`<text class="ft" x="${x0+3*gap+r+2}" y="${y0+fh*0.5}" dominant-baseline="middle" style="font-size:${Math.max(9,Math.round(w*0.13))}px;font-weight:700">${base}</text>`;
   return s+"</svg>";
 }
 
@@ -1330,7 +1332,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="09/11 12:46";
+const APP_BUILD="09/11 13:21";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -2291,7 +2293,7 @@ function drawDrawer(){
       saveMeta(s.id,{bpm:(meta[s.id]||{}).bpm||null,aula:u||null},"Aula salva").then(closeDrawer)};
   } else if(dr.kind==="acorde"){
     const all=shapes(dr.name),sh=all[dr.i||0];
-    B.innerHTML=`<div class="diag"><div>${svgShape(sh,120)}</div><div><div class="nm">${esc(dr.name)}</div><p class="sub" style="margin:4px 0 10px">${all.length?(sh&&sh.dic?"Desenho do dicionário de acordes":`Posição ${(dr.i||0)+1} de ${all.length}`+(sh&&!sh.dic?" · gerada":"")):"Ainda sem desenho"}</p>
+    B.innerHTML=`<div class="diag"><div>${svgShape(sh,120)}</div><div><div class="nm">${esc(dr.name)}</div><p class="sub" style="margin:4px 0 10px">${all.length?(sh&&sh.dic?"Desenho do dicionário de acordes":`Posição ${(dr.i||0)+1} de ${all.length}`+(sh&&!sh.dic?" · gerada":"")):"Ainda sem desenho"}${sh&&shapeBase(sh)>1?`<br><b style="color:var(--ink)">Começa na ${shapeBase(sh)}ª casa</b>`:""}</p>
      ${all.length>1?`<div style="display:flex;gap:6px"><button class="ghost" id="pp">‹</button><button class="ghost" id="pn">Outra posição ›</button></div>`:""}</div></div>
      <p class="sub" style="margin-top:14px;text-align:center">Cavaquinho em Ré Sol Si Ré · corda 4 (Ré grave) à esquerda</p>`;
     if($("pn")){$("pn").onclick=()=>{dr.i=((dr.i||0)+1)%all.length;drawDrawer()};$("pp").onclick=()=>{dr.i=((dr.i||0)-1+all.length)%all.length;drawDrawer()}}
