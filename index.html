@@ -843,6 +843,18 @@ details.admcard[open] summary{margin-bottom:8px}
 @media(max-width:400px){.top h1.brand{font-size:19px}.top h1.brand svg{width:26px;height:26px}.ptag{padding:5px 8px;margin-left:4px}.top .tools-r .icon{width:38px;height:38px}}
 @media(max-width:375px){.ptag .ptx{display:none}}
 @media(max-width:340px){.top h1.brand .b1{font-size:17px}}
+.edvers{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.edv{font:inherit;font-size:15px;font-weight:600;padding:9px 16px;border-radius:999px;border:1.5px solid var(--line,#ddd);background:#fff;color:var(--ink);cursor:pointer;white-space:nowrap}
+.edv.on{border-color:var(--orange);color:var(--orange)}
+.edv.nova{border-style:dashed;color:var(--orange);background:transparent}
+.edv.nova.on{border-style:solid;background:rgba(245,130,32,.08)}
+.field textarea.rsmsg{min-height:120px;font-family:inherit;width:100%;box-sizing:border-box;font:inherit;font-size:15px;line-height:1.45;white-space:pre-wrap;padding:10px 12px;border-radius:12px;border:1px solid var(--line,#ddd)}
+.edaviso{margin-top:8px}
+.rssel{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--orange);border-radius:12px;padding:10px 12px;margin-top:6px}
+.rssel small{color:var(--muted)}
+.rsres{margin-top:6px}
+.avisoit{border:1px solid var(--line,#e5e5e5);border-radius:14px;padding:12px 14px;margin:10px 0}
+.avisoit p{margin:6px 0 10px;line-height:1.45}
 
 </style>
 </head>
@@ -1333,7 +1345,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="10/11 12:22";
+const APP_BUILD="16/11 10:10";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1357,7 +1369,13 @@ function prefetchChunks(){let i=0;const nx=()=>{if(i>=CHUNKS.length)return;const
 setTimeout(()=>{if(!(navigator.connection&&navigator.connection.saveData))prefetchChunks()},5000);
 /* limpa do cache offline os pacotes de cifra que não fazem mais parte do app (o resto continua guardado entre publicações) */
 setTimeout(async()=>{try{if(!window.caches)return;const c=await caches.open("sambacifra-dados"),vivos=new Set(CHUNKS.map(f=>"/data/"+f));for(const r of await c.keys()){if(!vivos.has(new URL(r.url).pathname))await c.delete(r)}}catch(e){}},20000);
-function vers(s){if(!songReady(s))return[{k:"completa",label:"Completa",lines:[]}];if(!s.vers){const v=[];if(s.completa)v.push({k:"completa",label:s.rot||"Completa",lines:s.completa});if(s.simplificada)v.push({k:"simplificada",label:"Simplificada",lines:s.simplificada});(s.extra||[]).forEach((x,i)=>v.push({k:"v"+(i+2),label:x.rot||("Versão "+(v.length+1)),lines:x.lines,key:x.key}));if(!v.length)v.push({k:"completa",label:"Completa",lines:[]});for(const x of v){const e=EDITS[s.id+"|"+x.label];if(e){x.lines=parseChordText(e.texto);if(e.tom)x.key=e.tom;x.edited=true}}s.vers=v}return s.vers}
+function vers(s){if(!songReady(s))return[{k:"completa",label:"Completa",lines:[]}];if(!s.vers){const v=[];if(s.completa)v.push({k:s.rot==="Simplificada"&&!s.simplificada?"simplificada":"completa",label:s.rot||"Completa",lines:s.completa});if(s.simplificada)v.push({k:"simplificada",label:"Simplificada",lines:s.simplificada});(s.extra||[]).forEach((x,i)=>v.push({k:"v"+(i+2),label:x.rot||("Versão "+(v.length+1)),lines:x.lines,key:x.key}));for(const x of v){const e=EDITS[s.id+"|"+x.label];if(e){x.lines=parseChordText(e.texto);if(e.tom)x.key=e.tom;x.edited=true}}
+    /* versão que o professor ADICIONOU (a música não tinha completa ou simplificada) */
+    for(const lb of VER_BASE){const e=EDITS[s.id+"|"+lb];if(!e||v.some(x=>x.label===lb))continue;let k=lb.toLowerCase();if(v.some(x=>x.k===k))k+="2";
+      const nv={k,label:lb,lines:parseChordText(e.texto),key:e.tom||undefined,edited:true,added:true};
+      if(lb==="Completa")v.unshift(nv);else{const i=v.findIndex(x=>x.label==="Completa");v.splice(i+1,0,nv)}}
+    if(!v.length)v.push({k:"completa",label:"Completa",lines:[]});s.vers=v}return s.vers}
+const VER_BASE=["Completa","Simplificada"];
 function curVer(s){const vs=vers(s);return vs.find(v=>v.k===st.ver)||(st.ver==="simplificada"&&vs.find(v=>/simplif/i.test(v.label)))||vs[0]}
 function songKey(s){return curVer(s).key||s.key}
 let FREE_REPS=1, FREE_SONGS=20, PREMIUM=false, PLANO={};
@@ -1531,7 +1549,7 @@ function contarToque(s){if(naoConta()||s.pending)return;const k=s.id;if(_lastPla
 async function initCaps(){
   try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:"pkce",storageKey:"sc-auth"}})}catch(e){sb=null}
   if(sb){await authInit()}
-  if(sb){await Promise.allSettled([loadCatalog(),loadMeta(),loadMine(),loadAdmin(),loadEdits(),loadFotos()]);loadPlays();loadAdminEdits()}
+  if(sb){await Promise.allSettled([loadCatalog(),loadMeta(),loadMine(),loadAdmin(),loadEdits(),loadFotos()]);loadPlays();loadAdminEdits();setTimeout(loadAvisos,1500)}
   AUTH_OK=true;
   if(gateOn()) draw(); else if(st.view==="home") drawHome();
   handleHash();
@@ -1565,12 +1583,18 @@ async function authInit(){
     else if(!novo&&USER&&ev==="SIGNED_OUT"){USER=null;PROF=false;PREMIUM=false}
   },0)});
 }
+/* resposta do professor a um pedido: aparece uma vez para quem pediu */
+let _avisoOn=false;
+async function loadAvisos(){if(!sb||_avisoOn)return;try{const {data,error}=await sb.rpc("meus_avisos",{p_device:DEVICE});if(error||!data||!data.length)return;
+  const mostra=()=>{if(dr||["import","edit","login"].includes(st.view)){setTimeout(mostra,4000);return}_avisoOn=true;openDrawer("aviso",{lista:data});
+    data.forEach(a=>sb.rpc("aviso_visto",{p_device:DEVICE,p_id:a.id}));setTimeout(()=>_avisoOn=false,3000)};mostra()}catch(e){}}
 async function aoEntrar(avisar){
   const md=USER.user_metadata||{};if(!myName&&(md.full_name||md.name))myName=md.full_name||md.name;
   await syncPull();
   try{const {data}=await sb.rpc("sou_professor");PROF=data===true}catch(e){PROF=false}
   await loadPlano();
   if(PROF){isAdmin=true;await loadAdmin();loadAdminEdits()}
+  loadAvisos();
   if(st.wantPanel){st.wantPanel=false;if(isAdmin){closeDrawer();return go("review",{})}toast("Esta conta não é de professor.")}
   if(avisar){closeDrawer();toast("Pronto, você entrou"+(md.full_name||md.name?", "+String(md.full_name||md.name).split(" ")[0]:"")+"!");if(st.view==="login")st.view="home";draw()}
 }
@@ -2346,6 +2370,41 @@ function drawDrawer(){
       let ok=false;try{const {data,error}=await sb.rpc("enviar_pedido",{p_tipo:tp,p_titulo:tp==="cifra"?dr.titulo||"":"",p_artista:tp==="cifra"?dr.artista||"":"",p_texto:dr.texto||"",p_contato:dr.contato||"",p_device:DEVICE,p_plat:plataforma()});ok=!error&&data===true}catch(x){}
       if(ok){closeDrawer();toast(tp==="cifra"?"Pedido enviado! Obrigado 🎶":"Recebido! Obrigado por ajudar 🙌")}
       else{bt.disabled=false;bt.textContent="Tentar de novo";toast(navigator.onLine===false?"Sem internet agora. Tente de novo.":"Não deu para enviar agora. Tente de novo em instantes.")}};
+  } else if(dr.kind==="responder"){   /* professor: fechar pedido avisando quem pediu */
+    const x=dr.x,cif=x.tipo==="cifra",sel=dr.song?byId(dr.song):null;
+    const tit=sel?sel.title:(x.titulo||"");
+    const MSG={novo:`Oi! A cifra de “${tit}” acabou de entrar no SambaCifra, do jeito que você pediu. Toque em Abrir a cifra e bom som! 🎶`,
+      ja:`Oi! A cifra de “${tit}” já está no SambaCifra. Toque em Abrir a cifra para ir direto nela. Bom som! 🎶`,
+      ok:`Oi! Obrigado pelo aviso. Já resolvemos por aqui. 🙌`};
+    if(!dr.mod){dr.modelo=dr.modelo||(cif?"novo":"ok");dr.msg=MSG[dr.modelo]}
+    const res=cif&&!sel&&dr.q?searchSongs(dr.q).slice(0,5):[];
+    B.innerHTML=`<h3>${cif?"Marcar como adicionada":"Marcar como resolvido"}</h3>
+     <p class="sub">${x.titulo?`<b>${esc(x.titulo)}</b>${x.artista?" · "+esc(x.artista):""}. `:""}${x.votos>1?`${x.votos} pessoas pediram. `:""}Quem pediu recebe este aviso quando abrir o app.</p>
+     ${cif?`<div class="field"><label for="rsq">Música no site</label>
+       ${sel?`<div class="rssel"><span><b>${esc(sel.title)}</b> <small>${esc(sel.artist)}</small></span><button class="linkbtn" id="rsTroca">Trocar</button></div>`
+       :`<input id="rsq" value="${esc(dr.q||"")}" placeholder="Busque pelo nome ou cole o link da música" autocomplete="off">
+         <div class="rsres">${res.map(t=>`<button class="opt" data-rs="${t.id}"><b>${esc(t.title)}</b><small>${esc(t.artist)}</small></button>`).join("")||(dr.q?`<p class="help">Nada encontrado. Confira o nome ou cole o link.</p>`:"")}</div>`}</div>
+       <div class="pills" style="margin:6px 0 4px"><button data-rmod="novo" class="${dr.modelo==="novo"?"on":""}">Acabei de adicionar</button><button data-rmod="ja" class="${dr.modelo==="ja"?"on":""}">Já estava no site</button></div>`:""}
+     <div class="field"><label for="rsmsg">Recado para quem pediu</label><textarea id="rsmsg" class="rsmsg" rows="4" maxlength="600">${esc(dr.msg)}</textarea></div>
+     <div class="row2" style="margin-top:10px"><button class="ghost" id="rsSem">Fechar sem avisar</button><button class="primary" id="rsOk">Salvar e avisar</button></div>`;
+    const idDoLink=v=>{const m=/musica\/(\d+)/.exec(v)||/^\s*s?(\d+)\s*$/.exec(v);return m&&byId("s"+m[1])?"s"+m[1]:null};
+    if($("rsq")){const q=$("rsq");q.oninput=()=>{const lk=idDoLink(q.value);if(lk){dr.song=lk;dr.q="";drawDrawer();return}dr.q=q.value;const pos=q.selectionStart;drawDrawer();const n=$("rsq");if(n){n.focus();n.setSelectionRange(pos,pos)}}}
+    B.querySelectorAll("[data-rs]").forEach(b=>b.onclick=()=>{dr.song=b.dataset.rs;drawDrawer()});
+    if($("rsTroca"))$("rsTroca").onclick=()=>{dr.song=null;dr.q=dr.q||x.titulo||"";drawDrawer()};
+    B.querySelectorAll("[data-rmod]").forEach(b=>b.onclick=()=>{dr.modelo=b.dataset.rmod;dr.mod=false;drawDrawer()});
+    $("rsmsg").oninput=()=>{dr.msg=$("rsmsg").value;dr.mod=true};
+    $("rsSem").onclick=async()=>{const {error}=await sb.rpc("admin_pedido_status",{p_key:ADMIN_KEY,p_id:x.id,p_status:"feito"});if(error)return toast("Não foi possível salvar");closeDrawer();toast("Marcado, sem aviso");admPedidos()};
+    $("rsOk").onclick=async()=>{const bt=$("rsOk");if(cif&&!dr.song)return toast("Escolha a música no site (ou use Fechar sem avisar)");
+      bt.disabled=true;bt.textContent="Salvando…";
+      const {data,error}=await sb.rpc("admin_pedido_responder",{p_key:ADMIN_KEY,p_id:x.id,p_status:"feito",p_song:dr.song||"",p_msg:($("rsmsg").value||"").trim()});
+      if(error||!data){bt.disabled=false;bt.textContent="Tentar de novo";return toast("Não foi possível salvar")}
+      closeDrawer();toast(x.votos>1?`Pronto! ${x.votos} pessoas vão ser avisadas`:"Pronto! Quem pediu vai ser avisado");admPedidos()};
+  } else if(dr.kind==="aviso"){   /* aluno: resposta ao pedido */
+    const L=dr.lista||[];
+    B.innerHTML=`<h3>${L.length>1?"Seus pedidos foram atendidos 🎶":L[0]&&L[0].tipo==="cifra"?"Seu pedido chegou 🎶":"Resposta ao seu recado 🙌"}</h3>`+
+      L.map(a=>{const sg=a.resposta_song&&byId(a.resposta_song);return`<div class="avisoit">${a.titulo?`<b>${esc(a.titulo)}</b>`:""}<p>${esc(a.resposta||(a.tipo==="cifra"?`A cifra de “${a.titulo||"sua música"}” já está no SambaCifra.`:"Seu recado foi resolvido. Obrigado!"))}</p>
+        ${sg?`<button class="primary" data-av="${sg.id}" style="width:100%">Abrir a cifra de ${esc(sg.title)}</button>`:""}</div>`}).join("");
+    B.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{closeDrawer();go("song",{id:b.dataset.av})});
   } else if(dr.kind==="instalar"){
     const os=dr.os||plataformaInst();
     B.innerHTML=`<div class="ishead"><img src="icon-192.png" alt="" width="56" height="56"><div><h3>SambaCifra na tela inicial</h3><p class="sub">Fica com o ícone junto dos seus apps, abre em tela cheia e mais rápido. Não ocupa espaço como um app da loja.</p></div></div>
@@ -2510,9 +2569,11 @@ async function admPedidos(){
    <div class="pills" style="margin:4px 0 10px">${[["abertos","Em aberto"],["cifra","Cifras"],["ideia","Sugestões"],["fechados","Resolvidos"]].map(([k,l])=>`<button data-pf="${k}" class="${f===k?"on":""}">${l}</button>`).join("")}</div>
    ${vis.length?vis.map(x=>`<div class="peditem ${x.status}"><div class="pedh"><span class="pedtag ${PED_TP[x.tipo][1]}">${PED_TP[x.tipo][0]}</span>${x.status==="novo"?`<span class="pednew">novo</span>`:""}<small>${quando(x.criado_em)}${x.votos>1?` · ${x.votos} pedidos`:""}${x.plat?` · ${esc(x.plat)}`:""}</small></div>
      ${x.titulo?`<b>${esc(x.titulo)}${x.artista?` <small>· ${esc(x.artista)}</small>`:""}</b>`:""}${x.texto?`<p>${esc(x.texto)}</p>`:""}
+     ${x.respondido_em&&x.status==="feito"?`<p class="pedc">✓ Avisado${x.resposta_song&&byId(x.resposta_song)?`: <b>${esc(byId(x.resposta_song).title)}</b>`:""}${x.resposta?` · “${esc(x.resposta.slice(0,90))}${x.resposta.length>90?"…":""}”`:""}</p>`:""}
      ${x.email||x.contato?`<p class="pedc">${x.email?`Conta: <a href="mailto:${esc(x.email)}">${esc(x.email)}</a>`:""}${x.email&&x.contato?" · ":""}${x.contato?`Contato: ${esc(x.contato)}`:""}</p>`:""}
-     <div class="row2">${["novo","visto"].includes(x.status)?`<button class="primary" data-ps="feito" data-pid="${x.id}">${x.tipo==="cifra"?"Adicionada":"Resolvido"}</button><button class="ghost" data-ps="descartado" data-pid="${x.id}">Descartar</button>`:`<button class="ghost" data-ps="novo" data-pid="${x.id}">Reabrir</button>`}</div></div>`).join(""):`<p class="help">Nada por aqui.</p>`}`;
+     <div class="row2">${["novo","visto"].includes(x.status)?`<button class="primary" data-resp="${x.id}">${x.tipo==="cifra"?"Adicionada":"Resolvido"}</button><button class="ghost" data-ps="descartado" data-pid="${x.id}">Descartar</button>`:`<button class="ghost" data-ps="novo" data-pid="${x.id}">Reabrir</button>`}</div></div>`).join(""):`<p class="help">Nada por aqui.</p>`}`;
   box.querySelectorAll("[data-pf]").forEach(b=>b.onclick=()=>{st.pedF=b.dataset.pf;admPedidos()});
+  box.querySelectorAll("[data-resp]").forEach(b=>b.onclick=()=>{const x=L.find(y=>y.id===+b.dataset.resp);if(!x)return;const ach=x.tipo==="cifra"&&x.titulo?searchSongs(x.titulo):[];openDrawer("responder",{x,song:ach.length===1?ach[0].id:null,q:ach.length===1?"":(x.titulo||"")})});
   box.querySelectorAll("[data-ps]").forEach(b=>b.onclick=async()=>{b.disabled=true;const {error}=await sb.rpc("admin_pedido_status",{p_key:ADMIN_KEY,p_id:+b.dataset.pid,p_status:b.dataset.ps});if(error)toast("Não foi possível salvar");admPedidos()});
   // abriu a lista: os novos passam a "visto"
   const novos=L.filter(x=>x.status==="novo");if(novos.length&&f==="abertos")setTimeout(()=>novos.forEach(x=>sb.rpc("admin_pedido_status",{p_key:ADMIN_KEY,p_id:x.id,p_status:"visto"})),4000);
@@ -2823,12 +2884,20 @@ const ICO_LAPIS='<svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none;st
 function normTom(t){t=String(t||"").trim();if(!t)return"";const PT={"dó":"C","do":"C","ré":"D","re":"D","mi":"E","fá":"F","fa":"F","sol":"G","lá":"A","la":"A","si":"B"};
   let m=/^([a-gA-G])(#|b)?\s*(m|min|menor)?$/i.exec(t);if(m)return m[1].toUpperCase()+(m[2]||"")+(m[3]?"m":"");
   m=/^(dó|do|ré|re|mi|fá|fa|sol|lá|la|si)\s*(#|b|sustenido|bemol)?\s*(m|menor)?$/i.exec(t);if(m)return PT[m[1].toLowerCase()]+(m[2]?(/^(#|sus)/i.test(m[2])?"#":"b"):"")+(m[3]?"m":"");return null}
+/* professor: escolher qual versão editar, ou ADICIONAR a completa/simplificada que falta */
+function edVerPicker(s,e){const vs=vers(s),falta=VER_BASE.filter(lb=>!vs.some(v=>v.label===lb));
+  return`<div class="field"><label>Qual versão</label><div class="edvers">${vs.map(v=>`<button type="button" class="edv ${!e.novo&&v.label===e.ver?"on":""}" data-edv="${esc(v.label)}">${esc(v.label)}</button>`).join("")}${falta.map(lb=>`<button type="button" class="edv nova ${e.novo&&e.ver===lb?"on":""}" data-edv="${lb}" data-novo="1">+ Adicionar ${lb.toLowerCase()}</button>`).join("")}</div>
+  ${e.novo?`<p class="help edaviso">Nova versão <b>${esc(e.ver)}</b>. Começa com uma cópia da <b>${esc(e.base)}</b> para você só trocar os acordes. As outras versões continuam como estão.</p>`:""}</div>`}
+function edTrocaVersao(s,e,lb,novo){const vs=vers(s);
+  if(novo){const base=vs.find(v=>v.label===(e.novo?e.base:e.ver))||vs[0];Object.assign(e,{ver:lb,novo:true,base:base.label,texto:linesToText(base.lines),orig:null,tom:base.key||s.key,otom:null})}
+  else{const v=vs.find(x=>x.label===lb)||vs[0];const t=linesToText(v.lines);Object.assign(e,{ver:v.label,novo:false,base:null,texto:t,orig:t,tom:v.key||s.key,otom:v.key||s.key})}}
 function drawEdit(){
   const e=st.ed,s=e&&byId(e.song);if(!s)return go("home",{});
   $("topbar").innerHTML=`<button class="icon" id="bk" aria-label="Voltar">${IC.back}</button><span class="ttl">${isAdmin?"Editar cifra":"Sugerir correção"}</span>`;
   $("bk").onclick=()=>go("song",{id:s.id});
   $("view").innerHTML=`<div class="homepad edwrap">
-    <h2 class="ptitle" style="margin-bottom:2px">${esc(s.title)}</h2><p class="help" style="margin-top:0">${esc(s.artist)} · versão <b>${esc(e.ver)}</b>${e.origem?" · sugestão de "+esc(e.nome||"aluno"):""}</p>
+    <h2 class="ptitle" style="margin-bottom:2px">${esc(s.title)}</h2><p class="help" style="margin-top:0">${esc(s.artist)}${isAdmin&&!e.origem?"":` · versão <b>${esc(e.ver)}</b>`}${e.origem?" · sugestão de "+esc(e.nome||"aluno"):""}</p>
+    ${isAdmin&&!e.origem?edVerPicker(s,e):""}
     ${isAdmin?`<div class="field"><label for="edti">Nome da música</label><input id="edti" value="${esc(s.title)}" maxlength="150"></div><div class="field"><label for="edar">Artista</label><input id="edar" value="${esc(s.artist)}" maxlength="150"></div>`:""}
     <div class="edrow"><label>Tom <input id="edtom" value="${esc(e.tom||"")}" maxlength="6"></label></div>
     <p class="help">Acordes na linha de cima e a letra logo embaixo. Use espaços para colocar o acorde sobre a sílaba certa. Linha em branco separa as partes. ${"[b]"} no fim da linha deixa a letra em destaque.</p>
@@ -2837,6 +2906,7 @@ function drawEdit(){
     ${isAdmin?"":`<div class="field"><label for="ednm">Seu nome (opcional)</label><input id="ednm" value="${esc(e.nome||"")}" maxlength="60"></div><div class="field"><label for="ednt">O que você mudou? (opcional)</label><input id="ednt" value="${esc(e.nota||"")}" maxlength="300" placeholder="Ex.: o acorde do refrão é G7, não G"></div>`}
     <div class="row2" style="margin-top:12px"><button class="ghost" id="edcan">Cancelar</button><button class="primary" id="edok">${isAdmin?"Salvar e publicar":"Enviar sugestão"}</button></div>
     <p class="status" id="edst" hidden></p></div>`;
+  $("view").querySelectorAll("[data-edv]").forEach(b=>b.onclick=()=>{e.texto=$("edtx").value;e.tom=$("edtom").value.trim();edTrocaVersao(s,e,b.dataset.edv,b.dataset.novo==="1");drawEdit()});
   const pv=()=>{e.texto=$("edtx").value;e.tom=$("edtom").value.trim();const L=parseChordText(e.texto);let k=e.tom;try{parseKey(k)}catch(_){k=s.key}
     $("edpv").innerHTML=renderSheet(L,makeSpeller(/^[A-G][#b]?m?$/.test(k)?k:s.key,0),$("edpv").parentElement.clientWidth||340,14).html};
   $("edtx").oninput=pv;$("edtom").oninput=pv;pv();
@@ -2855,7 +2925,7 @@ function drawEdit(){
       if(mudouNome){const tx=JSON.stringify({title:nti,artist:nar});const {data,error}=await sb.rpc("admin_publicar_edicao",{p_key:ADMIN_KEY,p_song:s.id,p_ver:"__nome",p_texto:tx,p_tom:"",p_origem:null});
         if(error||!data){B.disabled=false;S.className="status err";S.textContent="A cifra foi salva, mas não deu para mudar o nome. Tente de novo.";return}
         EDITS[s.id+"|__nome"]={texto:tx,tom:""};applyNomes()}
-      loadAdminEdits();toast("Publicado para todos");go(e.origem?"review":"song",{id:s.id})}
+      loadAdminEdits();toast(e.novo?"Versão "+e.ver.toLowerCase()+" adicionada":"Publicado para todos");if(e.novo)st.ver=(vers(s).find(v=>v.label===e.ver)||{}).k||st.ver;go(e.origem?"review":"song",{id:s.id})}
     else{const nm=($("ednm")||{}).value||"",nt=($("ednt")||{}).value||"";if(nm){myName=nm;lsSet("rpc-name",nm)}
       const {data,error}=await sb.rpc("sugerir_edicao",{p_device:DEVICE,p_song:s.id,p_ver:e.ver,p_texto:e.texto,p_tom:e.tom,p_nome:nm,p_nota:nt});
       if(error||!data){B.disabled=false;S.className="status err";S.textContent="Não foi possível enviar agora. Tente de novo em instantes.";return}
