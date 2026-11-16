@@ -751,6 +751,9 @@ details.admcard[open] summary{margin-bottom:8px}
 .premshow figcaption b{display:block;font-size:14.5px;margin-bottom:2px}
 .premshow figcaption small{display:block;font-size:13px;font-weight:500;line-height:1.35;color:var(--muted)}
 .premlock .premimg{box-shadow:0 10px 26px rgba(31,36,48,.14)}
+/* app da Play Store: sem "instalar" */
+html.app-loja .instban,html.app-loja #instFoot,html.app-loja #instGo{display:none!important}
+button.opt.ply{font:inherit;text-align:left;cursor:pointer;width:100%}
 /* instalar na tela inicial */
 .instban{display:grid;grid-template-columns:44px 1fr auto auto;gap:10px;align-items:center;background:linear-gradient(135deg,var(--orange-soft),#fbf3e8);border:1.5px solid #f3c39d;border-radius:16px;padding:10px 8px 10px 12px;margin:2px 0 14px}
 .instban img{border-radius:11px;box-shadow:0 3px 8px rgba(31,36,48,.15)}
@@ -1378,6 +1381,34 @@ function vers(s){if(!songReady(s))return[{k:"completa",label:"Completa",lines:[]
 const VER_BASE=["Completa","Simplificada"];
 function curVer(s){const vs=vers(s);return vs.find(v=>v.k===st.ver)||(st.ver==="simplificada"&&vs.find(v=>/simplif/i.test(v.label)))||vs[0]}
 function songKey(s){return curVer(s).key||s.key}
+/* ===== App da Play Store (TWA): Premium cobrado pelo Google Play =====
+   O app Android abre o site com ?origem=play. Dentro dele não aparece a Hotmart (regra do Google):
+   a assinatura é feita pela Play Store e confirmada no servidor (Edge Function "play"). */
+const APP_LOJA=(()=>{try{const q=new URLSearchParams(location.search).get("origem");if(q==="web"){localStorage.removeItem("sc-loja");return false}if(q==="play"||(document.referrer||"").indexOf("android-app://")===0)localStorage.setItem("sc-loja","play");return localStorage.getItem("sc-loja")==="play"}catch(e){return false}})();
+if(APP_LOJA)document.documentElement.classList.add("app-loja");
+const PLAY_PACOTE="br.com.sambacifra.app", PLAY_SKU={mensal:"premium_mensal",anual:"premium_anual"};
+let PLAY=null, PLAY_PRECO={}, PLAY_INI=false;
+async function playIniciar(){if(PLAY_INI||!APP_LOJA)return;PLAY_INI=true;if(!("getDigitalGoodsService" in window))return;
+  try{PLAY=await window.getDigitalGoodsService("https://play.google.com/billing")}catch(e){PLAY=null;return}
+  try{(await PLAY.getDetails(Object.values(PLAY_SKU))).forEach(x=>{try{PLAY_PRECO[x.itemId]=new Intl.NumberFormat("pt-BR",{style:"currency",currency:x.price.currency}).format(+x.price.value)}catch(e){}})}catch(e){}
+  playRestaurar();if(dr)drawDrawer()}
+async function playVerificar(token,silencioso){if(!sb||!USER||!token)return false;
+  try{const {data:{session}}=await sb.auth.getSession();if(!session)return false;
+    const r=await fetch(SB_URL+"/functions/v1/play",{method:"POST",headers:{"content-type":"application/json",apikey:SB_KEY,Authorization:"Bearer "+session.access_token},body:JSON.stringify({acao:"verificar",token})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok){if(!silencioso)toast(j.resultado==="compra ligada a outra conta"?"Essa assinatura está ligada a outra conta do SambaCifra.":"Não consegui confirmar a compra agora. Abra o app de novo em instantes.");return false}
+    const antes=PREMIUM;await loadPlano();if(PREMIUM&&!antes){closeDrawer();draw();if(!silencioso)toast("Premium liberado! Bom som 🎶")}return true}catch(e){return false}}
+async function playRestaurar(){if(!PLAY||!USER)return;try{for(const p of await PLAY.listPurchases())await playVerificar(p.purchaseToken,true)}catch(e){}}
+async function playComprar(sku){if(!USER){toast("Entre na sua conta para assinar.");return}
+  if(!PLAY){toast("A compra pela Play Store não está disponível neste aparelho.");return}
+  try{const req=new PaymentRequest([{supportedMethods:"https://play.google.com/billing",data:{sku}}],{total:{label:"Total",amount:{currency:"BRL",value:"0"}}});
+    const res=await req.show();const token=res.details&&res.details.purchaseToken;await res.complete("success");
+    toast("Confirmando sua assinatura…");if(!(await playVerificar(token,false)))setTimeout(()=>playVerificar(token,false),5000)}
+  catch(e){if(e&&e.name==="AbortError")return;toast("A compra não foi concluída.")}}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("button.ply");if(!b)return;e.preventDefault();playComprar(b.dataset.sku)});
+function planBtnsPlay(m,pm,pa){if(m&&m===CFG.checkout_aulas_mensal)return`<p class="help" style="margin:6px 0 0"><b>Em breve no app.</b></p>`;
+  if(!PLAY)return`<p class="help" style="margin:6px 0 0">${PLAY_INI?"A assinatura pela Play Store não abriu neste aparelho. Atualize o app pela Play Store e tente de novo.":"Carregando os planos…"}</p>`;
+  return`<div class="premplans"><button class="opt on ply" data-sku="${PLAY_SKU.anual}"><b>Anual · ${esc(PLAY_PRECO[PLAY_SKU.anual]||pa||"")}</b><small>O melhor preço.</small></button><button class="opt ply" data-sku="${PLAY_SKU.mensal}"><b>Mensal · ${esc(PLAY_PRECO[PLAY_SKU.mensal]||pm||"")}</b><small>Cancele quando quiser na Play Store.</small></button></div><p class="help" style="margin:6px 0 0">Cobrado pela sua conta do Google Play. Renova sozinho; cancele quando quiser.</p>`}
 let FREE_REPS=1, FREE_SONGS=20, PREMIUM=false, PLANO={};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1569,7 +1600,7 @@ const gateOn=()=>!!(AUTH_OK&&CFG.exigir_login&&!USER);
 async function authHdr(){if(!sb||!USER)return{};const {data}=await sb.auth.getSession();const t=data&&data.session&&data.session.access_token;return t?{Authorization:"Bearer "+t}:{}}
 try{const c=JSON.parse(localStorage.getItem("sc-cfg")||"null");if(c&&typeof c==="object")for(const k in c)if(!(k in CFG))CFG[k]=c[k];const pl=JSON.parse(localStorage.getItem("sc-plano")||"null");if(pl&&pl.ate>Date.now()&&pl.premium){PREMIUM=true}}catch(e){}
 async function loadCfg(){const {data,error}=await sb.from("app_cfg").select("k,v");if(!error&&data){CFG._lido=true;const c={};data.forEach(x=>{CFG[x.k]=x.v;c[x.k]=x.v});try{localStorage.setItem("sc-cfg",JSON.stringify(c))}catch(e){}}if(CFG.free_reps!=null&&+CFG.free_reps>=0)FREE_REPS=+CFG.free_reps;if(+CFG.free_musicas>0)FREE_SONGS=+CFG.free_musicas}
-async function loadPlano(){if(!USER||!sb){PREMIUM=false;PLANO={};return}try{const {data,error}=await sb.rpc("meu_plano");if(error)return;PLANO=data||{};PREMIUM=!!PLANO.premium;try{localStorage.setItem("sc-plano",JSON.stringify({premium:PREMIUM,ate:Date.now()+7*864e5}))}catch(e){}}catch(e){}}
+async function loadPlano(){if(!USER||!sb){PREMIUM=false;PLANO={};return}try{const {data,error}=await sb.rpc("meu_plano");if(error)return;PLANO=data||{};PREMIUM=!!PLANO.premium;if(APP_LOJA&&!PLAY_INI)playIniciar();try{localStorage.setItem("sc-plano",JSON.stringify({premium:PREMIUM,ate:Date.now()+7*864e5}))}catch(e){}}catch(e){}}
 document.addEventListener("visibilitychange",async()=>{if(document.visibilityState!=="visible"||!USER||PREMIUM)return;await loadPlano();if(PREMIUM){toast("Premium liberado! Bom som 🎶");closeDrawer();draw()}});
 async function loadAuthCfg(){try{const r=await fetch(SB_URL+"/auth/v1/settings",{headers:{apikey:SB_KEY}});AUTHCFG=await r.json()}catch(e){AUTHCFG=null}}
 async function authInit(){
@@ -2510,7 +2541,7 @@ const premImg=(k,alt="")=>`<img class="premimg" src="img/premium/${k}.webp" alt=
 const premShow=(menos)=>`<div class="psec">Tudo o que vem no Premium</div><div class="premshow">${PREM_FEAT.filter(f=>f.k!==menos).map(f=>`<figure>${premImg(f.k,f.t)}<figcaption><b>${f.t}</b><small>${f.s}</small></figcaption></figure>`).join("")}</div>`;
 const premBen=l=>`<ul class="premben">${l.map(t=>`<li>${t}</li>`).join("")}</ul>`;
 function checkoutUrl(u){if(!u)return"";try{const x=new URL(u);if(x.protocol!=="https:"||!/(^|\.)hotmart\.com$/.test(x.hostname))return"";if(USER&&USER.email)x.searchParams.set("email",USER.email);return x.toString()}catch(e){return""}}
-function planBtns(m,a,pm,pa){m=checkoutUrl(m);a=checkoutUrl(a);if(!m&&!a)return`<p class="help" style="margin:6px 0 0"><b>Abre em breve.</b></p>`;
+function planBtns(m,a,pm,pa){if(APP_LOJA)return planBtnsPlay(m,pm,pa);m=checkoutUrl(m);a=checkoutUrl(a);if(!m&&!a)return`<p class="help" style="margin:6px 0 0"><b>Abre em breve.</b></p>`;
   return`<div class="premplans">${a?`<a class="opt on ckt" href="${esc(a)}" target="_blank" rel="noopener"><b>Anual · ${esc(pa||"")}</b><small>O melhor preço. Pode parcelar.</small></a>`:""}${m?`<a class="opt ckt" href="${esc(m)}" target="_blank" rel="noopener"><b>Mensal · ${esc(pm||"")}</b><small>Cancele quando quiser.</small></a>`:""}</div>`}
 /* Checkout da Hotmart aberto dentro do app (tela cheia), com saída para o navegador se algo não carregar. */
 let CKT=null;
@@ -2536,7 +2567,7 @@ function premiumDrawer(B,why){
     const o=PLANO.origem, canc=(PLANO.status==="cancelado"||PLANO.status==="atrasado")&&PLANO.expira_em;
     B.innerHTML=`<h3>Seu plano: ${temAulas()?"Premium + Aulas":"Premium"}</h3><p class="sub">${PROF&&!o?"Você é o professor: tudo liberado.":o==="escola"?"Incluído no seu plano de aluno.":o==="manual"?"Liberado pelo professor.":"Assinatura ativa."}${canc?` Vale até ${new Date(PLANO.expira_em).toLocaleDateString("pt-BR")}.`:""}</p>${premBen(temAulas()?[...PREM_BEN,...AULAS_BEN.slice(1)]:PREM_BEN)}
      ${aulasOn()&&!temAulas()?`<div class="premtier"><b>Premium + Aulas</b>${premBen(AULAS_BEN.slice(1))}${planBtns(CFG.checkout_aulas_mensal,CFG.checkout_aulas_anual,CFG.preco_aulas_mensal,CFG.preco_aulas_anual)}</div>`:""}
-     ${o==="hotmart"?`<a class="ghost" style="width:100%;display:grid;place-items:center;text-decoration:none;margin-top:8px" href="https://consumer.hotmart.com/" target="_blank" rel="noopener">Gerenciar assinatura na Hotmart</a><button class="lnk cancrefl" id="cancRef">Cancelar a assinatura ou pedir reembolso</button>`:""}`;
+     ${o==="play"?`<a class="ghost" style="width:100%;display:grid;place-items:center;text-decoration:none;margin-top:8px" href="https://play.google.com/store/account/subscriptions?package=${PLAY_PACOTE}" target="_blank" rel="noopener">Gerenciar assinatura no Google Play</a>`:""}${o==="hotmart"&&!APP_LOJA?`<a class="ghost" style="width:100%;display:grid;place-items:center;text-decoration:none;margin-top:8px" href="https://consumer.hotmart.com/" target="_blank" rel="noopener">Gerenciar assinatura na Hotmart</a><button class="lnk cancrefl" id="cancRef">Cancelar a assinatura ou pedir reembolso</button>`:""}`;
     if($("cancRef"))$("cancRef").onclick=()=>openDrawer("cancelar");
     return;
   }

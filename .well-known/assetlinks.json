@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "br.com.sambacifra.app",
+      "sha256_cert_fingerprints": ["3F:D8:B3:FD:E3:F6:A6:FE:6D:7A:6C:2B:B2:5F:6B:00:B9:F1:CD:26:54:E9:B7:9F:02:F6:61:79:FB:21:B8:B9"]
+    }
+  }
+]
