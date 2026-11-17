@@ -1404,7 +1404,7 @@ async function playComprar(sku){if(!USER){toast("Entre na sua conta para assinar
   try{const req=new PaymentRequest([{supportedMethods:"https://play.google.com/billing",data:{sku}}],{total:{label:"Total",amount:{currency:"BRL",value:"0"}}});
     const res=await req.show();const token=res.details&&res.details.purchaseToken;await res.complete("success");
     toast("Confirmando sua assinatura…");if(!(await playVerificar(token,false)))setTimeout(()=>playVerificar(token,false),5000)}
-  catch(e){if(e&&e.name==="AbortError")return;toast("A compra não foi concluída.")}}
+  catch(e){if(e&&e.name==="AbortError")return;toast("A compra não foi concluída. ("+((e&&e.name)||"erro")+": "+String((e&&e.message)||e).slice(0,120)+")")}}
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("button.ply");if(!b)return;e.preventDefault();playComprar(b.dataset.sku)});
 function planBtnsPlay(m,pm,pa){if(m&&m===CFG.checkout_aulas_mensal)return`<p class="help" style="margin:6px 0 0"><b>Em breve no app.</b></p>`;
   if(!PLAY)return`<p class="help" style="margin:6px 0 0">${PLAY_INI?"A assinatura pela Play Store não abriu neste aparelho. Atualize o app pela Play Store e tente de novo.":"Carregando os planos…"}</p>`;
