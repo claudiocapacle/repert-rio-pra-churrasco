@@ -1,10 +1,15 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "br.com.sambacifra.app",
-      "sha256_cert_fingerprints": ["3F:D8:B3:FD:E3:F6:A6:FE:6D:7A:6C:2B:B2:5F:6B:00:B9:F1:CD:26:54:E9:B7:9F:02:F6:61:79:FB:21:B8:B9"]
+      "sha256_cert_fingerprints": [
+        "F8:6D:91:83:2C:35:B1:05:45:73:55:CA:22:50:58:63:DA:AE:CF:78:A5:1E:9C:A1:B7:0E:C3:ED:D1:FB:F0:5B",
+        "3F:D8:B3:FD:E3:F6:A6:FE:6D:7A:6C:2B:B2:5F:6B:00:B9:F1:CD:26:54:E9:B7:9F:02:F6:61:79:FB:21:B8:B9"
+      ]
     }
   }
 ]
