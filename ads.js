@@ -1,5 +1,5 @@
 /* SambaCifra — anúncios (só para quem não é Premium).
-   - Na cifra: um bloco entre as estrofes (nunca corta uma linha), com "Remover anúncios".
+   - Na cifra: um bloco entre as estrofes (nunca corta uma linha), com chamada para o Premium.
    - Pop-up: ao abrir o app pela tela inicial e, depois, a cada ~5 minutos de uso, sempre na troca de tela
      (abrir uma música ou voltar ao início), nunca no meio de uma música que a pessoa está tocando.
    - Selo flutuante na tela da música, que abre o Premium.
@@ -16,7 +16,7 @@ const ICO_CROWN='<svg viewBox="0 0 24 24" width="22" height="22" fill="currentCo
 /* Itens padrão. tipo: "casa" (abre o Premium), "parceiro" (link próprio), "afiliado" (loja).
    onde: "cifra" (no meio da letra), "popup". Itens com link vazio não aparecem. */
 const ITENS_PADRAO=[
-  {id:"p-semads",tipo:"casa",img:"rol",kick:"SambaCifra Premium",titulo:"Toque sem anúncios",texto:"No Premium a cifra fica limpa, sem propaganda, e todas as ferramentas ficam liberadas.",cta:"Seja Premium",peso:4,onde:["cifra","popup"]},
+  {id:"p-tudo",tipo:"casa",img:"rol",kick:"SambaCifra Premium",titulo:"Toque com tudo liberado",texto:"Rolagem automática, batucada, Roda de Samba, repertórios sem limite e dicionário de acordes, num só plano.",cta:"Seja Premium",peso:4,onde:["cifra","popup"]},
   {id:"p-roda",tipo:"casa",img:"roda",kick:"Só no Premium",titulo:"Abra a Roda de Samba",texto:"A galera entra pelo QR code e acompanha cada troca de música e de tom no próprio celular.",cta:"Quero abrir a roda",why:"roda",peso:3,onde:["cifra","popup"]},
   {id:"p-bt",tipo:"casa",img:"bt",kick:"Só no Premium",titulo:"Estude com a batucada",texto:"Surdo, pandeiro, rebolo, repiques e cuíca, na velocidade da música. Toque só o pandeiro, só o rebolo…",cta:"Liberar a batucada",why:"bt",peso:3,onde:["cifra","popup"]},
   {id:"p-reps",tipo:"casa",img:"reps",kick:"Só no Premium",titulo:"Repertórios sem limite",texto:"Monte quantos quiser, na ordem da roda e com o tom de cada música salvo. E use os repertórios prontos.",cta:"Montar meus repertórios",why:"reps",peso:3,onde:["cifra","popup"]},
@@ -83,7 +83,7 @@ function blocoHTML(ad,i){
       `<span class="adtx"><span class="adkick">${E(ad.kick||ad.loja||"")}</span><b>${E(ad.titulo)}</b><span class="adtxt">${E(ad.texto||"")}</span>`+
       `${ad.preco?`<span class="adpreco">${E(ad.preco)}</span>`:""}<span class="adcta">${E(ad.cta||"Saiba mais")} ›</span></span>`+
     `</span>`+
-    `<button class="adrm" type="button" data-adrm="1">${ICO_NO}<span>Remover anúncios</span></button>`+
+    (ad.tipo!=="casa"?`<button class="adrm" type="button" data-adrm="1">${ICO_NO}<span>Remover anúncios</span></button>`:"")+
   `</span>`;
 }
 const porMusica={}; // mesma propaganda na mesma música ao redesenhar
@@ -192,19 +192,19 @@ function badge(){
   if(!mostra){if(b)b.remove();return}
   if(b) return;
   b=document.createElement("div");b.id="adbadge";
-  b.innerHTML=`<button type="button" class="adbadge" data-adbadge="1" aria-label="Seja Premium">${ICO_CROWN}<span>Sem<br>anúncios</span></button><button type="button" class="adbx" data-adbx="1" aria-label="Fechar">${ICO_X}</button>`;
+  b.innerHTML=`<button type="button" class="adbadge" data-adbadge="1" aria-label="Seja Premium">${ICO_CROWN}<span>Seja<br>Premium</span></button><button type="button" class="adbx" data-adbx="1" aria-label="Fechar">${ICO_X}</button>`;
   document.body.appendChild(b);
 }
 
 /* ===== ganchos no app ===== */
-try{if(typeof PREM_WHY==="object")PREM_WHY.ads="No Premium não tem anúncios: só a cifra, limpa, e todas as ferramentas liberadas."}catch(e){}
+try{if(typeof PREM_WHY==="object")PREM_WHY.ads="Com o Premium você libera todas as ferramentas do SambaCifra."}catch(e){}
 try{if(typeof PREM_IMG==="object"&&!PREM_IMG.ads)PREM_IMG.ads="rol"}catch(e){}
 const _drawSong=window.drawSong, _redraw=window.redrawSheet, _draw=window.draw, _open=window.openDrawer;
 if(typeof _open==="function") window.openDrawer=function(kind,arg){const r=_open.apply(this,arguments);
   try{if(kind==="upsell"&&arg&&arg.why==="ads"){const B=document.getElementById("dbody"),h=B&&B.querySelector(".pfhero");
     if(h){const k=h.querySelector(".pfkick"),t=h.querySelector("h3"),d=h.querySelector("p.sub");
-      if(k)k.textContent="Premium é sem anúncios";if(t)t.textContent="Toque sem anúncios";
-      if(d)d.textContent="Assinando, some toda a propaganda do app: fica só a cifra, limpa. E todas as ferramentas ficam liberadas: rolagem automática, batucada, Roda de Samba, repertórios sem limite e mais.";}}}catch(e){}
+      if(k)k.textContent="SambaCifra Premium";if(t)t.textContent="Toque com tudo liberado";
+      if(d)d.textContent="Rolagem automática, batucada, Roda de Samba, repertórios sem limite, dicionário de acordes e muito mais.";}}}catch(e){}
   return r};
 if(typeof _drawSong==="function") window.drawSong=function(){const r=_drawSong.apply(this,arguments);try{injeta()}catch(e){}return r};
 if(typeof _redraw==="function") window.redrawSheet=function(){const r=_redraw.apply(this,arguments);try{injeta()}catch(e){}return r};
