@@ -1,0 +1,45 @@
+/* SambaCifra — anúncios (ads.js) */
+.sheet .adslot{display:block;white-space:normal;font-family:var(--f-body);margin:14px -4px 18px;padding:10px 0 4px;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);text-align:center;user-select:none;-webkit-user-select:none}
+.adlab{display:block;font:600 10.5px/1.2 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.adcard{display:grid;grid-template-columns:104px 1fr;gap:12px;align-items:center;text-align:left;max-width:520px;margin:0 auto;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:10px;cursor:pointer;box-shadow:0 2px 10px rgba(31,36,48,.06)}
+.adcard.casa{background:linear-gradient(135deg,#fff7ef,#fbe4d1);border-color:#f2c9a6}
+.adcard:active{transform:scale(.99)}
+.adimg{width:104px;height:78px;object-fit:cover;border-radius:11px;background:var(--orange-soft);display:block}
+.adart-escola{display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),#2f6fc4)}
+.adart-loja{display:grid;place-items:center;color:var(--orange)}
+.adtx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.adkick{font:700 10.5px/1.2 var(--f-body);letter-spacing:.05em;text-transform:uppercase;color:var(--orange)}
+.adtx b{font-size:15px;line-height:1.2;color:var(--ink)}
+.adtxt{font-size:12.5px;line-height:1.35;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.adpreco{font:800 15px var(--f-body);color:var(--ink)}
+.adcta{margin-top:4px;font:700 13px var(--f-body);color:var(--blue)}
+.adrm{display:inline-flex;align-items:center;gap:7px;margin:10px auto 4px;padding:7px 16px;border:1.5px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font:600 13px var(--f-body)}
+.adrm svg{flex:none}
+.adrm:hover{border-color:var(--orange);color:var(--orange)}
+body.stage .adslot,body.stage #adbadge{display:none!important}
+
+/* pop-up */
+.adpop{position:fixed;inset:0;z-index:60;background:rgba(20,22,28,.55);display:grid;place-items:center;padding:20px;opacity:0;transition:opacity .18s}
+.adpop.on{opacity:1}
+.adpopbox{position:relative;width:min(380px,100%);max-height:90vh;overflow:auto;background:var(--paper);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.35);transform:translateY(12px) scale(.98);transition:transform .2s}
+.adpop.on .adpopbox{transform:none}
+.adx{position:absolute;top:10px;right:10px;z-index:2;width:36px;height:36px;border-radius:50%;border:0;background:rgba(31,36,48,.72);color:#fff;display:grid;place-items:center}
+.adpopart{background:var(--orange-soft);border-radius:22px 22px 0 0;overflow:hidden}
+.adpopimg{display:block;width:100%;height:190px;object-fit:cover}
+.adpopart .adart-escola,.adpopart .adart-loja{display:grid;place-items:center;height:170px}
+.adpopart .adart-escola svg{width:110px;height:110px}
+.adpoptx{padding:16px 20px 18px;text-align:center}
+.adpoptx h3{font:800 21px/1.15 var(--f-display);margin:6px 0 6px;color:var(--ink)}
+.adpoptx p{margin:0 0 14px;color:var(--muted);font-size:14.5px;line-height:1.4}
+.adpopcta{width:100%;min-height:48px;font-size:16px}
+.adnao{display:block;margin:10px auto 0;border:0;background:none;color:var(--muted);font:600 14px var(--f-body);text-decoration:underline}
+.adpoptx .adlab{margin:10px 0 0}
+
+/* selo flutuante (tela da música) */
+#adbadge{position:fixed;z-index:26;right:12px;bottom:calc(var(--tb) + env(safe-area-inset-bottom,0px) + 70px)}
+.repnav:not([hidden]) ~ #adbadge{bottom:calc(var(--tb) + env(safe-area-inset-bottom,0px) + 110px)}
+.adbadge{width:64px;height:64px;border-radius:18px;border:0;background:linear-gradient(145deg,#f07a24,var(--orange));color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:800 9.5px/1.05 var(--f-body);text-transform:uppercase;box-shadow:0 8px 22px rgba(226,100,15,.42);animation:adpulse 2.6s ease-in-out infinite}
+.adbx{position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;border:0;background:#fff;color:var(--ink);display:grid;place-items:center;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.adbx svg{width:12px;height:12px}
+@keyframes adpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.adbadge{animation:none}}

@@ -880,6 +880,7 @@ html.app-loja .playban,html.app-loja #playFoot{display:none!important}
 .avisoit p{margin:6px 0 10px;line-height:1.45}
 
 </style>
+<link rel="stylesheet" href="ads.css">
 </head>
 <body>
 <header class="top" id="top"><div class="wrap" id="topbar"></div></header>
@@ -1592,8 +1593,7 @@ function instPassos(os){
      ${P("share","Toque no botão Compartilhar","É o quadradinho com a seta para cima, na barra de baixo do Safari (no iPad, em cima). Se não aparecer, toque nos três pontinhos ••• e depois em Compartilhar.")}
      ${P("addhome","Role e toque em “Adicionar à Tela de Início”","Se não estiver na lista, toque em “Editar ações” no fim e ative a opção.")}
      ${P("ok","Toque em “Adicionar”","Pronto: o ícone do SambaCifra aparece junto dos seus apps.")}</ol>`}
-  if(os==="android"&&!APP_LOJA) return`${botaoLoja("instalar",true)}<p class="help" style="text-align:center;margin-top:8px">O jeito mais fácil: baixe o app oficial na loja.</p>
-     <div class="playou">ou coloque o site na tela inicial</div>${instPassosAndroid()}`;
+  if(os==="android"&&!APP_LOJA) return`${botaoLoja("instalar",true)}<p class="help" style="text-align:center;margin-top:8px">Toque no botão para abrir a Play Store e instalar.</p>`;
   if(os==="android") return instPassosAndroid();
   return instPassosPC();
 }
@@ -1869,7 +1869,7 @@ function drawTab(){
     const arts=artistsAll().sort((a,b)=>b.songs.length-a.songs.length);
     const recent=store.hist.map(byId).filter(Boolean).slice(0,5), news=ultimasAdicionadas(5), favN=store.fav.filter(byId).length;
     const tile=(attr,ic,l,cls="")=>`<button class="qt2 ${cls}" ${attr}><span class="qi">${ico(ic,22)}</span><span>${l}</span></button>`;
-    let h=(playOferta()?(!playEsconde()?`<div class="playban"><img src="icon-192.png" alt="" width="44" height="44"><div class="ibtx"><b>SambaCifra chegou na Google Play</b><small>Baixe o app oficial para Android.</small></div>${botaoLoja("banner")}<button class="ibx" id="playX" aria-label="Agora não">✕</button></div>`:""):!instalado()&&!instEsconde()?`<div class="instban"><img src="icon-192.png" alt="" width="44" height="44"><div class="ibtx"><b>Coloque o SambaCifra na tela inicial</b><small>Abre com um toque, em tela cheia, como um aplicativo.</small></div><button class="primary" id="instGo">${BIP?"Instalar":"Ver como"}</button><button class="ibx" id="instX" aria-label="Agora não">✕</button></div>`:"")+`<div class="qgrid2">${tile('data-nav="musicas"',"note","Músicas")}${tile('data-nav="artistas"',"user","Artistas")}${tile('data-nav="meus"',"addlist","Meus repertórios")}
+    let h=(playOferta()?(!playEsconde()?`<div class="playban"><img src="icon-192.png" alt="" width="44" height="44"><div class="ibtx"><b>SambaCifra chegou na Play Store</b><small>Baixe o app oficial para Android.</small></div>${botaoLoja("banner")}<button class="ibx" id="playX" aria-label="Agora não">✕</button></div>`:""):!instalado()&&!instEsconde()?`<div class="instban"><img src="icon-192.png" alt="" width="44" height="44"><div class="ibtx"><b>Coloque o SambaCifra na tela inicial</b><small>Abre com um toque, em tela cheia, como um aplicativo.</small></div><button class="primary" id="instGo">${BIP?"Instalar":"Ver como"}</button><button class="ibx" id="instX" aria-label="Agora não">✕</button></div>`:"")+`<div class="qgrid2">${tile('data-nav="musicas"',"note","Músicas")}${tile('data-nav="artistas"',"user","Artistas")}${tile('data-nav="meus"',"addlist","Meus repertórios")}
       ${tile('data-nav="prontos"',"star","Repertórios prontos","o")}${tile('data-nav="ferramentas"',"tune","Ferramentas")}${tile('data-go="import"',"upload","Enviar cifra")}</div>
       <button class="pedhome" id="pedHome"><span class="pi">${ico("note",20)}</span><span class="pt"><b>Pedir cifra ou mandar sugestão</b><small>Faltou alguma música? Tem uma ideia para o app? Fala com a gente.</small></span><span class="go">›</span></button>`;
     if(recent.length) h+=`<div class="sec">Continue tocando</div><div class="rows" style="padding-bottom:0">${recent.map(s=>songRow(s)).join("")}</div>`;
@@ -1877,7 +1877,7 @@ function drawTab(){
     h+=`<div class="sec">Músicas em alta</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,st.altaMais?20:5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>${TOP.length>5?`<button class="ghost" id="altaMais" style="width:100%;margin-top:6px">${st.altaMais?"Mostrar menos":"Ver o top 20"}</button>`:""}`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
     if(news.length) h+=`<div class="sec">Últimas adicionadas</div><div class="rows" style="padding-bottom:0">${news.map(s=>songRow(s)).join("")}</div>`;
     const ex=store.reps[0]; if(ex) h+=`<div class="sec">Seu repertório</div><button class="card" data-rep="${esc(ex.id)}" style="margin-top:4px"><b>${esc(ex.name)}</b><small>${ex.items.length} músicas · toque para abrir e tocar em sequência</small><span class="go">›</span></button>`;
-    h+=`<div class="appfoot"><span>SambaCifra · versão ${esc(APP_BUILD)}</span>${playOferta()?`<a class="lnk" id="playFoot" href="${PLAY_URL("rodape")}" target="_blank" rel="noopener" data-playgo="rodape" style="text-decoration:none">📲 Baixar na Google Play</a>`:!instalado()?`<button class="lnk" id="instFoot">📲 Instalar na tela inicial</button>`:""}<button class="lnk" id="updHome">↻ Atualizar o app</button></div>`;
+    h+=`<div class="appfoot"><span>SambaCifra · versão ${esc(APP_BUILD)}</span>${playOferta()?`<a class="lnk" id="playFoot" href="${PLAY_URL("rodape")}" target="_blank" rel="noopener" data-playgo="rodape" style="text-decoration:none">📲 Baixar na Play Store</a>`:!instalado()?`<button class="lnk" id="instFoot">📲 Instalar na tela inicial</button>`:""}<button class="lnk" id="updHome">↻ Atualizar o app</button></div>`;
     tb.innerHTML=h;$("updHome").onclick=()=>appAtualizar();$("pedHome").onclick=()=>openDrawer("pedido",{});if($("instGo"))$("instGo").onclick=()=>BIP?instalarAgora():openDrawer("instalar");if($("instFoot"))$("instFoot").onclick=()=>openDrawer("instalar");if($("instX"))$("instX").onclick=()=>{try{localStorage.setItem("sc-inst-hide",Date.now()+7*864e5)}catch(e){}drawTab()};if($("playX"))$("playX").onclick=()=>{try{localStorage.setItem("sc-play-hide",Date.now()+5*864e5)}catch(e){}drawTab()};if($("altaMais"))$("altaMais").onclick=()=>{st.altaMais=!st.altaMais;drawTab()};
   } else if(st.tab==="musicas"){
     const q=st.q.trim();
@@ -2479,14 +2479,14 @@ function drawDrawer(){
         ${sg?`<button class="primary" data-av="${sg.id}" style="width:100%">Abrir a cifra de ${esc(sg.title)}</button>`:""}</div>`}).join("");
     B.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{closeDrawer();go("song",{id:b.dataset.av})});
   } else if(dr.kind==="play"){
-    B.innerHTML=`<div class="playhero"><img src="icon-192.png" alt="" width="76" height="76"><h3>O SambaCifra chegou na Google Play!</h3><p>Agora tem app oficial para Android. Baixe e toque com tudo o que você já usa aqui.</p></div>
+    B.innerHTML=`<div class="playhero"><img src="icon-192.png" alt="" width="76" height="76"><h3>O SambaCifra chegou na Play Store!</h3><p>Agora tem app oficial para Android. Baixe e toque com tudo o que você já usa aqui.</p></div>
      <ul class="playlist"><li>Abre direto, em tela cheia, sem passar pelo navegador</li><li>Atualiza sozinho pela loja</li><li>${USER?"Entre com o mesmo e-mail e seus repertórios e o Premium vão junto":"Crie sua conta (é grátis) e seus repertórios ficam salvos em qualquer celular"}</li></ul>
      ${botaoLoja("popup",true)}<button class="ghost" id="playDepois" style="width:100%;margin-top:8px">Agora não</button>`;
     $("playDepois").onclick=closeDrawer;
   } else if(dr.kind==="instalar"){
     const os=dr.os||plataformaInst();
-    B.innerHTML=`<div class="ishead"><img src="icon-192.png" alt="" width="56" height="56"><div>${os==="android"&&!APP_LOJA?`<h3>Instale o SambaCifra</h3><p class="sub">O app oficial está na Google Play. Abre em tela cheia, direto, como qualquer aplicativo.</p>`:`<h3>SambaCifra na tela inicial</h3><p class="sub">Fica com o ícone junto dos seus apps, abre em tela cheia e mais rápido. Não ocupa espaço como um app da loja.</p>`}</div></div>
-     <div class="pills istabs">${[["ios","iPhone / iPad"],["android","Android"],["pc","Computador"]].map(([k,l])=>`<button data-os="${k}" class="${os===k?"on":""}">${l}</button>`).join("")}</div>
+    B.innerHTML=`<div class="ishead"><img src="icon-192.png" alt="" width="56" height="56"><div>${os==="android"&&!APP_LOJA?`<h3>Instale o SambaCifra</h3><p class="sub">O app oficial para Android está na Play Store.</p>`:`<h3>SambaCifra na tela inicial</h3><p class="sub">Fica com o ícone junto dos seus apps, abre em tela cheia e mais rápido. Não ocupa espaço como um app da loja.</p>`}</div></div>
+     <div class="pills istabs">${[["android","Android"],["ios","iPhone / iPad"],["pc","Computador"]].map(([k,l])=>`<button data-os="${k}" class="${os===k?"on":""}">${l}</button>`).join("")}</div>
      ${instPassos(os)}`;
     B.querySelectorAll("[data-os]").forEach(b=>b.onclick=()=>{dr.os=b.dataset.os;drawDrawer()});
     if($("isNow"))$("isNow").onclick=instalarAgora;
@@ -3535,5 +3535,6 @@ function tomOff(mostrar){const t=T.tom;cancelAnimationFrame(t.raf);clearInterval
 
 if("serviceWorker" in navigator) addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
+<script src="ads.js"></script>
 </body>
 </html>
