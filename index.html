@@ -711,8 +711,34 @@ details.admcard[open] summary{margin-bottom:8px}
 .canc .cpasso{color:var(--ink);font-size:12.5px}
 .canc a.ghost{display:grid;place-items:center;width:100%;margin-top:10px;text-decoration:none;min-height:42px}
 /* painel: aba Acessos */
-.admtabs{grid-template-columns:repeat(4,1fr)}
+.admtabs{grid-template-columns:repeat(3,1fr)}
 .admtabs button{font-size:13px;padding:10px 2px}
+/* painel: aba Semanas */
+.semnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 12px}
+.semnav b{font:900 20px/1.1 var(--f-head,var(--f-body))}
+.semnav button{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--paper);font-size:20px;color:var(--ink);cursor:pointer}
+.semnav button:disabled{opacity:.3;cursor:default}
+.semmet{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin:0 0 10px;scrollbar-width:none}
+.semmet button{flex:none;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 12px;font:700 13px/1 var(--f-body);color:var(--muted);cursor:pointer}
+.semmet button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.sembar{display:grid;grid-template-columns:92px 1fr 54px;gap:8px;align-items:center;margin:8px 0;font-size:13px}
+.sembar span{color:var(--muted);line-height:1.15}.sembar span small{display:block;font-size:11px}
+.sembar div{height:22px;background:var(--line);border-radius:7px;overflow:hidden}
+.sembar i{display:block;height:100%;background:#3f6aa0;border-radius:7px;min-width:3px}
+.sembar.best i{background:var(--orange)}
+.sembar b{text-align:right;font-size:15px}
+.semcard{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 12px}
+.semcard h4{margin:0 0 2px;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.semcard h4 em{font-style:normal;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;background:#fff4dc;color:#6b4a00}
+.semcard h4 em.top{background:#ffe8d9;color:#a3420c}
+.semcard>p{margin:0 0 10px;color:var(--muted);font-size:12.5px}
+.semgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 12px}
+.semgrid div{display:flex;justify-content:space-between;align-items:baseline;gap:6px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.semgrid div span{color:var(--muted)}
+.semgrid div b{font-size:15px;white-space:nowrap}
+.semgrid div b small{font-size:11px;font-weight:700;margin-left:4px}
+.semgrid .up{color:#1f8a4c}.semgrid .dn{color:#c0392b}
+.semsec{grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:8px}
 .aceagora{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:14px;background:#e7f6ec;color:#1d5c34;font-size:14px;margin-bottom:10px}
 .aceagora b{font:900 22px/1 var(--f-body)}
 .aceagora .dot{width:10px;height:10px;border-radius:50%;background:#2f9e5b;box-shadow:0 0 0 0 rgba(47,158,91,.5);animation:acepulse 2s infinite}
@@ -1369,7 +1395,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="23/11 23:45";
+const APP_BUILD="24/11 17:30";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -2694,6 +2720,53 @@ async function admAcessos(){
   box.querySelectorAll(".acebars").forEach((g,gi)=>g.querySelectorAll(".acebar").forEach(b=>{const show=()=>{const t=$(["aceTip1","aceTip2","aceTip3"][gi]||"aceTip1");if(t)t.textContent=b.dataset.tip;g.querySelectorAll(".acebar").forEach(x=>x.classList.toggle("on",x===b))};b.onclick=show;b.onmouseenter=show}));
   _aceT=setTimeout(()=>{if(st.view==="review"&&(st.admTab||"acessos")==="acessos")admAcessos()},30000);
 }
+/* aba Semanas: relatório semana a semana (segunda a domingo), mês a mês */
+let SEM_W=null;
+const SEM_MET=[["visitantes","Visitantes"],["cifras","Cifras abertas"],["cadastros","Cadastros"],["novos","Novos Premium"],["loja_novos","App Play Store"]];
+const semNovos=w=>(w.novos_hotmart||0)+(w.novos_play||0);
+const semVal=(w,k)=>k==="novos"?semNovos(w):(w[k]||0);
+const semMes=w=>{const d=new Date(w.ini+"T12:00:00");d.setDate(d.getDate()+3);return d.toISOString().slice(0,7)};
+async function admSemanas(){
+  const box=$("admSem");if(!box)return;
+  if(!SEM_W){const {data,error}=await sb.rpc("admin_semanas",{p_key:ADMIN_KEY});if(!$("admSem"))return;if(error||!data){box.innerHTML=`<p class="help">Não foi possível carregar.</p>`;return}SEM_W=data}
+  const W=SEM_W,meses=[...new Set(W.map(semMes))];
+  let mes=st.semMes&&meses.includes(st.semMes)?st.semMes:meses[meses.length-1];st.semMes=mes;
+  const met=st.semMet||"visitantes",L=W.filter(w=>semMes(w)===mes),mi=meses.indexOf(mes);
+  const dd=x=>{const [y,m,d]=x.split("-");return d+"/"+m};
+  const hoje=new Date().toISOString().slice(0,10);
+  const nomeMes=(m=>m[0].toUpperCase()+m.slice(1))(new Date(mes+"-15T12:00:00").toLocaleDateString("pt-BR",{month:"long",year:"numeric"}));
+  const mx=Math.max(1,...L.map(w=>semVal(w,met))),best=L.length>1?Math.max(...L.map(w=>semVal(w,met))):-1;
+  const delta=(w,k)=>{const i=W.indexOf(w);if(i<1||w.dias<7)return"";const a=semVal(W[i-1],k),b=semVal(w,k);if(!a)return"";const p=Math.round((b-a)/a*100);return p?`<small class="${p>0?"up":"dn"}">${p>0?"▲":"▼"}${Math.abs(p)}%</small>`:""};
+  const linha=(rot,v,k)=>`<div><span>${rot}</span><b>${v}${k?delta(W.find(x=>x===k.w),k.k):""}</b></div>`;
+  const soma=k=>L.reduce((a,w)=>a+semVal(w,k),0);
+  box.innerHTML=`
+   <div class="semnav"><button id="semAnt" ${mi<=0?"disabled":""} aria-label="Mês anterior">‹</button><b>${nomeMes}</b><button id="semProx" ${mi>=meses.length-1?"disabled":""} aria-label="Próximo mês">›</button></div>
+   <div class="admstats ace4"><div><b>${soma("cadastros")}</b><span>Cadastros no mês</span></div><div><b>${soma("novos")}</b><span>Novos Premium</span></div><div><b>${L.reduce((a,w)=>a+(w.cancelamentos||0),0)}</b><span>Cancelamentos</span></div><div><b>${soma("cifras").toLocaleString("pt-BR")}</b><span>Cifras abertas</span></div></div>
+   <section class="admcard"><h3>Comparar semanas</h3>
+    <div class="semmet">${SEM_MET.map(([k,l])=>`<button data-sm="${k}" class="${met===k?"on":""}">${l}</button>`).join("")}</div>
+    ${L.map((w,i)=>{const v=semVal(w,met);return`<div class="sembar${v===best&&v>0?" best":""}"><span>Semana ${i+1}<small>${dd(w.ini)} a ${dd(w.fim)}</small></span><div><i style="width:${(v/mx*100).toFixed(1)}%"></i></div><b>${v.toLocaleString("pt-BR")}</b></div>`}).join("")}
+    <p class="admhelp" style="margin:6px 0 0">Em laranja, a melhor semana do mês nesse número. Semana = segunda a domingo.</p></section>
+   ${L.slice().reverse().map(w=>{const i=L.indexOf(w),atual=hoje>=w.ini&&hoje<=w.fim,top=L.length>1&&w.visitantes===Math.max(...L.map(x=>x.visitantes));const K=k=>({w,k});return`<div class="semcard">
+     <h4>Semana ${i+1}${atual?` <em>em andamento · ${w.dias} de 7 dias</em>`:""}${top&&!atual?` <em class="top">★ mais visitantes do mês</em>`:""}</h4>
+     <p>${dd(w.ini)} a ${dd(w.fim)}${atual?"":" · ▲▼ comparado com a semana anterior"}</p>
+     <div class="semgrid">
+      <span class="semsec">Acessos</span>
+      ${linha("Visitantes",w.visitantes.toLocaleString("pt-BR"),K("visitantes"))}${linha("Média por dia",w.media_dia)}
+      ${linha("Cifras abertas",w.cifras.toLocaleString("pt-BR"),K("cifras"))}${linha("Cadastros",w.cadastros,K("cadastros"))}
+      <span class="semsec">Assinantes</span>
+      ${linha("Novos Premium",semNovos(w),K("novos"))}${linha("· pela Hotmart",w.novos_hotmart)}
+      ${linha("· pela Play Store",w.novos_play)}${linha("Renovações",w.renovacoes)}
+      ${linha("Cancelamentos",w.cancelamentos)}${linha("Reembolsos",w.reembolsos)}
+      ${linha("Cortesias",w.cortesias)}${linha("Premium no fim",w.premium_fim==null?"–":w.premium_fim)}
+      <span class="semsec">App e chamadas</span>
+      ${linha("Novos no app da loja",w.loja_novos,K("loja_novos"))}${linha("Cliques p/ a loja",w.loja_cliques)}
+      ${linha("Cliques no Premium",w.chamadas_cliques)}
+     </div></div>`}).join("")}
+   <p class="admhelp" style="text-align:center">Visitas contadas desde 28/10. “Premium no fim”, app da Play Store e cliques começaram a ser registrados em 23 e 24/11, então as semanas anteriores aparecem com “–” ou zero nesses números. Contas e compras de teste não entram.</p>`;
+  const nav=d=>{st.semMes=meses[mi+d];admSemanas();scrollTo(0,0)};
+  if($("semAnt"))$("semAnt").onclick=()=>nav(-1);if($("semProx"))$("semProx").onclick=()=>nav(1);
+  box.querySelectorAll("[data-sm]").forEach(b=>b.onclick=()=>{st.semMet=b.dataset.sm;admSemanas()});
+}
 async function admAssin(){
   const box=$("admPrem");if(!box)return;
   const {data,error}=await sb.rpc("admin_premium_list",{p_key:ADMIN_KEY});
@@ -3044,9 +3117,9 @@ function drawReview(){
   const need=[...new Set(ep.map(x=>byId(x.song_id)).filter(s=>s&&!songReady(s)).map(s=>s.c))];
   if(need.length){Promise.all(need.map(loadChunk)).then(()=>{if(st.view==="review")drawReview()}).catch(()=>{})}
   const tab=st.admTab||"acessos", nRev=pend.length+ep.length;
-  const tabs=`<div class="admtabs" role="tablist">${[["acessos","Acessos"],["pedidos","Pedidos"+(PED_NOVOS?` <b>${PED_NOVOS}</b>`:"")],["assin","Assinantes"],["config","Ajustes"],["rev","Revisão"+(nRev?` <b>${nRev}</b>`:"")]].map(([k,l])=>`<button role="tab" data-at="${k}" aria-selected="${tab===k}">${l}</button>`).join("")}</div>`;
-  const wireTabs=()=>document.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{st.admTab=b.dataset.at;drawReview();scrollTo(0,0)});
-  if(tab!=="rev"){$("view").innerHTML=`<div class="adm">${tabs}<div id="${({assin:"admPrem",config:"admCfg",acessos:"admAce",pedidos:"admPed"})[tab]}"><p class="help">Carregando…</p></div></div>`;wireTabs();return tab==="assin"?admAssin():tab==="acessos"?admAcessos():tab==="pedidos"?admPedidos():admConfig()}
+  const tabs=`<div class="admtabs" role="tablist">${[["acessos","Acessos"],["semanas","Semanas"],["pedidos","Pedidos"+(PED_NOVOS?` <b>${PED_NOVOS}</b>`:"")],["assin","Assinantes"],["config","Ajustes"],["rev","Revisão"+(nRev?` <b>${nRev}</b>`:"")]].map(([k,l])=>`<button role="tab" data-at="${k}" aria-selected="${tab===k}">${l}</button>`).join("")}</div>`;
+  const wireTabs=()=>document.querySelectorAll("[data-at]").forEach(b=>b.onclick=()=>{st.admTab=b.dataset.at;SEM_W=null;drawReview();scrollTo(0,0)});
+  if(tab!=="rev"){$("view").innerHTML=`<div class="adm">${tabs}<div id="${({assin:"admPrem",config:"admCfg",acessos:"admAce",pedidos:"admPed",semanas:"admSem"})[tab]}"><p class="help">Carregando…</p></div></div>`;wireTabs();return tab==="assin"?admAssin():tab==="acessos"?admAcessos():tab==="semanas"?admSemanas():tab==="pedidos"?admPedidos():admConfig()}
   let eh="";
   eh+=`<div class="sec">Compositores sugeridos</div><div id="admComp"><p class="help">Carregando…</p></div>`;
   eh+=`<div class="sec">Alterações sugeridas pelos alunos (${ep.length})</div>`;
