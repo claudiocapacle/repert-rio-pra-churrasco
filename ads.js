@@ -144,6 +144,8 @@ document.addEventListener("keydown",e=>{
 /* ===== pop-up ===== */
 function abrePop(local){
   if(!ligado()||document.querySelector(".adpop")) return false;
+  /* no Android, o aviso da Play Store (uma vez por aparelho) tem prioridade */
+  try{if(typeof playOferta==="function"&&playOferta()&&!localStorage.getItem("sc-play-aviso")) return false}catch(e){}
   const dr=document.getElementById("drawer");if(dr&&!dr.hidden) return false;
   try{if(roda.following||roda.host) return false}catch(e){}
   const ad=sorteia("popup",[ss.get("ultpop","")]);if(!ad) return false;
