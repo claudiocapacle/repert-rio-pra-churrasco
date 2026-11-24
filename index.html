@@ -1369,7 +1369,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="23/11 23:25";
+const APP_BUILD="23/11 23:45";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1578,7 +1578,8 @@ const playOferta=()=>!APP_LOJA&&plataformaInst()==="android";
 const playEsconde=()=>{try{return +(localStorage.getItem("sc-play-hide")||0)>Date.now()}catch(e){return false}};
 const PLAYICO=`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 10.5 12 15l4.5-4.5"/><path d="M5 20h14"/></svg>`;
 const botaoLoja=(m,big)=>`<a class="btplay${big?" big":""}" href="${PLAY_URL(m)}" target="_blank" rel="noopener" data-playgo="${m}">${PLAYICO}<span><small>Disponível no</small>Google Play</span></a>`;
-function playClique(e){const a=e.target.closest&&e.target.closest("[data-playgo]");if(!a)return;try{localStorage.setItem("sc-play-aviso","1")}catch(x){}}
+function playClique(e){const a=e.target.closest&&e.target.closest("[data-playgo]");if(!a)return;try{localStorage.setItem("sc-play-aviso","1")}catch(x){}
+  try{if(sb&&!naoConta())sb.rpc("registrar_clique_loja",{p_device:DEVICE,p_origem:a.dataset.playgo}).then(()=>{}).catch(()=>{})}catch(x){}}
 document.addEventListener("click",playClique,true);
 function playAviso(){ /* pop-up uma vez por aparelho */
   if(!playOferta())return;try{if(localStorage.getItem("sc-play-aviso"))return}catch(e){return}
@@ -1621,7 +1622,7 @@ function instPassosPC(){
 
 let _visT=0;
 function registrarVisita(abertura){if(naoConta())return;const t=Date.now();if(!abertura&&t-_visT<100000)return;_visT=t;
-  sb.rpc("registrar_visita",{p_device:DEVICE,p_plat:plataforma(),p_inst:instalado(),p_abertura:!!abertura}).then(()=>{}).catch(()=>{})}
+  sb.rpc("registrar_visita",{p_device:DEVICE,p_plat:plataforma(),p_inst:instalado(),p_abertura:!!abertura,p_loja:!!APP_LOJA}).then(()=>{}).catch(()=>{})}
 setInterval(()=>{if(document.visibilityState==="visible")registrarVisita(false)},120000);
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")registrarVisita(false)});
 function contarToque(s){if(naoConta()||s.pending)return;const k=s.id;if(_lastPlay[k]&&Date.now()-_lastPlay[k]<30*60000)return;_lastPlay[k]=Date.now();
@@ -2668,7 +2669,7 @@ async function admPedidos(){
 let _aceT=null;
 async function admAcessos(){
   const box=$("admAce");if(!box)return;clearTimeout(_aceT);
-  const {data:d,error}=await sb.rpc("admin_acessos",{p_key:ADMIN_KEY});
+  const [{data:d,error},{data:lj}]=await Promise.all([sb.rpc("admin_acessos",{p_key:ADMIN_KEY}),sb.rpc("admin_loja",{p_key:ADMIN_KEY})]);
   if(!$("admAce"))return;
   if(error||!d){box.innerHTML=`<p class="help">Não foi possível carregar.</p>`;return}
   const S=d.serie||[],mx=Math.max(1,...S.map(x=>x.visitantes)),mc=Math.max(1,...S.map(x=>x.cifras)),pl=d.plataformas||{},tp=Object.values(pl).reduce((a,b)=>a+b,0)||1;
@@ -2684,9 +2685,13 @@ async function admAcessos(){
    <section class="admcard"><h3>Aparelhos <small>últimos 30 dias</small></h3>
     ${[["android","Android"],["ios","iPhone / iPad"],["desktop","Computador"]].map(([k,l])=>`<div class="acepl"><span>${l}</span><div><i style="width:${((pl[k]||0)/tp*100).toFixed(0)}%"></i></div><b>${pl[k]||0}</b></div>`).join("")}
     <p class="admhelp" style="margin:10px 0 0">${d.instalados30} usam o app instalado na tela inicial · ${d.recorrentes30} voltaram em mais de um dia · ${d.logados_hoje} entraram logados hoje</p></section>
+   ${lj?`<section class="admcard"><h3>App da Play Store <small>Android</small></h3>
+    <div class="admstats ace4" style="margin:4px 0 10px"><div><b>${lj.total}</b><span>Instalaram e abriram</span></div><div><b>${lj.hoje}</b><span>Novos hoje</span></div><div><b>${lj.d7}</b><span>Novos em 7 dias</span></div><div><b>${lj.ativos7}</b><span>Usaram em 7 dias</span></div></div>
+    <div class="acebars alt" role="img" aria-label="Novos aparelhos no app da Play Store por dia">${(lj.serie||[]).map(x=>`<button class="acebar" style="--h:${(x.novos/Math.max(1,...lj.serie.map(y=>y.novos))*100).toFixed(1)}%" data-tip="${dd(x.dia)}: ${x.novos} ${x.novos===1?"novo aparelho":"novos aparelhos"}"><i></i></button>`).join("")}</div><div class="aceaxis"><span>${lj.serie&&lj.serie.length?dd(lj.serie[0].dia):""}</span><span>hoje</span></div><p class="acetip" id="aceTip3">&nbsp;</p>
+    <p class="admhelp" style="margin:6px 0 0">Cliques em “Disponível no Google Play” no site, 7 dias: <b>${(lj.cliques7||{}).popup||0}</b> no aviso · <b>${(lj.cliques7||{}).banner||0}</b> na faixa · <b>${(lj.cliques7||{}).instalar||0}</b> no Instalar · <b>${(lj.cliques7||{}).rodape||0}</b> no rodapé.<br>${lj.logados} dos aparelhos do app entraram numa conta. Conta cada celular uma vez, quando o app é aberto pela primeira vez${lj.desde?` (contagem desde ${dd(lj.desde)})`:" (a contagem começou hoje)"}. Quem baixou e nunca abriu só aparece no Play Console.</p></section>`:""}
    <section class="admcard"><h3>Mais abertas <small>7 dias, por aparelhos diferentes</small></h3><ol class="acetop">${(d.top7||[]).map(x=>`<li><span>${nome(x.id)}</span><b>${x.n}</b></li>`).join("")||`<p class="admhelp">Ainda sem dados.</p>`}</ol></section>
    <p class="admhelp" style="text-align:center">As visitas começaram a ser contadas em 28/10. Cada aparelho conta uma vez por dia, de forma anônima. Seus acessos como professor e os testes automáticos não entram. Atualiza sozinho a cada 30 segundos.</p>`;
-  box.querySelectorAll(".acebars").forEach((g,gi)=>g.querySelectorAll(".acebar").forEach(b=>{const show=()=>{const t=$(gi?"aceTip2":"aceTip1");if(t)t.textContent=b.dataset.tip;g.querySelectorAll(".acebar").forEach(x=>x.classList.toggle("on",x===b))};b.onclick=show;b.onmouseenter=show}));
+  box.querySelectorAll(".acebars").forEach((g,gi)=>g.querySelectorAll(".acebar").forEach(b=>{const show=()=>{const t=$(["aceTip1","aceTip2","aceTip3"][gi]||"aceTip1");if(t)t.textContent=b.dataset.tip;g.querySelectorAll(".acebar").forEach(x=>x.classList.toggle("on",x===b))};b.onclick=show;b.onmouseenter=show}));
   _aceT=setTimeout(()=>{if(st.view==="review"&&(st.admTab||"acessos")==="acessos")admAcessos()},30000);
 }
 async function admAssin(){
