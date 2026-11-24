@@ -1369,7 +1369,7 @@ function applyNomes(){for(const k in EDITS){if(!k.endsWith("|__nome"))continue;l
 async function loadAdminEdits(){if((!ADMIN_KEY&&!PROF)||!sb)return;const {data,error}=await sb.rpc("admin_edicoes",{p_key:ADMIN_KEY});if(!error&&data)EDS_ALL=data;if(st.view==="review")drawReview()}
 function songReady(s){return !(s&&s.c!=null&&!s.completa)}
 /* ===== atualizar o app (o instalado no celular às vezes fica preso numa versão antiga) ===== */
-const APP_BUILD="23/11 23:20";
+const APP_BUILD="23/11 23:25";
 async function appAtualizar(auto){
   if(auto){try{const t=+sessionStorage.getItem("sc-upd")||0;if(Date.now()-t<90000)return;sessionStorage.setItem("sc-upd",String(Date.now()))}catch(e){return}}
   toast("Atualizando o app…");
@@ -1405,7 +1405,15 @@ function songKey(s){return curVer(s).key||s.key}
 /* ===== App da Play Store (TWA): Premium cobrado pelo Google Play =====
    O app Android abre o site com ?origem=play. Dentro dele não aparece a Hotmart (regra do Google):
    a assinatura é feita pela Play Store e confirmada no servidor (Edge Function "play"). */
-const APP_LOJA=(()=>{try{const q=new URLSearchParams(location.search).get("origem");if(q==="web"){localStorage.removeItem("sc-loja");return false}if(q==="play"||(document.referrer||"").indexOf("android-app://")===0)localStorage.setItem("sc-loja","play");return localStorage.getItem("sc-loja")==="play"}catch(e){return false}})();
+/* O app da Play Store (TWA) abre o site com ?origem=play e roda dentro do Chrome do celular, dividindo a memória com ele.
+   Por isso a marca "app da loja" vale para a sessão do app (sessionStorage) e, de reserva, só quando a tela está em modo app
+   (standalone): assim quem instalou o app e depois abre o site no Chrome volta a ser tratado como navegador. */
+const APP_LOJA=(()=>{try{const q=new URLSearchParams(location.search).get("origem");
+  if(q==="web"){localStorage.removeItem("sc-loja");sessionStorage.removeItem("sc-loja");return false}
+  if(q==="play"||(document.referrer||"").indexOf("android-app://")===0){localStorage.setItem("sc-loja","play");sessionStorage.setItem("sc-loja","play");return true}
+  if(sessionStorage.getItem("sc-loja")==="play")return true;
+  const modoApp=["standalone","fullscreen","minimal-ui"].some(m=>matchMedia("(display-mode: "+m+")").matches);
+  return modoApp&&localStorage.getItem("sc-loja")==="play"}catch(e){return false}})();
 if(APP_LOJA)document.documentElement.classList.add("app-loja");
 const PLAY_PACOTE="br.com.sambacifra.app", PLAY_SKU={mensal:"premium_mensal",anual:"premium_anual"};
 let PLAY=null, PLAY_PRECO={}, PLAY_INI=false;
