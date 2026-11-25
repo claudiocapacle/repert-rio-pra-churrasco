@@ -6,7 +6,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://lbspifonlkwnthvohyvv.supabase.co https://thumb.wikimedia.org https://upload.wikimedia.org; media-src 'self' data: blob:; connect-src 'self' https://lbspifonlkwnthvohyvv.supabase.co wss://lbspifonlkwnthvohyvv.supabase.co https://cdnjs.cloudflare.com https://play.google.com; frame-src https://www.youtube-nocookie.com https://pay.hotmart.com https://*.hotmart.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://lbspifonlkwnthvohyvv.supabase.co https://rnznqwuoexwspwvnbkri.supabase.co https://thumb.wikimedia.org https://upload.wikimedia.org; media-src 'self' data: blob:; connect-src 'self' https://minhaevolucao.claudiocapacle.com https://lbspifonlkwnthvohyvv.supabase.co wss://lbspifonlkwnthvohyvv.supabase.co https://cdnjs.cloudflare.com https://play.google.com; frame-src https://www.youtube-nocookie.com https://pay.hotmart.com https://*.hotmart.com; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
         },
         {
           "key": "X-Frame-Options",

@@ -905,6 +905,22 @@ html.app-loja .playban,html.app-loja #playFoot{display:none!important}
 .avisoit{border:1px solid var(--line,#e5e5e5);border-radius:14px;padding:12px 14px;margin:10px 0}
 .avisoit p{margin:6px 0 10px;line-height:1.45}
 
+.lojatabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 12px;scrollbar-width:none}
+.lojatabs::-webkit-scrollbar{display:none}
+.lojatabs button{flex:none;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.lojatabs button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.lojagrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(min-width:640px){.lojagrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:900px){.lojagrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.lojacard{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+.lojacard .ft{aspect-ratio:1;padding:10px;display:grid;place-items:center;background:#fff}
+.lojacard .ft img{width:100%;height:100%;object-fit:contain}
+.lojacard .bd{display:flex;flex-direction:column;gap:10px;flex:1;padding:10px 10px 12px;border-top:1px solid var(--line)}
+.lojacard b{font-size:14px;line-height:1.3;color:#1f2430}
+.lojabtn{margin-top:auto;display:block;text-align:center;text-decoration:none;color:#fff;border-radius:12px;padding:8px 6px;background:linear-gradient(90deg,var(--orange),#b4500e);box-shadow:0 6px 14px -6px rgba(201,90,16,.7)}
+.lojabtn small{display:block;font-size:11px;opacity:.9}
+.lojabtn span{display:block;font-weight:800;font-size:14px}
+.lojanota{text-align:center;font-size:12px;color:var(--muted);margin:16px 0 4px}
 </style>
 <link rel="stylesheet" href="ads.css">
 </head>
@@ -1897,6 +1913,24 @@ function drawHome(){
 function ultimasAdicionadas(n){const h=x=>{let v=0;for(const c of String(x))v=(v*31+c.charCodeAt(0))|0;return v};
   const L=SONGS.filter(s=>s.addedAt&&!s.pending).sort((a,b)=>Math.floor(b.addedAt/36e5)-Math.floor(a.addedAt/36e5)||h(a.id)-h(b.id)),out=[],arts=new Map();
   for(const s of L){if(out.length>=n)break;const k=artistKey(s.artist),c=arts.get(k)||0;if(c>=2)continue;arts.set(k,c+1);out.push(s)}return out}
+/* ---------- Loja: produtos indicados (o catálogo e os cliques ficam num lugar só, com o app da escola) ---------- */
+const LOJA_API="https://minhaevolucao.claudiocapacle.com/api/loja/publico";
+let LOJA=null,lojaAba="mais",lojaCarregando=null;
+function carregarLoja(){if(lojaCarregando)return lojaCarregando;lojaCarregando=(async()=>{try{const r=await fetch(LOJA_API,{cache:"no-store"});if(r.ok){const j=await r.json();if(j&&Array.isArray(j.produtos))LOJA=j}}catch(e){}if(!LOJA)LOJA={categorias:[],produtos:[],erro:true}})();return lojaCarregando}
+function drawLoja(tb){
+  if(!LOJA||LOJA.erro){tb.innerHTML=`<h2 class="ptitle">Loja</h2><p class="help">${LOJA&&LOJA.erro?"Não deu para abrir a loja agora. Tente de novo em instantes.":"Carregando…"}</p>`;if(LOJA&&LOJA.erro){LOJA=null;lojaCarregando=null}carregarLoja().then(()=>{if(st.view==="home"&&st.tab==="loja")drawTab()});return}
+  const P=LOJA.produtos,C=LOJA.categorias;
+  if(!P.length){tb.innerHTML=`<h2 class="ptitle">Loja</h2><p class="help">Em breve.</p>`;return}
+  if(lojaAba!=="mais"&&lojaAba!=="todos"&&!C.some(c=>c.id===lojaAba))lojaAba="mais";
+  const pos=new Map(C.map((c,i)=>[c.id,i]));
+  const lista=lojaAba==="mais"?[...P].sort((a,b)=>b.cliques-a.cliques||a.ordem-b.ordem).slice(0,8):lojaAba==="todos"?[...P].sort((a,b)=>(pos.has(a.categoria_id)?pos.get(a.categoria_id):99)-(pos.has(b.categoria_id)?pos.get(b.categoria_id):99)||a.ordem-b.ordem):P.filter(p=>p.categoria_id===lojaAba);
+  const abas=[["mais","🔥 Mais acessados"],["todos","Todos"],...C.map(c=>[c.id,c.nome])];
+  const app=instalado()?"?app=1":"";
+  tb.innerHTML=`<h2 class="ptitle">Loja</h2><p class="help" style="margin-top:-4px">Cordas, palhetas, acessórios e instrumentos indicados.</p><div class="lojatabs">${abas.map(([k,l])=>`<button data-lojaaba="${esc(k)}" aria-pressed="${lojaAba===k}">${esc(l)}</button>`).join("")}</div><div class="lojagrid">${lista.map(p=>`<div class="lojacard"><div class="ft">${p.foto?`<img src="${esc(p.foto)}" alt="${esc(p.nome)}" loading="lazy">`:""}</div><div class="bd"><b>${esc(p.nome)}</b><a class="lojabtn" href="${esc(p.url+app)}" target="_blank" rel="noopener noreferrer nofollow sponsored"><small>🛒 Ver o produto</small><span>${esc(p.loja)} ↗</span></a></div></div>`).join("")}</div><p class="lojanota">Links de parceiros: comprando por aqui você apoia o SambaCifra, sem pagar nada a mais.</p>`;
+  tb.querySelectorAll("[data-lojaaba]").forEach(b=>b.onclick=()=>{lojaAba=b.dataset.lojaaba;drawTab()});
+}
+carregarLoja().then(()=>{if(st.view==="home"&&st.tab==="inicio"&&LOJA&&LOJA.produtos.length)drawTab()});
+
 function drawTab(){
   const tb=$("tabbody"); if(!tb) return;
   if(["inicio","musicas","artistas"].includes(st.tab)&&st.q.trim()){tb.innerHTML=searchResults(st.q);if($("sendIt"))$("sendIt").onclick=()=>go("import",{});if($("pedirIt"))$("pedirIt").onclick=()=>openDrawer("pedido",{tipo:"cifra",titulo:st.q.trim()});return}
@@ -1906,7 +1940,7 @@ function drawTab(){
     const tile=(attr,ic,l,cls="")=>`<button class="qt2 ${cls}" ${attr}><span class="qi">${ico(ic,22)}</span><span>${l}</span></button>`;
     let h=(playOferta()?(!playEsconde()?`<div class="playban"><img src="icon-192.png" alt="" width="44" height="44"><div class="ibtx"><b>SambaCifra chegou na Play Store</b><small>Baixe o app oficial para Android.</small></div>${botaoLoja("banner")}<button class="ibx" id="playX" aria-label="Agora não">✕</button></div>`:""):!instalado()&&!instEsconde()?`<div class="instban"><img src="icon-192.png" alt="" width="44" height="44"><div class="ibtx"><b>Coloque o SambaCifra na tela inicial</b><small>Abre com um toque, em tela cheia, como um aplicativo.</small></div><button class="primary" id="instGo">${BIP?"Instalar":"Ver como"}</button><button class="ibx" id="instX" aria-label="Agora não">✕</button></div>`:"")+`<div class="qgrid2">${tile('data-nav="musicas"',"note","Músicas")}${tile('data-nav="artistas"',"user","Artistas")}${tile('data-nav="meus"',"addlist","Meus repertórios")}
       ${tile('data-nav="prontos"',"star","Repertórios prontos","o")}${tile('data-nav="ferramentas"',"tune","Ferramentas")}${tile('data-go="import"',"upload","Enviar cifra")}</div>
-      <button class="pedhome" id="pedHome"><span class="pi">${ico("note",20)}</span><span class="pt"><b>Pedir cifra ou mandar sugestão</b><small>Faltou alguma música? Tem uma ideia para o app? Fala com a gente.</small></span><span class="go">›</span></button>`;
+      ${LOJA&&LOJA.produtos&&LOJA.produtos.length?`<button class="pedhome" data-nav="loja"><span class="pi"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.6L21.5 7H6"/></svg></span><span class="pt"><b>Loja</b><small>Cordas, palhetas, acessórios e instrumentos indicados.</small></span><span class="go">›</span></button>`:""}<button class="pedhome" id="pedHome"><span class="pi">${ico("note",20)}</span><span class="pt"><b>Pedir cifra ou mandar sugestão</b><small>Faltou alguma música? Tem uma ideia para o app? Fala com a gente.</small></span><span class="go">›</span></button>`;
     if(recent.length) h+=`<div class="sec">Continue tocando</div><div class="rows" style="padding-bottom:0">${recent.map(s=>songRow(s)).join("")}</div>`;
     h+=`<div class="sec">Artistas</div><div class="achips">${arts.slice(0,12).map((a,i)=>`<button data-artist="${esc(a.key)}">${artistAv(a.name,"",i)}${esc(a.name)}</button>`).join("")}<button data-nav="artistas" class="more">Ver todos ›</button></div>`;
     h+=`<div class="sec">Músicas em alta</div>`+(TOP.length?`<div class="rows" style="padding-bottom:0">${TOP.slice(0,st.altaMais?20:5).map((x,i)=>songRow(byId(x.song_id),i+1)).join("")}</div>${TOP.length>5?`<button class="ghost" id="altaMais" style="width:100%;margin-top:6px">${st.altaMais?"Mostrar menos":"Ver o top 20"}</button>`:""}`:`<p class="help">O ranking aparece aqui conforme a galera for tocando.</p>`);
@@ -1938,6 +1972,8 @@ function drawTab(){
     h+=`<p class="help">Os repertórios ficam neste aparelho. Para levar para outro, use <b>Compartilhar</b> dentro do repertório.</p>`;
     tb.innerHTML=h;
     $("newRep").onclick=()=>{if(repsCheios()) return openDrawer("upsell",{why:"reps"}); openDrawer("novo")};
+  } else if(st.tab==="loja"){
+    drawLoja(tb);
   } else {
     const blocks=[...new Set(SONGS.filter(s=>s.block).map(s=>s.block))];
     const cols=[...new Set(SONGS.flatMap(s=>[...(s.colecao?[s.colecao]:[]),...Object.keys(s.cols||{})]))];
@@ -2337,6 +2373,7 @@ async function compartilharMusica(s){
   try{await navigator.clipboard.writeText(url);toast("Link copiado: "+url.replace(/^https?:\/\//,""))}catch(e){prompt("Copie o link:",url)}}
 function handleHash(){
   const h=(location.hash||"").slice(1);
+  if(h==="loja"){history.replaceState(null,"",location.pathname);st.q="";return go("home",{tab:"loja"})}
   if(h==="professor"){history.replaceState(null,"",location.pathname);return openDrawer("professor")}
   if(h==="painel"){history.replaceState(null,"",location.pathname);st.wantPanel=true;return abrirPainel()}
   if(/^rep-/.test(h)) openShared(h.slice(4));
